@@ -215,3 +215,58 @@ The Script Command Line_SHOULD && SHOULD_NOT
 NPH Scripts_Identification_MUST
  - NPH 지원을 제공하는 서버는 NPH 스크립트를 식별하기 위한 구현 정의된 메커니즘을 제공해야 합니다. 이 메커니즘은 스크립트의 이름이나 위치를 기반으로 할 수 있습니다.
  - A server with NPH support MUST provide an implementationdefined mechanism for identifying NPH scripts, perhaps based on the name or location of the script.
+
+CGI Response
+Response Handling_MUST
+ - 스크립트는 항상 비어 있지 않은 응답을 제공해야하며, 이를 서버로 보내기 위한 시스템 정의된 방법이 있습니다. 일반적으로 이 작업은 '표준 출력' 파일 디스크립터를 통해 이루어집니다. 스크립트는 요청을 처리하고 응답을 준비할 때 REQUEST_METHOD 변수를 확인해야 합니다.
+ - A script MUST always provide a non-empty response, and so there is a system-defined method for it to send this data back to the server. Unless defined otherwise, this will be via the 'standard output' file descriptor. The script MUST check the REQUEST_METHOD variable when processing the request and preparing its response.
+
+Response Types_MUST
+ - 응답은 메시지 헤더와 메시지 본문으로 구성되며, 이들은 공백 줄로 구분됩니다. 메시지 헤더에는 하나 이상의 헤더 필드가 포함될 수 있습니다. 본문은 NULL일 수도 있습니다. 스크립트는 문서 응답, 로컬 리디렉션 응답 또는 클라이언트 리디렉션 (선택적 문서 포함) 중 하나를 반환해야 합니다. 아래에서 정의된 응답 정의에서 응답의 헤더 필드 순서는 중요하지 않습니다 (BNF에서는 그렇게 나타나지만). 헤더 필드는 섹션 6.3에서 정의됩니다.
+ - The response comprises a message-header and a message-body, separated by a blank line. The message-header contains one or more header fields. The body may be NULL. The script MUST return one of either a document response, a local redirect response or a client redirect (with optional document) response. In the response definitions below, the order of header fields in a response is not significant (despite appearing so in the BNF). The header fields are defined in section 6.3.
+
+ Document Response_MUST
+  - CGI 스크립트는 문서 응답에서 사용자에게 문서를 반환할 수 있으며, 선택적으로 응답의 성공 상태를 나타내는 오류 코드를 포함할 수 있습니다. 스크립트는 Content-Type 헤더 필드를 반환해야 합니다. Status 헤더 필드는 선택 사항이며, 생략된 경우 상태 200 'OK'로 가정됩니다. 서버는 클라이언트에 대한 응답이 응답 프로토콜 버전을 준수하도록 스크립트의 출력에 필요한 수정을 수행해야 합니다.
+  - The CGI script can return a document to the user in a document response, with an optional error code indicating the success status of the response. The script MUST return a Content-Type header field. A Status header field is optional, and status 200 'OK' is assumed if it is omitted. The server MUST make any appropriate modifications to the script's output to ensure that the response to the client complies with the response protocol version.
+
+Local Redirect Response_MUST && MUST_NOT
+ - CGI 스크립트는 Location 헤더 필드에서 로컬 리소스의 URI 경로와 쿼리 문자열('local-pathquery')을 반환할 수 있습니다. 이것은 서버에게 지정된 경로를 사용하여 요청을 다시 처리해야 함을 나타냅니다. 스크립트는 다른 헤더 필드나 메시지 본문을 반환해서는 안 되며, 서버는 해당 URL을 포함하는 요청에 응답으로 생성해야 할 응답을 생성해야 합니다.
+ - The CGI script can return a URI path and query-string ('local-pathquery') for a local resource in a Location header field. This indicates to the server that it should reprocess the request using the path specified. The script MUST NOT return any other header fields or a message-body, and the server MUST generate the response that it would have produced in response to a request containing the URL
+
+Client Redirect Response_MUST && MUST_NOT
+ - CGI 스크립트는 Location 헤더 필드에 절대 URI 경로를 반환하여 클라이언트에게 지정된 URI를 사용하여 요청을 다시 처리하도록 알릴 수 있습니다. 스크립트는 다른 헤더 필드를 제공해서는 안되며 서버 정의 CGI 확장 필드를 제외한 다른 헤더 필드를 제공해서는 안됩니다. HTTP 클라이언트 요청의 경우, 서버는 302 'Found' HTTP 응답 메시지를 생성해야 합니다.
+ - The CGI script can return an absolute URI path in a Location header field, to indicate to the client that it should reprocess the request using the URI specified. The script MUST not provide any other header fields, except for server-defined CGI extension fields. For an HTTP client request, the server MUST generate a 302 'Found' HTTP response message.
+
+Client Redirect Response with Document_MUST
+ - CGI 스크립트는 Location 헤더 필드에 첨부된 문서와 함께 절대 URI 경로를 반환하여 클라이언트에게 지정된 URI를 사용하여 요청을 다시 처리하도록 알릴 수 있습니다. Status 헤더 필드는 제공해야 하며, 302 'Found' 상태 값을 포함해야 합니다. 또는 확장 코드를 포함할 수 있으며, 이는 클라이언트 리디렉션을 의미하는 다른 유효한 상태 코드일 수 있습니다. 서버는 스크립트의 출력이 클라이언트 응답 프로토콜 버전을 준수하도록 필요한 수정을 수행해야 합니다.
+ - The CGI script can return an absolute URI path in a Location header field together with an attached document, to indicate to the client that it should reprocess the request using the URI specified. The Status header field MUST be supplied and MUST contain a status value of 302 'Found', or it MAY contain an extension-code, that is, another valid status code that means client redirection. The server MUST make any appropriate modifications to the script's output to ensure that the response to the client complies with the response protocol version.
+
+Response Header Fields_MUST
+ - 응답 헤더 필드는 서버에 의해 해석되는 CGI 또는 확장 헤더 필드, 또는 클라이언트에 반환되는 응답에 포함되는 프로토콜별 헤더 필드 중 하나입니다. 적어도 하나의 CGI 필드를 제공해야 하며, 각 CGI 필드는 응답에 두 번 이상 나타나서는 안 됩니다.
+ - 헤더 필드의 이름은 대소문자를 구분하지 않습니다. NULL 필드 값은 필드를 보내지 않는 것과 동일합니다. 각 CGI-Response의 헤더 필드는 하나의 라인에 지정되어야 합니다. CGI/1.1은 여러 줄로 나누어진 헤더 필드를 지원하지 않습니다. ":"와 필드 값 사이에는 공백이 허용되며, 필드 값 내의 토큰 사이에도 공백이 허용됩니다.
+ - he response header fields are either CGI or extension header fields to be interpreted by the server, or protocol-specific header fields to be included in the response returned to the client. At least one CGI field MUST be supplied.
+ - The field-name is not case sensitive. A NULL field value is equivalent to a field not being sent. Note that each header field in a CGI-Response MUST be specified on a single line; CGI/1.1 does not support continuation lines. Whitespace is permitted between the ":" and the field-value (but not between the field-name and the ":"), and also between tokens in the field-value.
+
+Content-Type_MUST
+ - Content-Type 응답 필드는 엔터티 본문의 인터넷 미디어 유형 [6]을 설정합니다. 엔터티 본문이 반환되면 스크립트는 응답에 Content-Type 필드를 제공해야 합니다. 그렇게 하지 않으면 서버는 올바른 콘텐츠 유형을 결정하지 않아야 합니다. 값은 문자 인코딩 매개 변수 변경을 제외하고 클라이언트에게 그대로 보내져야 합니다. 텍스트 미디어 유형의 경우 클라이언트가 기본 문자 집합으로 가정하는 값은 HTTP 프로토콜의 경우 ISO-8859-1이고, 다른 프로토콜인 경우 US-ASCII입니다. 따라서 스크립트는 charset 매개 변수를 포함하는 것이 좋습니다. 이에 대한 자세한 내용은 HTTP/1.1 명세서 [4]의 섹션 3.4.1을 참조하십시오.
+ - The Content-Type response field sets the Internet Media Type [6] of the entity body. If an entity body is returned, the script MUST supply a Content-Type field in the response. If it fails to do so, the server SHOULD NOT attempt to determine the correct content type. The value SHOULD be sent unmodified to the client, except for any charset parameter changes. Unless it is otherwise system-defined, the default charset assumed by the client for text media-types is ISO-8859-1 if the protocol is HTTP and US-ASCII otherwise. Hence the script SHOULD include a charset parameter. See section 3.4.1 of the HTTP/1.1 specification [4] for a discussion of this issue.
+
+Status_SHOULD
+ - 스크립트는 HTTP/1.1 상태 코드를 사용하기 전에 SERVER_PROTOCOL의 값을 확인해야 합니다.
+ - The script SHOULD check the value of SERVER_PROTOCOL before using HTTP/1.1 status codes.
+
+Protocol-Specific Header Fields_MUST && MUST_NOT
+ - 스크립트는 응답 메시지와 관련된 다른 헤더 필드를 반환할 수 있으며, 이러한 헤더 필드는 SERVER_PROTOCOL (HTTP/1.0 [1] 또는 HTTP/1.1 [4]에 대한 명세에 정의된 대로)에 의해 정의됩니다. 서버는 CGI 헤더 구문에서 HTTP 헤더 구문으로 헤더 데이터를 변환해야 합니다. 예를 들어, CGI 스크립트에서 사용되는 개행 문자 시퀀스 (예: UNIX의 US-ASCII LF)가 HTTP (US-ASCII CR 다음 LF)에서 사용되는 것과 다를 수 있습니다. 스크립트는 서버가 클라이언트에 응답을 보내는 데 영향을 미칠 수 있는 클라이언트 측 통신 문제와 관련된 헤더 필드를 반환해서는 안 됩니다. 서버는 클라이언트가 반환한 이러한 헤더 필드를 제거할 수 있습니다. 스크립트가 반환한 헤더 필드와 서버가 자체적으로 전송하려는 헤더 필드 간의 충돌을 해결해야 합니다.
+ - The script MAY return any other header fields that relate to the response message defined by the specification for the SERVER_PROTOCOL (HTTP/1.0 [1] or HTTP/1.1 [4]). The server MUST translate the header data from the CGI header syntax to the HTTP header syntax if these differ. For example, the character sequence for newline (such as UNIX's US-ASCII LF) used by CGI scripts may not be the same as that used by HTTP (US-ASCII CR followed by LF). The script MUST NOT return any header fields that relate to client-side communication issues and could affect the server's ability to send the response to the client. The server MAY remove any such header fields returned by the client. It SHOULD resolve any conflicts between header fields returned by the script and header fields that it would otherwise send itself.
+
+Extension Header Fields_SHOULD
+ - 추가적으로 구현 정의된 CGI 헤더 필드가 있을 수 있으며, 이러한 필드 이름은 "X-CGI-"로 시작해야 합니다. 서버는 스크립트로부터 수신한 "X-CGI-"로 시작하는 이름을 가진 인식되지 않은 헤더 필드를 무시하고(또는 삭제할) 수 있습니다.
+ - There may be additional implementation-defined CGI header fields, whose field names SHOULD begin with "X-CGI-". The server MAY ignore (and delete) any unrecognised header fields with names beginning "XCGI-" that are received from the script.
+
+Response Message-Body_MUST
+ - 응답 메시지 본문은 스크립트에 의해 제공된 데이터를 읽어서 스크립트가 메시지 본문의 끝을 나타낼 때까지 모두 읽어야 합니다(예: 파일의 끝에 도달). 메시지 본문은 HEAD 요청 또는 필요한 전송 코딩, 콘텐츠 코딩 또는 문자 집합 변환을 제외하고는 변경하지 않고 클라이언트에게 전송해야 합니다.
+ - The response message-body is an attached document to be returned to the client by the server. The server MUST read all the data provided by the script, until the script signals the end of the message-body by way of an end-of-file condition. The message-body SHOULD be sent unmodified to the client, except for HEAD requests or any required transfer-codings, content-codings or charset conversions.
+
+The current working directory for UNIX
+ - 스크립트의 현재 작업 디렉토리는 스크립트를 포함하는 디렉토리로 설정되어야 합니다.
+ - The current working directory for the script SHOULD be set to the directory containing the script.
