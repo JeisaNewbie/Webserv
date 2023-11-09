@@ -127,3 +127,91 @@ SERVER_NAME_MUST
 Script-URI.
 
 SERVER_PORT_MUST
+ - SERVER_PORT 변수는 이 요청을 클라이언트로부터 받은 TCP/IP 포트 번호로 설정되어야 합니다. 이 값은 Script-URI의 포트 부분에서 사용됩니다.
+ - 포트가 스킴의 기본 포트인 경우여서 URI에서 생략되어도, 이 변수는 반드시 설정되어야 합니다.
+ - The SERVER_PORT variable MUST be set to the TCP/IP port number on which this request is received from the client. This value is used in the port part of the Script-URI.
+ - Note that this variable MUST be set, even if the port is the default port for the scheme and could otherwise be omitted from a URI.
+
+SERVER_PROTOCOL_MUST
+ - SERVER_PROTOCOL 변수는 이 CGI 요청에 사용된 응용 프로그램 프로토콜의 이름과 버전으로 설정되어야 합니다. 이것은 서버가 클라이언트와의 통신에서 사용하는 프로토콜 버전과 다를 수 있습니다.
+ - The SERVER_PROTOCOL variable MUST be set to the name and version of the application protocol used for this CGI request. This MAY differ from the protocol version used by the server in its communication with the client.
+
+SERVER_SOFTWARE_MUST
+ - SERVER_SOFTWARE 메타-변수는 CGI 요청을 생성하는 정보 서버 소프트웨어(게이트웨이를 실행 중인 소프트웨어)의 이름과 버전으로 설정되어야 합니다.
+ - The SERVER_SOFTWARE meta-variable MUST be set to the name and version of the information server software making the CGI request (and running the gateway).
+
+SERVER_SOFTWARE_SHOULD
+ - 가능한 경우 이 값은 클라이언트에 보고되는 서버 설명과 동일해야 합니다.
+ - It SHOULD be the same as the server description reported to the client, if any.
+
+Protocol-Specific Meta-Variables_SHOULD
+ - 서버는 요청에 대한 프로토콜 및 스킴에 특정한 메타-변수를 설정해야 합니다. 프로토콜별 변수의 해석은 SERVER_PROTOCOL의 프로토콜 버전에 따라 달라집니다. 서버는 스킴이 프로토콜과 다를 경우 해당 스킴의 이름을 가진 메타-변수를 NULL이 아닌 값으로 설정할 수 있습니다. 이러한 변수의 존재는 스크립트에게 요청에 사용된 스킴을 알려줍니다.
+ - 이름이 'HTTP_'로 시작하는 메타-변수는 HTTP 프로토콜을 사용하는 경우 클라이언트 요청 헤더 필드에서 읽은 값을 포함합니다. HTTP 헤더 필드 이름은 대문자로 변환되며, 모든 '-'는 '_'로 대체되고, 'HTTP'가 메타-변수 이름 앞에 추가됩니다. 헤더 데이터는 클라이언트가 보낸대로 제공되거나, 의미를 변경하지 않는 방식으로 다시 작성될 수 있습니다.
+ - 서버는 받은 모든 헤더 필드에 대한 메타-변수를 생성할 필요가 없습니다. 특히 'Authorization'와 같은 인증 정보를 포함하는 헤더 필드나 스크립트에서 다른 변수로 사용 가능한 'Content-Length' 및 'Content-Type'과 같은 필드를 제거해야 합니다. 또한 'Connection'과 같이 클라이언트 측 통신 문제와 관련된 헤더 필드를 제거할 수 있습니다.
+ - The server SHOULD set meta-variables specific to the protocol and scheme for the request. Interpretation of protocol-specific variables depends on the protocol version in SERVER_PROTOCOL. The server MAY set a meta-variable with the name of the scheme to a non-NULL value if the scheme is not the same as the protocol. The presence of such a variable indicates to a script which scheme is used by the request.
+ - Meta-variables with names beginning with "HTTP_" contain values read from the client request header fields, if the protocol used is HTTP. The HTTP header field name is converted to upper case, has all occurrences of "-" replaced with "_" and has "HTTP_" prepended to give the meta-variable name. The header data can be presented as sent by the client, or can be rewritten in ways which do not change its semantics.
+ - The server is not required to create meta-variables for all the header fields that it receives. In particular, it SHOULD remove any header fields carrying authentication information, such as 'Authorization'; or that are available to the script in other variables, such as 'Content-Length' and 'Content-Type'. The server MAY remove header fields that relate solely to client-side communication issues, such as 'Connection'.
+
+Protocol-Specific Meta-Variables_MUST
+ - 동일한 필드 이름을 가진 여러 헤더 필드가 수신된 경우 서버는 그들을 동일한 의미를 가진 단일 값으로 다시 작성해야 합니다. 마찬가지로 여러 줄에 걸친 헤더 필드는 단일 줄로 병합되어야 합니다. 필요한 경우 서버는 데이터의 표현(예: 문자 집합)을 CGI 메타-변수에 적합하도록 변경해야 합니다.
+ -  If multiple header fields with the same field-name are received then the server MUST rewrite them as a single value having the same semantics. Similarly, a header field that spans multiple lines MUST be merged onto a single line. The server MUST, if necessary, change the representation of the data (for example, the character set) to be appropriate for a CGI meta-variable.
+
+Request Message-Body_MUST
+ - A request-body 는 CONTENT_LENGTH가 NULL이 아닌 경우 요청과 함께 제공됩니다. 서버는 적어도 해당 바이트 수를 스크립트가 읽을 수 있도록 제공해야 합니다. 서버는 CONTENT_LENGTH 바이트를 읽은 후 파일의 끝(EoF) 조건을 나타낼 수도 있고 확장 데이터를 제공할 수도 있습니다.
+ - A request-body is supplied with the request if the CONTENT_LENGTH is not NULL. The server MUST make at least that many bytes available for the script to read. The server MAY signal an end-of-file condition after CONTENT_LENGTH bytes have been read or it MAY supply extension data.
+
+Request Message-Body_MUST_NOT
+ - 따라서 스크립트는 CONTENT_LENGTH 바이트보다 더 많은 데이터를 읽으려고 시도해서는 안 되며, 더 많은 데이터가 있더라도 해당 바이트 수를 초과해서 읽어서는 안 됩니다. 그러나 스크립트는 데이터를 읽을 의무가 없습니다.
+ - Therefore, the script MUST NOT attempt to read more than CONTENT_LENGTH bytes, even if more data is available. However, it is not obliged to read any of the data.
+
+Request Message-Body_SHOULD
+ - 비 구문 분석 헤더 (NPH) 스크립트 (섹션 5)의 경우 서버는 클라이언트가 제공한 데이터가 정확하게 그대로이고 서버에서 변경되지 않도록 보장하기 위해 노력해야 합니다.
+ - For non-parsed header (NPH) scripts (section 5), the server SHOULD attempt to ensure that the data supplied to the script is precisely as supplied by the client and is unaltered by the server.
+
+Request Message-Body_MUST
+ - 전송 코딩은 요청 본문에서 지원되지 않으므로 서버는 메시지 본문에서 이러한 코딩을 제거하고 CONTENT_LENGTH를 재계산해야 합니다.
+ - As transfer-codings are not supported on the request-body, the server MUST remove any such codings from the message-body, and recalculate the CONTENT_LENGTH.
+
+Request Message-Body_SHOULD
+ - 이것이 불가능한 경우 (예: 큰 버퍼링 요구 사항 때문에) 서버는 클라이언트 요청을 거부해야 합니다. 또한 메시지 본문에서 콘텐츠 코딩을 제거할 수도 있습니다.
+ - If this is not possible (for example, because of large buffering requirements), the server SHOULD reject the client request. It MAY also remove content-codings from the message-body.
+
+Request Methods_SHOULD
+ - REQUEST_METHOD 메타-변수에서 제공되는 요청 메서드는 스크립트가 응답을 생성할 때 적용해야 하는 처리 방법을 식별합니다. 스크립트 작성자는 특정 응용 프로그램에 가장 적합한 메서드를 구현하기 위해 선택할 수 있습니다. 스크립트가 지원하지 않는 메서드로 요청을 받으면 오류를 반환해야 합니다(섹션 6.3.3 참조).
+ - The Request Method, as supplied in the REQUEST_METHOD meta-variable, identifies the processing method to be applied by the script in producing a response. The script author can choose to implement the methods most appropriate for the particular application. If the script receives a request with a method it does not support it SHOULD reject it with an error (see section 6.3.3).
+
+GET_SHOULD_NOT
+ - GET 메서드는 스크립트가 메타-변수 값에 기반한 문서를 생성해야 함을 나타냅니다. 관례적으로 GET 메서드는 '안전'하고 '멱등(멱등성: 연산을 여러 번 적용하더라도 결과가 달라지지 않는 성질)'하며 문서 생성 이외의 작업의 의미를 가져서는 안 되며, 프로토콜별 메타-변수에 의해 GET 메서드의 의미가 수정되고 보완될 수 있습니다.
+ - The GET method indicates that the script should produce a document based on the meta-variable values. By convention, the GET method is 'safe' and 'idempotent' and SHOULD NOT have the significance of taking an action other than producing a document. The meaning of the GET method may be modified and refined by protocol-specific meta-variables.
+
+POST_MUST
+ - POST 메서드는 메타-변수 값에 추가하여 요청 메시지 본문의 데이터를 기반으로 스크립트가 처리를 수행하고 문서를 생성하도록 요청하는 데 사용됩니다. 일반적인 사용 사례는 HTML [18]에서의 양식 제출으로, 데이터베이스의 변경과 같이 스크립트에서 지속적인 영향을 미치는 처리를 시작하도록 의도됩니다. 스크립트는 메시지 본문을 읽기 전에 CONTENT_LENGTH 변수의 값을 확인해야 하며, 처리하기 전에 CONTENT_TYPE 값을 확인하는 것이 좋습니다.
+ - The POST method is used to request the script perform processing and produce a document based on the data in the request message-body, in addition to meta-variable values. A common use is form submission in HTML [18], intended to initiate processing by the script that has a permanent affect, such a change in a database. The script MUST check the value of the CONTENT_LENGTH variable before reading the attached message-body, and SHOULD check the CONTENT_TYPE value before processing it.
+
+HEAD_MUST_NOT
+ - HEAD 메서드는 응답 헤더 필드를 반환하기 위해 충분한 처리를 수행하도록 스크립트에 요청하며, 응답 메시지 본문을 제공하지 않습니다. HEAD 요청에 대해 스크립트는 반드시 응답 메시지 본문을 제공해서는 안 됩니다. 
+ - The HEAD method requests the script to do sufficient processing to return the response header fields, without providing a response message-body. The script MUST NOT provide a response message-body for a HEAD request.
+
+HEAD_MUST
+ - 만약 제공한다면, 서버는 스크립트로부터 응답을 읽을 때 메시지 본문을 버려야 합니다.
+ - If it does, then the server MUST discard the message-body when reading the response from the script.
+
+Protocol-Specific Methods_SHOULD
+ - 스크립트는 HTTP/1.1 PUT 및 DELETE와 같은 프로토콜별 메서드를 구현할 수 있으며, 이를 수행할 때 SERVER_PROTOCOL의 값을 확인해야 합니다. 서버는 일부 메서드가 스크립트에 적합하지 않거나 허용되지 않을 수 있다고 결정할 수 있으며, 해당 메서드를 자체적으로 처리하거나 클라이언트에게 오류를 반환할 수 있습니다.
+ - The script MAY implement any protocol-specific method, such as HTTP/1.1 PUT and DELETE; it SHOULD check the value of SERVER_PROTOCOL when doing so. The server MAY decide that some methods are not appropriate or permitted for a script, and may handle the methods itself or return an error to the client.
+
+The Script Command Line_SHOULD
+ - 일부 시스템은 CGI 스크립트에 문자열 배열을 제공하는 방법을 지원합니다. 이것은 '인덱스화된' HTTP 쿼리의 경우에만 사용되며, 이러한 쿼리는 "=" 문자가 인코딩되지 않은 URI 쿼리 문자열을 포함하지 않는 'GET' 또는 'HEAD' 요청에 의해 식별됩니다. 이러한 요청의 경우, 서버는 쿼리 문자열을 검색 문자열로 취급하고 규칙을 사용하여 단어로 구문 분석해야 합니다. 구문 분석 후 각 검색어는 URL 디코딩되고 선택적으로 시스템에서 정의한 방식으로 인코딩된 다음 명령 줄 인수 목록에 추가됩니다.
+ - Some systems support a method for supplying an array of strings to the CGI script. This is only used in the case of an 'indexed' HTTP query, which is identified by a 'GET' or 'HEAD' request with a URI query string that does not contain any unencoded "=" characters. For such a request, the server SHOULD treat the query-string as a search-string and parse it into words, using the rules. After parsing, each search-word is URL-decoded, optionally encoded in a system-defined manner and then added to the command line argument list.
+
+The Script Command Line_MUST_NOT
+ - 서버가 인수 목록의 일부를 생성할 수 없는 경우 서버는 명령 줄 정보를 생성해서는 안됩니다. 예를 들어, 인수의 수가 운영 체제 또는 서버 제한을 초과하거나 한 단어가 인수로 표현할 수 없는 경우가 있을 수 있습니다.
+ - If the server cannot create any part of the argument list, then the server MUST NOT generate any command line information. For example, the number of arguments may be greater than operating system or server limits, or one of the words may not be representable as an argument.
+
+The Script Command Line_SHOULD && SHOULD_NOT
+ - 스크립트는 QUERY_STRING 값에 인코딩되지 않은 "=" 문자가 포함되어 있는지 확인하고, 포함되어 있다면 명령 줄 인수를 사용하지 않아야 합니다.
+ - The script SHOULD check to see if the QUERY_STRING value contains an unencoded "=" character, and SHOULD NOT use the command line arguments if it does.
+
+NPH Scripts_Identification_MUST
+ - NPH 지원을 제공하는 서버는 NPH 스크립트를 식별하기 위한 구현 정의된 메커니즘을 제공해야 합니다. 이 메커니즘은 스크립트의 이름이나 위치를 기반으로 할 수 있습니다.
+ - A server with NPH support MUST provide an implementationdefined mechanism for identifying NPH scripts, perhaps based on the name or location of the script.
