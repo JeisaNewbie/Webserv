@@ -89,16 +89,41 @@ the translation.
 
 PATH_TRANSLATED_SHOULD
  - 요청 URI에 경로 정보 구성 요소가 포함된 경우 서버는 이 메타 변수를 설정해야 합니다. PATH_INFO가 NULL인 경우 PATH_TRANSLATED 변수는 NULL (또는 설정되지 않음)로 설정되어야 합니다.
- - The server SHOULD set this meta-variable if the request URI includes
-a path-info component. If PATH_INFO is NULL, then the
-PATH_TRANSLATED variable MUST be set to NULL (or unset).
+ - The server SHOULD set this meta-variable if the request URI includes a path-info component. If PATH_INFO is NULL, then the PATH_TRANSLATED variable MUST be set to NULL (or unset).
 
 QUERY_STRING_MUST
  - 서버는 이 변수를 설정해야 합니다.
- - The server MUST set this variable.
  - Script-URI에 쿼리 구성 요소가 포함되지 않은 경우, QUERY_STRING은 빈 문자열("")로 정의되어야 합니다.
+ - The server MUST set this variable.
  - if the Script-URI does not include a query component, the QUERY_STRING MUST be defined as an empty string ("").
 
 REMOTE_ADDR_MUST
  - REMOTE_ADDR 변수는 요청을 서버로 보내는 클라이언트의 네트워크 주소로 설정해야 합니다.
  - The REMOTE_ADDR variable MUST be set to the network address of the client sending the request to the server.
+
+REMOTE_HOST_SHOULD
+ - 서버는 이 변수를 설정하는 것이 좋습니다. 호스트 이름이 성능상 또는 다른 이유로 사용 불가능한 경우, 서버는 REMOTE_ADDR 값을 대체할 수 있습니다.
+ - The server SHOULD set this variable. If the hostname is not available for performance reasons or otherwise, the server MAY substitute the REMOTE_ADDR value.
+
+REMOTE_USER_MUST
+ - 만약 클라이언트 요청이 HTTP 인증을 필요로 한다면 (예: AUTH_TYPE 메타-변수가 'Basic' 또는 'Digest'로 설정된 경우), REMOTE_USER 메타-변수의 값은 제공된 사용자 ID로 설정되어야 합니다.
+ - If the client request required HTTP Authentication [5] (e.g., the AUTH_TYPE meta-variable is set to "Basic" or "Digest"), then the value of the REMOTE_USER meta-variable MUST be set to the user-ID supplied.
+
+REQUEST_METHOD_MUST
+ - REQUEST_METHOD 메타-변수는 스크립트가 요청을 처리하는 데 사용해야 하는 메서드로 설정되어야 합니다. 이에 대한 설명은 섹션 4.3에서 제공됩니다.
+ - 메서드는 대소문자를 구분합니다. HTTP 메서드는 HTTP/1.1 명세의 섹션 5.1.1에서 설명되어 있습니다.
+ - The REQUEST_METHOD meta-variable MUST be set to the method which should be used by the script to process the request, as described in section 4.3.
+ - The method is case sensitive. The HTTP methods are described in section 5.1.1 of the HTTP/1.1 specification.
+
+SCRIPT_NAME_MUST
+ - SCRIPT_NAME 변수는 CGI 스크립트(스크립트의 출력이 아닌)를 식별할 수 있는 URI 경로(인코딩되지 않음)로 설정되어야 합니다. 구문은 PATH_INFO와 동일합니다.
+ - 선행 '/'는 경로의 일부가 아닙니다. 경로가 NULL인 경우 '/'는 선택 사항입니다. 그러나 이 경우에도 변수는 설정되어야 합니다.
+ - The SCRIPT_NAME variable MUST be set to a URI path (not URL-encoded) which could identify the CGI script (rather than the script's output). The syntax is the same as for PATH_INFO.
+ - The leading "/" is not part of the path. It is optional if the path is NULL; however, the variable MUST still be set in that case.
+
+SERVER_NAME_MUST
+ - SERVER_NAME 변수는 클라이언트 요청이 전송되는 서버 호스트의 이름으로 설정되어야 합니다. 이것은 대소문자를 구분하지 않는 호스트 이름이나 네트워크 주소입니다. 이것은 Script-URI의 호스트 부분을 형성합니다.
+ - The SERVER_NAME variable MUST be set to the name of the server host to which the client request is directed. It is a case-insensitive hostname or network address. It forms the host part of the
+Script-URI.
+
+SERVER_PORT_MUST
