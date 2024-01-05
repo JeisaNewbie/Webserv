@@ -11,7 +11,8 @@ int main(int argc, char **argv, char **envp) {
 
 	// if (openMainErrorLog(error_log) == -1)
 	// 	return -1;
-		
+	//hello world
+
 	try{
 		setConf(conf, argc, argv[1]);
 		parseConf(cycle, conf);
