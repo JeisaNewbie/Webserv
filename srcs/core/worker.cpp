@@ -13,7 +13,7 @@ Worker::Worker(int id) : worker_id(id) {
 		setException(WORK_OPEN_FAIL);
 	
 	std::string	tmp = std::to_string(id);
-	error_log.write(tmp.c_str(), tmp.length());
+	error_log.write(tmp.c_str(), tmp.length() + 1);
 	error_log.write("\n\n", 2);
 }
 

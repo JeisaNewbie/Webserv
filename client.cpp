@@ -40,8 +40,8 @@ int
 	int			client_socket;
 	sockaddr_in server_addr;
 
-	char sAddr[15] = "10.14.10.6";
-	int sPort = 4000;
+	char sAddr[15] = "127.0.0.1";
+	int sPort = 8080;
 
 	client_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (client_socket == -1)
@@ -57,18 +57,33 @@ int
 		return 0;
 
 	char message[BUF_SIZE];
-	// int recieve_size;
+	char r_message[BUF_SIZE];
+	int recieve_size;
 
 	while (1) {
-		fgets(message, BUF_SIZE, stdin);
+		std::string str("");
+		while (1) {
+			fgets(message, BUF_SIZE, stdin);
+			std::string tmp(message);
+			std::cout << "tmp: " << tmp << "\n";
+			if (tmp.find("stop") != std::string::npos)
+				break;
+			str += tmp;
+		}
 
-		if (!strcmp(message, "quit")) {
-			send(client_socket, message, (int)strlen(message), 0);
+		if (!strcmp(str.c_str(), "quit")) {
+			send(client_socket, str.c_str(), (int)strlen(str.c_str()) + 1, 0);
 			break;
 		}
 
-		send(client_socket, message, (int)strlen(message), 0);
-		// recieve_size = recv(client_socket, message, sizeof(message) - 1, 0);
+		std::cout << "str: " << str << "\n";
+		send(client_socket, str.c_str(), (int)strlen(str.c_str()) + 1, 0);
+
+		recieve_size = recv(client_socket, r_message, sizeof(r_message) - 1, 0);
+		if (recieve_size == -1)
+			return -1;
+
+		std::cout << "recieve message: " << r_message << "\n";
 	}
 
 	close(client_socket);

@@ -16,6 +16,7 @@ void prepConnect(Cycle &cycle, int id) {
 	std::memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(8080);
+	//TIME_WAIT 상태기 때문에 같은 포트 연속으로 사용 시 bind 에러. 어떻게 해결하지?
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(listen_socket, reinterpret_cast<sockaddr *>(&server_addr), sizeof(sockaddr_in)) == -1)
@@ -37,10 +38,7 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 	struct kevent	*cur_event;
 	struct timespec	timeout;
 	while (1) {
-		// 여기서 무한루프 도는 중
-		// 클라이언트 연결하고 데이터 보내는 것까지 간단하게 짜서 테스트해보기
-
-		timeout.tv_sec = 1;
+		timeout.tv_sec = 10;
 		timeout.tv_nsec = 0;
 		//시간 나중에 수정하기
 
@@ -61,23 +59,28 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 				disconnectClient(cur_event->ident, clients);
 			}
 			if (cur_event->filter == EVFILT_READ) {
-				if (cur_event->ident == listen_socket) {
+				if (cur_event->ident == listen_socket)
 					acceptNewClient(worker, listen_socket, clients, change_list);
-				}
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					recieveFromClient(worker, cur_event->ident, clients);
 					// request parsing
+					// clients[cur_event->ident] == request message;
+
+					// std::cout << clients[cur_event->ident].length() << clients[cur_event->ident] << "\n";
 					(void)cycle;
-					clients[cur_event->ident] = "";
+					// if (chunked == FALSE) chunked 유무 확인하고 받은 메시지 지우기?
+						clients[cur_event->ident] = "";
+					// response 작성
+					addEvent(change_list, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 				}
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
-				// response send
-				std::string	response;
-				if (send(cur_event->ident, response.c_str(), response.length(), 0) == -1) {
+				std::string	response("response message");
+				if (send(cur_event->ident, response.c_str(), response.length() + 1, 0) == -1) {
 					drivenEventException(worker.getErrorLog(), EVENT_SEND_FAIL, cur_event->ident);
 					disconnectClient(cur_event->ident, clients);
 				}
+				addEvent(change_list, cur_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 			}
 		}
 	}
@@ -99,11 +102,9 @@ static void acceptNewClient(Worker &worker, int listen_socket, std::map<int, std
 		drivenEventException(worker.getErrorLog(), EVENT_ACCEPT_FAIL, 0);
 		return ;
 	}
-	
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
 	
 	addEvent(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	addEvent(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	clients[client_socket] = "";
 }
 
@@ -111,12 +112,13 @@ static void recieveFromClient(Worker &worker, int client_socket, std::map<int, s
 	char	buf[BUF_SIZE] = {0,};
 	int		recieve_size;
 
-	while ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) != -1) {
+	while ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) > 0) {
 		buf[recieve_size] = '\0';
 		std::string	tmp(buf, recieve_size);
 		clients[client_socket] += tmp;
+		std::cout << clients[client_socket] << "\n";
 	}
-	if (recieve_size == -1 || errno != EAGAIN) {
+	if (recieve_size <= 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		drivenEventException(worker.getErrorLog(), EVENT_RECV_FAIL, client_socket);
 		disconnectClient(client_socket, clients);
 	}
