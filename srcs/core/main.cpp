@@ -15,7 +15,6 @@ int main(int argc, char **argv, char **envp) {
 	try{
 		setConf(conf, argc, argv[1]);
 		parseConf(cycle, conf);
-		std::cout<< "hello world\n";
 	} catch(Exception& e){
 		std::cerr << e.what() << std::endl;
 		if (errno != 0)

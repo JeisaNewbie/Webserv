@@ -30,9 +30,10 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 	uintptr_t					listen_socket = worker.getListenSocket();
 	std::map<int, std::string>	clients;
 	std::vector<struct kevent>	change_list, event_list(EVENT_LIST_INIT_SIZE);
+	std::map<int, Client>		server;
 
 	addEvent(change_list, listen_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	
+
 	uint32_t		new_events;
 	struct kevent	*cur_event;
 	struct timespec	timeout;
@@ -66,7 +67,7 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 				}
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					recieveFromClient(worker, cur_event->ident, clients);
-					// request parsing
+					server[cur_event->ident].do_parse(clients[cur_event->ident]);
 					(void)cycle;
 					clients[cur_event->ident] = "";
 				}
@@ -99,9 +100,9 @@ static void acceptNewClient(Worker &worker, int listen_socket, std::map<int, std
 		drivenEventException(worker.getErrorLog(), EVENT_ACCEPT_FAIL, 0);
 		return ;
 	}
-	
+
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
-	
+
 	addEvent(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	addEvent(change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	clients[client_socket] = "";
