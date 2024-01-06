@@ -61,10 +61,10 @@ void drivenEventException(std::ofstream &error_log, int _error_code, uintptr_t c
 
 	if (client_fd != 0) {
 		tmp = std::to_string(client_fd);
-		error_log.write(tmp.c_str(), tmp.length());
+		error_log.write(tmp.c_str(), tmp.length() + 1);
 		error_log.write(": ", 2);
 	}
 	tmp = std::string(Exception(error_code).what());
-	error_log.write(tmp.c_str(), tmp.length());
+	error_log.write(tmp.c_str(), tmp.length() + 1);
 	error_log.write("\n\n", 2);
 }

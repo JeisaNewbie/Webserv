@@ -6,7 +6,11 @@
 #    By: jhwang2 <jhwang2@student.42seoul.kr>       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
+<<<<<<< HEAD
 #    Updated: 2024/01/06 13:54:35 by jhwang2          ###   ########.fr        #
+=======
+#    Updated: 2024/01/05 19:56:06 by eunwolee         ###   ########.fr        #
+>>>>>>> origin
 #                                                                              #
 # **************************************************************************** #
 
@@ -46,12 +50,12 @@ YELLOW = \033[38;2;255;231;155m
 PECOCK = \033[38;2;115;187;201m
 PURPLE = \033[38;2;228;165;255m
 
-NUM_TASK = 9
+NUM_TASK = 11
 SIZE = 0
 END = 1
 CHAR = ""
-GAUGE = 🎋...... 🐼=3 yummy!
-NUM_GAUGE = 18
+GAUGE = "~~~~~      "
+NUM_GAUGE = 11
 
 all:
 	@echo "$(PINK)BUILD $(NAME)$(RESET)"
