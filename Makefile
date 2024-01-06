@@ -6,7 +6,7 @@
 #    By: eunwolee <eunwolee@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/05 19:56:06 by eunwolee         ###   ########.fr        #
+#    Updated: 2024/01/06 21:34:03 by eunwolee         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,7 +31,6 @@ SRCS =	core/main.cpp \
 		core/server.cpp \
 		core/worker.cpp \
 		core/event.cpp \
-		core/log.cpp
 
 SRCS_WITH_PATH = $(addprefix $(SRCS_DIR)/, $(SRCS))
 OBJS = $(SRCS_WITH_PATH:$(SRCS_DIR)/%.cpp=$(OBJS_DIR)/%.o)

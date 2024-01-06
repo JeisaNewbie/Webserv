@@ -8,13 +8,14 @@ Worker::Worker(int id) : worker_id(id) {
 	if (listen_socket == -1)
 		setException(WORK_CREATE_SOCKET_FAIL);
 
-	error_log.open("log/worker/" + std::to_string(id));
+	error_log.open("log/worker/" + std::to_string(id) + ".log");
 	if (error_log.is_open() == FALSE)
 		setException(WORK_OPEN_FAIL);
-	
+
 	std::string	tmp = std::to_string(id);
-	error_log.write(tmp.c_str(), tmp.length() + 1);
+	error_log.write(tmp.c_str(), tmp.length());
 	error_log.write("\n\n", 2);
+	error_log.flush(); //왜 필요한거지?
 }
 
 Worker::Worker(const Worker& src) {
