@@ -5,11 +5,11 @@ static void addEvent(std::vector<struct kevent> &change_list, uintptr_t ident, i
 					uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 static bool acceptNewClient(Worker &worker, int listen_socket, std::map<int, std::string> &clients,
 							std::vector<struct kevent> &change_list);
-static bool recieveFromClient(Worker &worker, int client_socket, std::vector<struct kevent> change_list, \
+static bool recieveFromClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list, \
 								std::map<int, std::string> &clients);
-static bool sendToClient(Worker &worker, int client_socket, std::vector<struct kevent> change_list, \
+static bool sendToClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list, \
 							std::map<int, std::string> &clients);
-static void disconnectClient(int client_socket, std::vector<struct kevent> change_list, \
+static void disconnectClient(int client_socket, std::vector<struct kevent>& change_list, \
 								std::map<int, std::string> &clients);
 
 void prepConnect(Cycle &cycle, int id) {
@@ -70,14 +70,8 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					if (recieveFromClient(worker, cur_event->ident, change_list, clients) == FALSE)
 						continue;
-					// request parsing
-					// clients[cur_event->ident] == request message;
-
-					// std::cout << clients[cur_event->ident].length() << clients[cur_event->ident] << "\n";
 					(void)cycle;
-					// if (chunked == FALSE) chunked 유무 확인하고 받은 메시지 지우기?
-						clients[cur_event->ident] = "";
-					// response 작성
+					clients[cur_event->ident] = "";
 					addEvent(change_list, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 				}
 			}
@@ -113,7 +107,7 @@ static bool acceptNewClient(Worker &worker, int listen_socket, std::map<int, std
 	return TRUE;
 }
 
-static bool recieveFromClient(Worker &worker, int client_socket, std::vector<struct kevent> change_list, \
+static bool recieveFromClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list, \
 								std::map<int, std::string> &clients) {
 	char	buf[BUF_SIZE] = {0,};
 	int		recieve_size;
@@ -123,16 +117,21 @@ static bool recieveFromClient(Worker &worker, int client_socket, std::vector<str
 		std::string	tmp(buf, recieve_size);
 		clients[client_socket] += tmp;
 	}
-	std::cout << clients[client_socket] << "\n";
-	if (recieve_size <= 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+	if (recieve_size == 0) {
+		std::cout << "Disconnection : client[" << client_socket << "]\n";
+		disconnectClient(client_socket, change_list, clients);
+		return FALSE;
+	}
+	else if (recieve_size == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		disconnectClient(client_socket, change_list, clients);
 		drivenEventException(worker.getErrorLog(), EVENT_RECV_FAIL, client_socket);
 		return FALSE;
 	}
+	std::cout << clients[client_socket] << "\n";
 	return TRUE;
 }
 
-static bool sendToClient(Worker &worker, int client_socket, std::vector<struct kevent> change_list, \
+static bool sendToClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list, \
 							std::map<int, std::string> &clients) {
 	std::string	response("test response message");
 	if (send(client_socket, response.c_str(), response.length() + 1, 0) == -1) {
@@ -143,7 +142,7 @@ static bool sendToClient(Worker &worker, int client_socket, std::vector<struct k
 	return TRUE;
 }
 
-static void disconnectClient(int client_socket, std::vector<struct kevent> change_list, \
+static void disconnectClient(int client_socket, std::vector<struct kevent>& change_list, \
 								std::map<int, std::string> &clients) {
 	addEvent(change_list, client_socket, EVFILT_READ, EV_DELETE, 0, 0, NULL);
 	addEvent(change_list, client_socket, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);

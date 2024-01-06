@@ -9,9 +9,6 @@ int main(int argc, char **argv, char **envp) {
 	Conf			conf;
 	std::ofstream	error_log;
 
-	// if (openMainErrorLog(error_log) == -1)
-	// 	return -1;
-		
 	try{
 		setConf(conf, argc, argv[1]);
 		parseConf(cycle, conf);
