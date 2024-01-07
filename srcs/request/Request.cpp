@@ -6,18 +6,30 @@ Request::Request(std::string &msg)
 : request_msg(msg)
 {
 	this->pos = 0;
+	this->chunked = false;
+	this->port = 80;
 }
 
 Request::~Request()
 {
 }
 
-int	Request::process_request_parsing(std::string &request_msg)
+void	Request::decode_chunked()
 {
-	this->request_msg = request_msg;
 
+}
+
+int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
+{
 	try
 	{
+		this->request_msg = request_msg;
+		if (get_chunked() == true)
+		{
+			decode_chunked();
+			return this->status_code = OK;
+		}
+		this->cycle = cycle;
 		// std::cout<< "parse_request\n";
 		parse_request ();
 		// std::cout<< "parse_request_line\n";
@@ -28,6 +40,7 @@ int	Request::process_request_parsing(std::string &request_msg)
 		// check_members();
 		// std::cout<< "check_header_is_valid\n";
 		check_header_is_valid ();
+		matching_server(); // port와 listen이 일치하는지 확인 &&  host와 server_name 일치 확인 -> location과 uri(path)와 일치하는지 확인 (만약 path가 absolute form으로 올경우 그중 path를 파싱해서 path 와 location 비교)
 	}
 	catch(int e)
 	{
@@ -438,7 +451,6 @@ void	Request::set_header_key_and_value(std::string &key, std::string &value)
 	this->header.insert (std::pair<std::string, std::string>(key, value));
 }
 
-
 void	Request::check_header_is_valid()
 {
 	// std::cout<< "check_host\n";
@@ -526,8 +538,7 @@ void	Request::check_transfer_encoding()
 		this->header["connection"] = "close";
 		throw BAD_REQUEST;
 	}
-
-	// decode_chunked();
+	this->chunked = true;
 }
 
 void	Request::check_content_length()
@@ -580,6 +591,37 @@ void	Request::check_uri_form()
 		throw NOT_FOUND;
 }
 
+void Request::matching_server()
+{
+	std::list<Server> &servers = cycle.getServerList();
+	std::list<Server>::iterator it = servers.begin();
+	std::list<Server>::iterator ite = servers.end();
+	matched_server = *it;
+
+	for (;it != ite; it++)
+	{
+		if (header["host"] != it->getDomain())
+			continue;
+
+		if (port != it->getPort())
+			continue;
+
+		std::list<Location> &locations = it->getLocationList();
+		std::list<Location>::iterator itl = locations.begin();
+		std::list<Location>::iterator itle = locations.end();
+
+		for (; itl != itle; itl++)
+		{
+			if (uri != itl->getBlockPath())
+				continue;
+			matched_server = *it;
+			matched_location = *itl;
+			return ;
+		}
+	}
+
+}
+
 void Request::check_members()
 {
 
@@ -615,6 +657,7 @@ void Request::check_members()
 int	Request::get_status_code() {return this->status_code;}
 std::string& Request::get_method() {return this->method;}
 bool Request::get_cgi() {return this->cgi;}
+bool Request::get_chunked() {return this->chunked;}
 
 //----------------------------------------utils---------------------------------------
 

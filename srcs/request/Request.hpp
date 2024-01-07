@@ -7,6 +7,7 @@
 #include <list>
 #include <iostream>
 #include "../utils/Status.hpp"
+#include "../core/cycle.hpp"
 // #include "../method/Method.hpp"
 
 #define	FAIL			1
@@ -20,6 +21,7 @@ class Request
 {
 private:
 	std::string										request_msg;
+	Cycle											cycle;
 	std::string										request_line;
 	std::string										request_target;
 	std::string										uri;
@@ -37,14 +39,17 @@ private:
 	char											*method_end;
 	size_t											pos;
 	size_t											content_length;
-	int												chunked;
+	bool											chunked;
 	int												status_code;
 	bool											cgi;
+	Server											matched_server;
+	Location										matched_location;
 	void											parse_query_string(std::string &query);
 	void											parse_query_key_and_value(std::string &query_element);
 	void											parse_header_key_and_value(std::string &header_element);
 	void											set_header_key_and_value(std::string &key, std::string &value);
 	void											check_header_is_valid();
+	void											matching_server();
 	void											check_host();
 	void											check_transfer_encoding_and_content_length();
 	void											check_transfer_encoding();
@@ -52,6 +57,7 @@ private:
 	void											check_te();
 	void											check_content_encoding();
 	void											check_uri_form();
+	void											decode_chunked();
 	//////-------------utils--------------------------------------------------
 	std::string										lower(const char *key, size_t end);
 	void											remove_spf(std::string &value, size_t end);
@@ -60,13 +66,14 @@ public:
 	Request();
 	Request(std::string &msg);
 	~Request();
-	int												process_request_parsing(std::string &request_msg);
+	int												process_request_parsing(std::string &request_msg, Cycle &cycle);
 	void											parse_request();
 	void											parse_request_line();
 	void											parse_header_fields();
 	bool											get_cgi();
 	int												get_status_code();
 	std::string&									get_method();
+	bool											get_chunked();
 
 	void check_members();
 };

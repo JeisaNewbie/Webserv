@@ -8,6 +8,7 @@
 #include "../utils/Status.hpp"
 #include "../request/Request.hpp"
 #include "../response/Response.hpp"
+#include "../core/cycle.hpp"
 
 #define	FILE	1000
 #define	DIR		1001
@@ -37,11 +38,12 @@ class Client {
 		Phase		get_current_phase();
 		int			get_status_code();
 		bool		get_cgi();
-		void		do_parse(std::string &request_msg);
+		void		do_parse(std::string &request_msg, Cycle &cycle);
 		void		do_method();
 		void		do_method_with_cgi();
 		void		do_method_without_cgi();
 		void		assemble_response();
 		int			check_path_property();
+		bool		get_chunked();
 
 };

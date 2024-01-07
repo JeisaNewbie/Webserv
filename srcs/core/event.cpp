@@ -64,13 +64,15 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 					acceptNewClient(worker, listen_socket, clients, change_list);
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					recieveFromClient(worker, cur_event->ident, clients);
-					server[cur_event->ident].do_parse(clients[cur_event->ident]);
-					// clients[cur_event->ident] == request message;
 
-					// std::cout << clients[cur_event->ident].length() << clients[cur_event->ident] << "\n";
-					(void)cycle;
-					// if (chunked == FALSE) chunked 유무 확인하고 받은 메시지 지우기?
-						clients[cur_event->ident] = "";
+					server[cur_event->ident].do_parse(clients[cur_event->ident], cycle);
+					if (server[cur_event->ident].get_chunked() == true)
+						continue ;
+					if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
+						server[cur_event->ident].do_method();
+					server[cur_event->ident].assemble_response();
+
+					clients[cur_event->ident] = "";
 					// response 작성
 					addEvent(change_list, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 				}
