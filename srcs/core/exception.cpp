@@ -55,16 +55,32 @@ void setException(int _error_code) {
 	throw Exception(error_code);
 }
 
-void drivenEventException(std::ofstream &error_log, int _error_code, uintptr_t client_fd) {
-	error_code = _error_code;
+void handleWorkerException(std::ofstream &error_log, int _error_code) {
 	std::string	tmp;
+	Exception	e(_error_code);
+
+	tmp = std::string(e.what());
+	error_log.write(tmp.c_str(), tmp.length());
+	error_log.write("\n: ", 1);
+
+	tmp = strerror(errno);
+	error_log.write(tmp.c_str(), tmp.length());
+	error_log.write("\n\n", 2);
+	error_log.flush();
+	throw e;
+}
+
+void handleEventException(std::ofstream &error_log, int _error_code, uintptr_t client_fd) {
+	std::string	tmp;
+	error_code = _error_code;
 
 	if (client_fd != 0) {
 		tmp = std::to_string(client_fd);
-		error_log.write(tmp.c_str(), tmp.length() + 1);
+		error_log.write(tmp.c_str(), tmp.length());
 		error_log.write(": ", 2);
 	}
 	tmp = std::string(Exception(error_code).what());
-	error_log.write(tmp.c_str(), tmp.length() + 1);
+	error_log.write(tmp.c_str(), tmp.length());
 	error_log.write("\n\n", 2);
+	error_log.flush();
 }

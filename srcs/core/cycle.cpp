@@ -1,7 +1,8 @@
 #include "core.hpp"
 
 Cycle::Cycle(void) \
-	: worker_processes(0), worker_connections(0), client_max_body_size(0) {}
+	: worker_processes(0), worker_connections(0), \
+		client_max_body_size(0), uri_limit_length(0) {}
 
 Cycle::Cycle(const Cycle& src) {
 	*this = src;
@@ -14,6 +15,7 @@ Cycle& Cycle::operator =(const Cycle& src) {
 		worker_processes = src.worker_processes;
 		worker_connections = src.worker_connections;
 		client_max_body_size = src.client_max_body_size;
+		uri_limit_length = src.uri_limit_length;
 		server_list = src.server_list;
 		worker_list = src.worker_list;
 	}
@@ -42,6 +44,14 @@ void	Cycle::setClientMaxBodySize(u_int32_t n) {
 
 int		Cycle::getClientMaxBodySize(void) const {
 	return client_max_body_size;
+}
+
+void	Cycle::setUriLimitLength(u_int32_t n) {
+	uri_limit_length = n;
+}
+
+int		Cycle::getUriLimitLength(void) const {
+	return uri_limit_length;
 }
 
 std::list<Server>& Cycle::getServerList(void){

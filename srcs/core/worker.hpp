@@ -7,6 +7,8 @@
 # include <sys/event.h>
 # include <netinet/ip.h>
 
+# define CHILD 0
+
 class Worker {
 	public:
 		Worker(int id);
@@ -26,10 +28,11 @@ class Worker {
 		pid_t			worker_id;
 		int				event_queue;
 		int				listen_socket;
+		uint32_t		cur_connection;
 		std::ofstream	error_log;
 };
 
-void createWorker(Cycle &cycle);
+void startWorker(Cycle &cycle);
 
 # include "event.hpp"
 

@@ -65,19 +65,14 @@ int
 		while (1) {
 			fgets(message, BUF_SIZE, stdin);
 			std::string tmp(message);
-			std::cout << "tmp: " << tmp << "\n";
 			if (tmp.find("stop") != std::string::npos)
 				break;
-			str += tmp;
+			str = str.substr(0, str.length() - 1) += tmp;
+			str[str.length() - 1] = '\0';
 		}
 
-		if (!strcmp(str.c_str(), "quit")) {
-			send(client_socket, str.c_str(), (int)strlen(str.c_str()) + 1, 0);
-			break;
-		}
-
-		std::cout << "str: " << str << "\n";
-		send(client_socket, str.c_str(), (int)strlen(str.c_str()) + 1, 0);
+		std::cout << "send message: " << str.length() << " " << str << "\n";
+		send(client_socket, str.c_str(), str.length(), 0);
 
 		recieve_size = recv(client_socket, r_message, sizeof(r_message) - 1, 0);
 		if (recieve_size == -1)

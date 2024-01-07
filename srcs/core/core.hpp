@@ -2,7 +2,6 @@
 # define CORE_HPP
 
 # include "cmd.hpp"
-# include "log.hpp"
 # include "conf.hpp"
 # include "cycle.hpp"
 # include "worker.hpp"
