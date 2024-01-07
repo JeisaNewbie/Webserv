@@ -7,7 +7,6 @@ int main(int argc, char **argv, char **envp) {
 
 	Cycle			cycle;
 	Conf			conf;
-	std::ofstream	error_log;
 
 	try{
 		setConf(conf, argc, argv[1]);
@@ -18,6 +17,6 @@ int main(int argc, char **argv, char **envp) {
 			std::cerr << ": " << strerror(errno) << std::endl;
 		return error_code;
 	}
-	createWorker(cycle);
+	startWorker(cycle);
 	return 0;
 }

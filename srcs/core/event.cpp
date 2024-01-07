@@ -22,11 +22,11 @@ void prepConnect(Cycle &cycle, int id) {
 	server_addr.sin_port = htons(8080);
 	//TIME_WAIT 상태기 때문에 같은 포트 연속으로 사용 시 bind 에러. 어떻게 해결하지?
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
+	
 	if (bind(listen_socket, reinterpret_cast<sockaddr *>(&server_addr), sizeof(sockaddr_in)) == -1)
-		setException(EVENT_BIND_FAIL);
+		handleWorkerException(worker.getErrorLog(), EVENT_BIND_FAIL);
 	if (listen(listen_socket, LISTEN_QUEUE_SIZE) == -1)
-		setException(EVENT_LISTEN_FAIL);
+		handleWorkerException(worker.getErrorLog(), EVENT_LISTEN_FAIL);
 	fcntl(listen_socket, F_SETFL, O_NONBLOCK);
 	startConnect(cycle, worker);
 }
@@ -48,6 +48,7 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 
 		new_events = kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
 							&event_list[0], event_list.size(), &timeout);
+		std::cout << "\n\n" << new_events << "\n";
 		if (new_events > event_list.size()) {
 			event_list.resize(new_events);
 			kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
@@ -57,9 +58,12 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 
 		for (uint32_t i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
+			std::cout << cur_event->ident << ": " << cur_event->filter << ", " << cur_event->flags << "\n";
 
-			if (cur_event->flags == EV_ERROR) {
-				drivenEventException(worker.getErrorLog(), EVENT_ERROR_FLAG, cur_event->ident);
+			if (cur_event->flags & EV_ERROR) {
+				if (cur_event->flags & EV_DELETE)
+					continue;
+				handleEventException(worker.getErrorLog(), EVENT_ERROR_FLAG, cur_event->ident);
 				disconnectClient(cur_event->ident, change_list, clients);
 			}
 			if (cur_event->filter == EVFILT_READ) {
@@ -97,7 +101,7 @@ static bool acceptNewClient(Worker &worker, int listen_socket, std::map<int, std
 	uintptr_t	client_socket;
 
 	if ((client_socket = accept(listen_socket, NULL, NULL)) == -1) {
-		drivenEventException(worker.getErrorLog(), EVENT_ACCEPT_FAIL, 0);
+		handleEventException(worker.getErrorLog(), EVENT_ACCEPT_FAIL, 0);
 		return FALSE;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
@@ -124,7 +128,7 @@ static bool recieveFromClient(Worker &worker, int client_socket, std::vector<str
 	}
 	else if (recieve_size == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		disconnectClient(client_socket, change_list, clients);
-		drivenEventException(worker.getErrorLog(), EVENT_RECV_FAIL, client_socket);
+		handleEventException(worker.getErrorLog(), EVENT_RECV_FAIL, client_socket);
 		return FALSE;
 	}
 	std::cout << clients[client_socket] << "\n";
@@ -136,7 +140,7 @@ static bool sendToClient(Worker &worker, int client_socket, std::vector<struct k
 	std::string	response("test response message");
 	if (send(client_socket, response.c_str(), response.length() + 1, 0) == -1) {
 		disconnectClient(client_socket, change_list, clients);
-		drivenEventException(worker.getErrorLog(), EVENT_SEND_FAIL, client_socket);
+		handleEventException(worker.getErrorLog(), EVENT_SEND_FAIL, client_socket);
 		return FALSE;
 	}
 	return TRUE;
