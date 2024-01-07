@@ -5,6 +5,8 @@
 #include <map>
 #include <list>
 #include <iostream>
+#include <sys/stat.h>
+#include <sys/file.h>
 #include "../utils/Status.hpp"
 #include "../request/Request.hpp"
 #include "../response/Response.hpp"
@@ -32,18 +34,21 @@ class Client {
 
 		Client& operator=(const Client& ref);
 
-		Request		&get_request_instance ();
-		Response	&get_response_instance ();
-		void		set_phase (Phase state);
-		Phase		get_current_phase();
-		int			get_status_code();
-		bool		get_cgi();
 		void		do_parse(std::string &request_msg, Cycle &cycle);
 		void		do_method();
 		void		do_method_with_cgi();
 		void		do_method_without_cgi();
 		void		assemble_response();
 		int			check_path_property();
+
+		Request		&get_request_instance ();
+		Response	&get_response_instance ();
+		Phase		get_current_phase();
+		int			get_status_code();
+		bool		get_cgi();
 		bool		get_chunked();
+		void		set_phase (Phase state);
+		void		set_status_code(int status_code);
+
 
 };

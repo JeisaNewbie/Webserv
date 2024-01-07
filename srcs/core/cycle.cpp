@@ -50,7 +50,7 @@ void	Cycle::setUriLimitLength(u_int32_t n) {
 	uri_limit_length = n;
 }
 
-int		Cycle::getUriLimitLength(void) const {
+size_t	Cycle::getUriLimitLength(void) const {
 	return uri_limit_length;
 }
 

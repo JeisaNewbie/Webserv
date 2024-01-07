@@ -86,6 +86,8 @@ void	Request::parse_request_line()
 	std::string::iterator ite = this->request_line.end();
 	std::string::iterator method_start;
 	std::string::iterator method_end;
+	std::string::iterator path_start;
+	std::string::iterator path_end;
 	std::string::iterator uri_start;
 	std::string::iterator uri_end;
 	std::string::iterator query_start;
@@ -95,6 +97,13 @@ void	Request::parse_request_line()
 	enum {
 		start = 0,
 		method,
+		spaces_before_uri,
+		scheme_h,
+		scheme_ht,
+		scheme_htt,
+		scheme_http,
+		scheme_slash,
+		scheme_slash_slash,
 		uri,
 		query,
 		query_parsing,
@@ -132,9 +141,8 @@ void	Request::parse_request_line()
 			if (ch == ' ')
 			{
 				method_end = it;
-				uri_start = it + 1;
-				state = uri;
-				pos = uri_start - method_start;
+				state = spaces_before_uri;
+				pos = it + 1 - method_start;
 
 				switch (method_end - method_start)
 				{
@@ -181,14 +189,130 @@ void	Request::parse_request_line()
 
 			break;
 
+		case spaces_before_uri:
+
+			if (ch == '/')
+			{
+				uri_start = it;
+				path_start = it;
+				state = uri;
+				break;
+			}
+
+			if (ch == 'h')
+			{
+				state = scheme_h;
+				break;
+			}
+
+			if (ch == ' ')
+				break;
+			else
+				throw BAD_REQUEST;
+
+			break;
+
+		case scheme_h:
+
+			switch (ch)
+			{
+			case 't':
+				state = scheme_ht;
+				break;
+
+			default:
+				throw BAD_REQUEST;
+			}
+
+			break;
+
+		case scheme_ht:
+
+			switch (ch)
+			{
+			case 't':
+				state = scheme_htt;
+				break;
+
+			default:
+				throw BAD_REQUEST;
+			}
+
+			break;
+
+		case scheme_htt:
+
+			switch (ch)
+			{
+			case 'p':
+				state = scheme_http;
+				break;
+
+			default:
+				throw BAD_REQUEST;
+			}
+
+			break;
+
+		case scheme_http:
+
+			switch (ch)
+			{
+			case ':':
+				state = scheme_slash;
+				break;
+
+			default:
+				throw BAD_REQUEST;
+			}
+
+			break;
+
+
+		case scheme_slash:
+
+			if (ch == '/')
+			{
+				state = scheme_slash_slash;
+				break;
+			}
+			else
+				throw BAD_REQUEST;
+
+			break;
+
+		case scheme_slash_slash:
+
+			if (ch == '/')
+			{
+				if (*(it + 1) == '/')
+					throw BAD_REQUEST;
+				state = uri;
+				uri_start = it + 1;
+				break;
+			}
+			else
+				throw BAD_REQUEST;
+
+			break;
+
 		case uri: //scheme[http], authority[userinfo@]host[:port], path, query
+
+			if (('a' <= ch && ch <= 'z') || ch == '.')
+				break;
+
+			if (ch == '/')
+			{
+				path_start = it;
+				break;
+			}
 
 			if (ch == '?')
 			{
-				uri_end = it;
+				path_end = it;
 				query_start = it + 1;
 				state = query;
-				this->uri = this->request_line.substr (pos, uri_end - uri_start);
+				this->path = this->request_line.substr (pos, path_end - path_start);
 				pos = uri_end + 1 - method_start;
 				break;
 			}
@@ -197,13 +321,16 @@ void	Request::parse_request_line()
 			{
 				uri_end = it;
 				state = http;
+				this->path = this->request_line.substr (pos, uri_end - path_start);
 				this->uri = this->request_line.substr (pos, uri_end - uri_start);
-				this->request_target = this->uri;
+				check_uri_form();
+				this->request_target = this->path;
+				if (this->request_target.size() > cycle.getUriLimitLength())
+					throw URI_TOO_LONG;
 				pos = uri_end + 1 - method_start;
 				break;
 			}
 
-			check_uri_form();
 			break;
 
 		case query:
@@ -212,7 +339,11 @@ void	Request::parse_request_line()
 			{
 				query_end = it;
 				this->query = this->request_line.substr (pos, query_end - query_start);
-				this->request_target = this->request_line.substr (uri_start - method_start, query_end - uri_start); //check_request_target_length
+				this->uri = this->request_line.substr (pos, uri_end - uri_start);
+				check_uri_form();
+				this->request_target = this->request_line.substr (uri_start - method_start, query_end - path_start);
+				if (this->request_target.size() > cycle.getUriLimitLength())
+					throw URI_TOO_LONG;
 				state = query_parsing;
 			}
 
@@ -462,8 +593,13 @@ void	Request::check_header_is_valid()
 	// std::cout<< "check_content_encoding\n";
 	check_content_encoding();
 	// check_header_limits(); // config로 설정한 서버의 header limits size를 넘으면 return 413
-	// check_body_limits(); //client의 body size를 넘으면 reutnr 413
-	// check_request_target_limits(); //request-target이 config파일의 서버 uri보다 길면 return 414
+	check_body_limits();
+}
+
+void	Request::check_body_limits()
+{
+	if (content_length > cycle.getClientMaxBodySize())
+		throw REQUEST_ENTITY_TOO_LARGE;
 }
 
 void	Request::check_host()
@@ -589,6 +725,8 @@ void	Request::check_uri_form()
 
 	if (pos != std::string::npos)
 		throw NOT_FOUND;
+
+
 }
 
 void Request::matching_server()
@@ -596,11 +734,12 @@ void Request::matching_server()
 	std::list<Server> &servers = cycle.getServerList();
 	std::list<Server>::iterator it = servers.begin();
 	std::list<Server>::iterator ite = servers.end();
+	std::string &host = header["host"];
 	matched_server = *it;
 
 	for (;it != ite; it++)
 	{
-		if (header["host"] != it->getDomain())
+		if (host != it->getDomain())
 			continue;
 
 		if (port != it->getPort())
@@ -612,14 +751,18 @@ void Request::matching_server()
 
 		for (; itl != itle; itl++)
 		{
-			if (uri != itl->getBlockPath())
+			if (itl->getBlockPath() == "/")
+				matched_location = *itl;
+
+			if (path != itl->getBlockPath())
 				continue;
+
 			matched_server = *it;
 			matched_location = *itl;
+			path = matched_location.getStaticPath() + path;
 			return ;
 		}
 	}
-
 }
 
 void Request::check_members()
@@ -658,6 +801,8 @@ int	Request::get_status_code() {return this->status_code;}
 std::string& Request::get_method() {return this->method;}
 bool Request::get_cgi() {return this->cgi;}
 bool Request::get_chunked() {return this->chunked;}
+std::string& Request::get_path() {return this->path;}
+void Request::set_status_code(int status_code) {this->status_code = status_code;}
 
 //----------------------------------------utils---------------------------------------
 

@@ -25,7 +25,7 @@ class Cycle {
 		int							getWorkerProcesses(void) const;
 		int							getWorkerConnections(void) const;
 		int							getClientMaxBodySize(void) const;
-		int							getUriLimitLength(void) const;
+		size_t						getUriLimitLength(void) const;
 		std::list<Server>&			getServerList(void);
 		const std::list<Server>&	getServerListConst(void) const;
 		worker_array				getWorkerList(void);

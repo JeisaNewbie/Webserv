@@ -5,6 +5,7 @@
 
 class Location {
 	public:
+		Location(void);
 		Location(std::string _block_path);
 		Location(const Location& obj);
 		~Location(void);
@@ -19,7 +20,6 @@ class Location {
 		const std::string& getCgiPath(void) const;
 
 	private:
-		Location(void);
 
 		std::string	block_path;
 		std::string	static_path;

@@ -23,8 +23,9 @@ private:
 	std::string										request_msg;
 	Cycle											cycle;
 	std::string										request_line;
-	std::string										request_target;
 	std::string										uri;
+	std::string										request_target;
+	std::string										path;
 	int												port;
 	std::string										query;
 	std::string										protocol_version;
@@ -50,6 +51,7 @@ private:
 	void											set_header_key_and_value(std::string &key, std::string &value);
 	void											check_header_is_valid();
 	void											matching_server();
+	void											check_body_limits();
 	void											check_host();
 	void											check_transfer_encoding_and_content_length();
 	void											check_transfer_encoding();
@@ -74,6 +76,8 @@ public:
 	int												get_status_code();
 	std::string&									get_method();
 	bool											get_chunked();
+	std::string&									get_path();
+	void											set_status_code(int status_code);
 
 	void check_members();
 };
