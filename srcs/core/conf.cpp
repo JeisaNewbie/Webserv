@@ -1,6 +1,6 @@
 #include "core.hpp"
 
-const int Conf::main_cmd_max = 3;
+const int Conf::main_cmd_max = 4;
 const int Conf::srv_cmd_max = 3;
 const int Conf::loc_cmd_max = 2;
 
@@ -93,6 +93,7 @@ void Conf::setCmd(void) {
 	main_cmd[0] = Cmd("worker_processes", CMD_TAKE1, mainWorkerProcesses);
 	main_cmd[1] = Cmd("worker_connections", CMD_TAKE1, mainWorkerConnections);
 	main_cmd[2] = Cmd("client_max_body_size", CMD_TAKE1, mainClientMaxBodySize);
+	main_cmd[3] = Cmd("uri_limit_length", CMD_TAKE1, mainUriLimitLength);
 
 	srv_cmd[0] = Cmd("listen", CMD_TAKE1, serverListen);
 	srv_cmd[1] = Cmd("server_name", CMD_TAKE1, serverName);

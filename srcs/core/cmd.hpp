@@ -9,6 +9,8 @@ enum cmd_args {
 	CMD_TAKE2
 };
 
+# define KILO_BYTE 1024
+
 typedef void (*handler_t)(Cycle&, std::string[]);
 
 class Cmd {
@@ -33,6 +35,7 @@ class Cmd {
 void mainWorkerProcesses(Cycle& cycle, std::string tokens[]);
 void mainWorkerConnections(Cycle& cycle, std::string tokens[]);
 void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]);
+void mainUriLimitLength(Cycle& cycle, std::string tokens[]);
 
 void serverListen(Cycle& cycle, std::string tokens[]);
 void serverName(Cycle& cycle, std::string tokens[]);

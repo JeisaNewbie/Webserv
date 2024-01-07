@@ -2,7 +2,7 @@
 
 static void createWorker(Cycle &cycle, worker_array &worker_list, int i);
 
-Worker::Worker(int id) : worker_id(id) {
+Worker::Worker(int id) : worker_id(id), cur_connection(0) {
 	event_queue = kqueue();
 	if (event_queue == -1)
 		setException(WORK_CREATE_KQ_FAIL);

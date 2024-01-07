@@ -48,7 +48,6 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 
 		new_events = kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
 							&event_list[0], event_list.size(), &timeout);
-		std::cout << "\n\n" << new_events << "\n";
 		if (new_events > event_list.size()) {
 			event_list.resize(new_events);
 			kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
@@ -58,7 +57,6 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 
 		for (uint32_t i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
-			std::cout << cur_event->ident << ": " << cur_event->filter << ", " << cur_event->flags << "\n";
 
 			if (cur_event->flags & EV_ERROR) {
 				if (cur_event->flags & EV_DELETE)
@@ -122,7 +120,7 @@ static bool recieveFromClient(Worker &worker, int client_socket, std::vector<str
 		clients[client_socket] += tmp;
 	}
 	if (recieve_size == 0) {
-		std::cout << "Disconnection : client[" << client_socket << "]\n";
+		std::cout << "worker: " << worker.getWorkerId() << ", Disconnection : client[" << client_socket << "]\n";
 		disconnectClient(client_socket, change_list, clients);
 		return FALSE;
 	}
@@ -131,7 +129,7 @@ static bool recieveFromClient(Worker &worker, int client_socket, std::vector<str
 		handleEventException(worker.getErrorLog(), EVENT_RECV_FAIL, client_socket);
 		return FALSE;
 	}
-	std::cout << clients[client_socket] << "\n";
+	std::cout << "worker: " << worker.getWorkerId() << ", " << clients[client_socket].length() << " " << clients[client_socket] << "\n";
 	return TRUE;
 }
 

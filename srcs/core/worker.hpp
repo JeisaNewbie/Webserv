@@ -28,6 +28,7 @@ class Worker {
 		pid_t			worker_id;
 		int				event_queue;
 		int				listen_socket;
+		uint32_t		cur_connection;
 		std::ofstream	error_log;
 };
 

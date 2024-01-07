@@ -19,11 +19,13 @@ class Cycle {
 		void						setWorkerProcesses(u_int32_t n);
 		void						setWorkerConnections(u_int32_t n);
 		void						setClientMaxBodySize(u_int32_t n);
+		void						setUriLimitLength(u_int32_t n);
 		void						setWorkerList(int idx, pid_t pid);
 
 		int							getWorkerProcesses(void) const;
 		int							getWorkerConnections(void) const;
 		int							getClientMaxBodySize(void) const;
+		int							getUriLimitLength(void) const;
 		std::list<Server>&			getServerList(void);
 		const std::list<Server>&	getServerListConst(void) const;
 		worker_array				getWorkerList(void);
@@ -32,6 +34,7 @@ class Cycle {
 		int					worker_processes;
 		int					worker_connections;
 		size_t				client_max_body_size;
+		size_t				uri_limit_length;
 
 		std::list<Server>	server_list;
 		worker_array		worker_list;
