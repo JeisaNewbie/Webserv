@@ -1,12 +1,12 @@
 #include "core.hpp"
 
-const int Conf::main_cmd_max = 4;
-const int Conf::srv_cmd_max = 3;
-const int Conf::loc_cmd_max = 2;
+const int Conf::main_cmd_max = 5;
+const int Conf::srv_cmd_max = 2;
+const int Conf::loc_cmd_max = 1;
 
 static void parseMain(Cycle &cycle, Conf &conf, std::ifstream& file);
 static void parseServer(Cycle &cycle, Conf &conf, std::ifstream& file);
-static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const std::string& block_path);
+static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const std::string& location_path);
 static void callCmd(Cycle &cycle, Conf &conf, int location, \
 						std::string *tokens, int token_cnt);
 static int tokenizer(char *str, std::string *tokens);
@@ -94,13 +94,12 @@ void Conf::setCmd(void) {
 	main_cmd[1] = Cmd("worker_connections", CMD_TAKE1, mainWorkerConnections);
 	main_cmd[2] = Cmd("client_max_body_size", CMD_TAKE1, mainClientMaxBodySize);
 	main_cmd[3] = Cmd("uri_limit_length", CMD_TAKE1, mainUriLimitLength);
+	main_cmd[4] = Cmd("root", CMD_TAKE1, mainRoot);
 
 	srv_cmd[0] = Cmd("listen", CMD_TAKE1, serverListen);
 	srv_cmd[1] = Cmd("server_name", CMD_TAKE1, serverName);
-	srv_cmd[2] = Cmd("error_page", CMD_TAKE1, serverErrorPage);
 
 	loc_cmd[0] = Cmd("root", CMD_TAKE1, locationRoot);
-	loc_cmd[1] = Cmd("cgi_pass", CMD_TAKE1, locationCgi);
 }
 
 const Cmd* Conf::getCmdListConst(int loc_type) const {
@@ -214,19 +213,24 @@ static void parseServer(Cycle &cycle, Conf &conf, std::ifstream& file) {
 	checkGetlineError(file);
 
 	if (server_list.back().getPort() == 0 || \
-		server_list.back().getDomain() == "" || \
-		server_list.back().getErrorPage() == "")
+		server_list.back().getDomain() == "")
 		setException(CONF_LACK_DIRECTIVE);
 }
 
-static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const std::string& block_path) {
+static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const std::string& location_path) {
 	char					buf[BUF_SIZE];
 	std::string				tokens[TOKEN_SIZE];
 	int						token_cnt;
 	std::string				str_buf;
 	std::list<Location>&	location_list = cycle.getServerList().back().getLocationList();
 
-	location_list.push_back(Location(block_path)); //복사해서 추가함
+	if (location_path[0] == '.') {
+		if (location_path == ".php")
+			cycle.setUseCgi(TRUE);
+		else
+			setException(CONF_INVALID_CGI);
+	}
+	location_list.push_back(Location(location_path)); //복사해서 추가함
 
 	while (file.getline(buf, sizeof(buf))) {
 		str_buf = static_cast<std::string>(buf);
@@ -242,8 +246,7 @@ static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const s
 	}
 	checkGetlineError(file);
 
-	if (location_list.back().getStaticPath() == "" \
-			&& location_list.back().getCgiPath() == "")
+	if (location_list.back().getStaticPath() == "")
 		setException(CONF_LACK_DIRECTIVE);
 }
 
