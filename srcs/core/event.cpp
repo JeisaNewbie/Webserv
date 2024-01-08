@@ -22,7 +22,7 @@ void prepConnect(Cycle &cycle, int id) {
 	server_addr.sin_port = htons(8080);
 	//TIME_WAIT 상태기 때문에 같은 포트 연속으로 사용 시 bind 에러. 어떻게 해결하지?
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	
+
 	if (bind(listen_socket, reinterpret_cast<sockaddr *>(&server_addr), sizeof(sockaddr_in)) == -1)
 		handleWorkerException(worker.getErrorLog(), EVENT_BIND_FAIL);
 	if (listen(listen_socket, LISTEN_QUEUE_SIZE) == -1)
@@ -35,9 +35,10 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 	uintptr_t					listen_socket = worker.getListenSocket();
 	std::map<int, std::string>	clients;
 	std::vector<struct kevent>	change_list, event_list(EVENT_LIST_INIT_SIZE);
+	std::map<int, Client>		server;
 
 	addEvent(change_list, listen_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	
+
 	uint32_t		new_events;
 	struct kevent	*cur_event;
 	struct timespec	timeout;
@@ -72,7 +73,12 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					if (recieveFromClient(worker, cur_event->ident, change_list, clients) == FALSE)
 						continue;
-					(void)cycle;
+					server[cur_event->ident].do_parse(clients[cur_event->ident], cycle);
+					if (server[cur_event->ident].get_chunked() == true)
+						continue ;
+					if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
+						server[cur_event->ident].do_method();
+					server[cur_event->ident].assemble_response();
 					clients[cur_event->ident] = "";
 					addEvent(change_list, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 				}
@@ -103,7 +109,7 @@ static bool acceptNewClient(Worker &worker, int listen_socket, std::map<int, std
 		return FALSE;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
-	
+
 	addEvent(change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	clients[client_socket] = "";
 	return TRUE;
