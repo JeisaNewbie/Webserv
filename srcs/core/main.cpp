@@ -3,11 +3,10 @@
 int error_code;
 
 int main(int argc, char **argv, char **envp) {
-	(void)envp;
+	Cycle	cycle(const_cast<const char **>(envp));
+	Conf	conf;
 
-	Cycle			cycle;
-	Conf			conf;
-
+	cycle.getEnvp();
 	try{
 		setConf(conf, argc, argv[1]);
 		parseConf(cycle, conf);
