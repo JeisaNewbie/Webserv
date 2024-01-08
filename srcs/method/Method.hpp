@@ -1,9 +1,9 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-
-
+// #include "../core/core.hpp"
+#include "../request/Request.hpp"
+#include "../response/Response.hpp"
+#include "../utils/Utils.hpp"
 
 class Method
 {
@@ -11,20 +11,14 @@ protected:
 	std::string start_line;
 	std::string *headers;
 	std::string body;
-	Method();
-	~Method();
+
 public:
+	virtual ~Method();
+	static int	find_index(Request &request);
+	void create_response(Response &response);
 	enum {
 	GET,
 	POST,
 	DELETE
 	};
 };
-
-Method::Method()
-{
-}
-
-Method::~Method()
-{
-}

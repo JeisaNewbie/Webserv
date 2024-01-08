@@ -6,8 +6,9 @@
 #include <map>
 #include <list>
 #include <iostream>
-#include "../utils/Status.hpp"
+// #include "../core/core.hpp"
 #include "../core/cycle.hpp"
+#include "../utils/Status.hpp"
 // #include "../method/Method.hpp"
 
 #define	FAIL			1

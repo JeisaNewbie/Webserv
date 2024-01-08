@@ -13,38 +13,36 @@ void	Client::do_parse(std::string &request_msg, Cycle &cycle)
 
 void	Client::do_method()
 {
-	int		path_property = check_path_property();
+	int		path_property = check_path_property(get_request_instance().get_path());
 	bool	cgi = get_cgi();
 
 	if (cgi == true && path_property == FILE)
 		do_method_with_cgi();
 	else if (cgi == false && (path_property == FILE | path_property == DIR))
-		do_method_without_cgi();
+		do_method_without_cgi(path_property);
 	else
 		return set_status_code(NOT_FOUND);
 }
 
 void	Client::do_method_with_cgi() {}
 
-void	Client::do_method_without_cgi() {}
+void	Client::do_method_without_cgi(int path_property)
+{
+	std::string	&method = get_request_instance().get_method();
+
+	if (method == "POST")
+		throw ;
+
+	if (method == "GET")
+	{
+		if (path_property == FILE)
+			Get::make_body(get_request_instance().get_path());
+		// else
+		// 	Get::
+	}
+}
 
 void	Client::assemble_response() {}
-
-int		Client::check_path_property()
-{
-	struct stat file_status;
-
-	if (stat (get_request_instance().get_path().c_str(), &file_status) != 0)
-		return -1;
-
-	if (S_ISREG(file_status.st_mode))
-		return FILE;
-
-	if (S_ISDIR(file_status.st_mode))
-		return DIR;
-
-	return -1;
-}
 
 //------------------------getter && setter---------------------------
 Phase	Client::get_current_phase() {return this->phase;}

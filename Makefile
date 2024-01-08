@@ -6,11 +6,7 @@
 #    By: jhwang2 <jhwang2@student.42seoul.kr>       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-<<<<<<< HEAD
-#    Updated: 2024/01/06 15:14:50 by jhwang2          ###   ########.fr        #
-=======
-#    Updated: 2024/01/06 21:52:41 by eunwolee         ###   ########.fr        #
->>>>>>> origin
+#    Updated: 2024/01/08 14:54:27 by jhwang2          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,15 +30,13 @@ SRCS =	core/main.cpp \
 		core/location.cpp \
 		core/server.cpp \
 		core/worker.cpp \
-<<<<<<< HEAD
 		core/event.cpp \
-		core/log.cpp \
 		request/Request.cpp \
 		response/Response.cpp \
-		client/Client.cpp
-=======
-		core/event.cpp
->>>>>>> origin
+		method/Method.cpp \
+		method/Get.cpp \
+		client/Client.cpp \
+		utils/Utils.cpp
 
 SRCS_WITH_PATH = $(addprefix $(SRCS_DIR)/, $(SRCS))
 OBJS = $(SRCS_WITH_PATH:$(SRCS_DIR)/%.cpp=$(OBJS_DIR)/%.o)
@@ -90,6 +84,8 @@ $(OBJS_DIR):
 	@mkdir ${OBJS_DIR}/request
 	@mkdir ${OBJS_DIR}/response
 	@mkdir ${OBJS_DIR}/client
+	@mkdir ${OBJS_DIR}/method
+	@mkdir ${OBJS_DIR}/utils
 	@mkdir log
 	@mkdir log/worker
 

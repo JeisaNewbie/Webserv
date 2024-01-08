@@ -7,9 +7,10 @@
 # include "worker.hpp"
 # include "event.hpp"
 # include "exception.hpp"
-# include "../client/Client.hpp"
 # include "../request/Request.hpp"
 # include "../response/Response.hpp"
+# include "../utils/Status.hpp"
+# include "../client/Client.hpp"
 
 # define FALSE 0
 # define TRUE 1

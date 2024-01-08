@@ -1,5 +1,7 @@
 #include "location.hpp"
 
+Location::Location() {}
+
 Location::Location(std::string _block_path) : block_path(_block_path) {}
 
 Location::Location(const Location& src) {
