@@ -1,4 +1,4 @@
-#include "core.hpp"
+#include "../core/core.hpp"
 
 Location::Location(int _location_type, std::string _location_path) \
 	: location_type(_location_type), location_path(_location_path) {

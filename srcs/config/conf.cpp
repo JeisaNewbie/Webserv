@@ -1,4 +1,4 @@
-#include "core.hpp"
+#include "../core/core.hpp"
 
 const int Conf::main_cmd_max = 5;
 const int Conf::srv_cmd_max = 2;

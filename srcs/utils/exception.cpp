@@ -1,4 +1,4 @@
-#include "core.hpp"
+#include "../core/core.hpp"
 
 Exception::Exception(int error_code) {
 	if (error_code == PROG_INVALID_ARG_CNT)

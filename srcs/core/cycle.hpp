@@ -1,7 +1,7 @@
 #ifndef CYCLE_HPP
 # define CYCLE_HPP
 
-# include "server.hpp"
+# include "../block/server.hpp"
 
 # define WORKER_PROCESS_MAX 2
 # define WORKER_CONNECTION_MAX 1024
