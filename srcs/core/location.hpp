@@ -17,7 +17,6 @@ class Location {
 		const std::string& getStaticPath(void) const;
 
 	private:
-		Location(void);
 
 		std::string	location_path;
 		std::string	sub_root;

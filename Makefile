@@ -3,17 +3,17 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: eunwolee <eunwolee@student.42seoul.kr>     +#+  +:+       +#+         #
+#    By: jhwang2 <jhwang2@student.42seoul.kr>       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/06 21:52:41 by eunwolee         ###   ########.fr        #
+#    Updated: 2024/01/08 14:54:27 by jhwang2          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = webserv
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+# CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
 SRCS_DIR = srcs
 OBJS_DIR = objs
@@ -30,7 +30,13 @@ SRCS =	core/main.cpp \
 		core/location.cpp \
 		core/server.cpp \
 		core/worker.cpp \
-		core/event.cpp
+		core/event.cpp \
+		request/Request.cpp \
+		response/Response.cpp \
+		method/Method.cpp \
+		method/Get.cpp \
+		client/Client.cpp \
+		utils/Utils.cpp
 
 SRCS_WITH_PATH = $(addprefix $(SRCS_DIR)/, $(SRCS))
 OBJS = $(SRCS_WITH_PATH:$(SRCS_DIR)/%.cpp=$(OBJS_DIR)/%.o)
@@ -75,6 +81,11 @@ $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp | $(OBJS_DIR)
 $(OBJS_DIR):
 	@mkdir ${OBJS_DIR}
 	@mkdir ${OBJS_DIR}/core
+	@mkdir ${OBJS_DIR}/request
+	@mkdir ${OBJS_DIR}/response
+	@mkdir ${OBJS_DIR}/client
+	@mkdir ${OBJS_DIR}/method
+	@mkdir ${OBJS_DIR}/utils
 	@mkdir log
 	@mkdir log/worker
 
