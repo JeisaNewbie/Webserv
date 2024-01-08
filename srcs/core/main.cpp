@@ -11,7 +11,8 @@ int main(int argc, char **argv, char **envp) {
 		setConf(conf, argc, argv[1]);
 		parseConf(cycle, conf);
 	} catch(Exception& e){
-		std::cerr << e.what() << std::endl;
+		std::cerr << "error code [" << error_code << "] : " \
+					<< e.what() << std::endl;
 		if (errno != 0)
 			std::cerr << ": " << strerror(errno) << std::endl;
 		return error_code;

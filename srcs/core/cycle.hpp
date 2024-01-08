@@ -1,7 +1,7 @@
 #ifndef CYCLE_HPP
 # define CYCLE_HPP
 
-# include "server.hpp"
+# include "../block/server.hpp"
 
 # define WORKER_PROCESS_MAX 2
 # define WORKER_CONNECTION_MAX 1024
@@ -21,7 +21,7 @@ class Cycle {
 		void						setWorkerConnections(u_int32_t n);
 		void						setClientMaxBodySize(u_int32_t n);
 		void						setUriLimitLength(u_int32_t n);
-		void						setServerPath(std::string _path);
+		void						setMainRoot(std::string _path);
 		void						setWorkerList(int idx, pid_t pid);
 
 		const char**				getEnvp(void) const;
@@ -30,7 +30,7 @@ class Cycle {
 		int							getWorkerConnections(void) const;
 		int							getClientMaxBodySize(void) const;
 		int							getUriLimitLength(void) const;
-		const std::string&			getServerPath(void) const;
+		const std::string&			getMainRoot(void) const;
 		std::list<Server>&			getServerList(void);
 		const std::list<Server>&	getServerListConst(void) const;
 		worker_array				getWorkerList(void);

@@ -1,14 +1,14 @@
 #ifndef CORE_HPP
 # define CORE_HPP
 
-# include "cmd.hpp"
-# include "conf.hpp"
 # include "cycle.hpp"
-# include "worker.hpp"
-# include "event.hpp"
-# include "exception.hpp"
+# include "../config/conf.hpp"
+# include "../config/cmd.hpp"
+# include "../worker/worker.hpp"
+# include "../event/event.hpp"
 # include "../request/Request.hpp"
 # include "../response/Response.hpp"
+# include "../utils/exception.hpp"
 # include "../utils/Status.hpp"
 # include "../client/Client.hpp"
 

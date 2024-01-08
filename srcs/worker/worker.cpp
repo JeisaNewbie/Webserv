@@ -1,4 +1,4 @@
-#include "core.hpp"
+#include "../core/core.hpp"
 
 static void createWorker(Cycle &cycle, worker_array &worker_list, int i);
 
@@ -10,7 +10,7 @@ Worker::Worker(int id) : worker_id(id), cur_connection(0) {
 	if (listen_socket == -1)
 		setException(WORK_CREATE_SOCKET_FAIL);
 
-	error_log.open("log/worker/" + std::to_string(id) + ".log");
+	error_log.open("log/" + std::to_string(id) + ".log");
 	if (error_log.is_open() == FALSE)
 		setException(WORK_OPEN_FAIL);
 

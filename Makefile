@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jhwang2 <jhwang2@student.42seoul.kr>       +#+  +:+       +#+         #
+#    By: eunwolee <eunwolee@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/08 14:54:27 by jhwang2          ###   ########.fr        #
+#    Updated: 2024/01/08 21:05:07 by eunwolee         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,20 +22,19 @@ RM = rm -rf
 MAKE = make
 
 SRCS =	core/main.cpp \
-		core/cmd.cpp \
-		core/conf_cmd.cpp \
-		core/conf.cpp \
 		core/cycle.cpp \
-		core/exception.cpp \
-		core/location.cpp \
-		core/server.cpp \
-		core/worker.cpp \
-		core/event.cpp \
+		config/conf.cpp \
+		config/cmd.cpp \
+		block/location.cpp \
+		block/server.cpp \
+		worker/worker.cpp \
+		event/event.cpp \
 		request/Request.cpp \
 		response/Response.cpp \
 		method/Method.cpp \
 		method/Get.cpp \
 		client/Client.cpp \
+		utils/exception.cpp \
 		utils/Utils.cpp
 
 SRCS_WITH_PATH = $(addprefix $(SRCS_DIR)/, $(SRCS))
@@ -81,13 +80,16 @@ $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp | $(OBJS_DIR)
 $(OBJS_DIR):
 	@mkdir ${OBJS_DIR}
 	@mkdir ${OBJS_DIR}/core
+	@mkdir ${OBJS_DIR}/config
+	@mkdir ${OBJS_DIR}/block
+	@mkdir ${OBJS_DIR}/worker
+	@mkdir ${OBJS_DIR}/event
 	@mkdir ${OBJS_DIR}/request
 	@mkdir ${OBJS_DIR}/response
 	@mkdir ${OBJS_DIR}/client
 	@mkdir ${OBJS_DIR}/method
 	@mkdir ${OBJS_DIR}/utils
 	@mkdir log
-	@mkdir log/worker
 
 clean:
 	@echo "$(PECOCK)CLEANING OBJS... 🧹$(RESET)"
