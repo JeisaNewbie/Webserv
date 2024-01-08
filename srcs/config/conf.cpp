@@ -1,4 +1,4 @@
-#include "core.hpp"
+#include "../core/core.hpp"
 
 const int Conf::main_cmd_max = 5;
 const int Conf::srv_cmd_max = 2;
@@ -12,6 +12,8 @@ static void callCmd(Cycle &cycle, Conf &conf, int location, \
 static int tokenizer(char *str, std::string *tokens);
 static int checkConfLocation(std::string str[]);
 static void checkGetlineError(std::ifstream& file);
+static void checkLocationType(std::string location_path, int &location_type);
+static void checkUseCgi(Cycle &cycle, std::string type);
 
 Conf::Conf(void) {
 	main_cmd = NULL;
@@ -176,9 +178,11 @@ static void parseMain(Cycle &cycle, Conf &conf, std::ifstream& file) {
 	}
 	checkGetlineError(file);
 
-	if (cycle.getWorkerProcesses() == 0 || \
-		cycle.getWorkerConnections() == 0 || \
-		cycle.getClientMaxBodySize() == 0)
+	if (cycle.getWorkerProcesses() == 0 \
+		|| cycle.getWorkerConnections() == 0 \
+		|| cycle.getClientMaxBodySize() == 0 \
+		|| cycle.getUriLimitLength() == 0 \
+		|| cycle.getMainRoot() == "")
 		setException(CONF_LACK_DIRECTIVE);
 }
 
@@ -220,17 +224,14 @@ static void parseServer(Cycle &cycle, Conf &conf, std::ifstream& file) {
 static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const std::string& location_path) {
 	char					buf[BUF_SIZE];
 	std::string				tokens[TOKEN_SIZE];
-	int						token_cnt;
+	int						token_cnt, location_type;
 	std::string				str_buf;
 	std::list<Location>&	location_list = cycle.getServerList().back().getLocationList();
 
-	if (location_path[0] == '.') {
-		if (location_path == ".php")
-			cycle.setUseCgi(TRUE);
-		else
-			setException(CONF_INVALID_CGI);
-	}
-	location_list.push_back(Location(location_path)); //복사해서 추가함
+	checkLocationType(location_path, location_type);
+	location_list.push_back(Location(location_type, location_path)); //복사해서 추가함
+	if (location_type == LOC_CGI)
+		checkUseCgi(cycle, location_path);
 
 	while (file.getline(buf, sizeof(buf))) {
 		str_buf = static_cast<std::string>(buf);
@@ -246,7 +247,7 @@ static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const s
 	}
 	checkGetlineError(file);
 
-	if (location_list.back().getStaticPath() == "")
+	if (location_list.back().getSubRoot() == "")
 		setException(CONF_LACK_DIRECTIVE);
 }
 
@@ -254,7 +255,7 @@ static void callCmd(Cycle &cycle, Conf &conf, int location, \
 						std::string *tokens, int token_cnt) {
 	handler_t	handler;
 	int 		idx;
-	const 		Cmd *cmd = conf.getCmdListConst(location);
+	const Cmd 	*cmd = conf.getCmdListConst(location);
 	int			cmd_max = conf.getCmdMaxConst(location);
 
 	for (idx = 0; idx < cmd_max; idx++) {
@@ -266,10 +267,8 @@ static void callCmd(Cycle &cycle, Conf &conf, int location, \
 			break;
 		}
 	}
-	if (idx == cmd_max) {
-		std::cout << idx << " " << cmd_max << "\n";
+	if (idx == cmd_max)
 		setException(CONF_INVALID_DIRECTIVE);
-	}
 }
 
 static int tokenizer(char *str, std::string *tokens) {
@@ -298,4 +297,22 @@ static int checkConfLocation(std::string str[]) {
 static void checkGetlineError(std::ifstream& file) {
 	if (file.eof() != TRUE && (file.fail() == TRUE || file.bad() == TRUE))
 		setException(CONF_READ_FAIL);
+}
+
+static void checkLocationType(std::string location_path, int &location_type) {
+	if (location_path == "/")
+		location_type = LOC_DEFAULT;
+	else if (location_path == "/error")
+		location_type = LOC_ERROR;
+	else if (location_path[0] == '.')
+		location_type = LOC_CGI;
+	else
+		setException(CONF_INVALID_LOC_TYPE);
+}
+
+static void checkUseCgi(Cycle &cycle, std::string type) {
+	if (type == ".php")
+			cycle.setUseCgi(TRUE);
+	else
+		setException(CONF_INVALID_CGI);
 }

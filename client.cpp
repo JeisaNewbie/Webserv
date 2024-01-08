@@ -61,15 +61,15 @@ int
 	int recieve_size;
 
 	while (1) {
-		std::string str("");
-		while (1) {
-			fgets(message, BUF_SIZE, stdin);
-			std::string tmp(message);
-			if (tmp.find("stop") != std::string::npos)
-				break;
-			str = str.substr(0, str.length() - 1) += tmp;
-			str[str.length() - 1] = '\0';
-		}
+		std::string str("POST /submit_form HTTP/1.1\r\nHost: www.example.com\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 28\r\nConnection: keep-alive\r\n\r\nusername=johndoe&password=1234\r\n");
+		// while (1) {
+		// 	fgets(message, BUF_SIZE, stdin);
+		// 	std::string tmp(message);
+		// 	if (tmp.find("stop") != std::string::npos)
+		// 		break;
+		// 	str = str.substr(0, str.length() - 1) += tmp;
+		// 	str[str.length() - 1] = '\0';
+		// }
 
 		std::cout << "send message: " << str.length() << " " << str << "\n";
 		send(client_socket, str.c_str(), str.length(), 0);

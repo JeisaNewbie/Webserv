@@ -70,11 +70,11 @@ int Cycle::getUriLimitLength(void) const {
 	return uri_limit_length;
 }
 
-void Cycle::setServerPath(std::string _path) {
+void Cycle::setMainRoot(std::string _path) {
 	main_root = _path;
 }
 
-const std::string& Cycle::getServerPath(void) const {
+const std::string& Cycle::getMainRoot(void) const {
 	return main_root;
 }
 

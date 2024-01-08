@@ -1,4 +1,4 @@
-#include "core.hpp"
+#include "../core/core.hpp"
 
 static void startConnect(Cycle &cycle, Worker &worker);
 static void addEvent(std::vector<struct kevent> &change_list, uintptr_t ident, int16_t filter, \

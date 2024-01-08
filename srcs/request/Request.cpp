@@ -123,6 +123,7 @@ void	Request::parse_request_line()
 	for (size_t pos = 0; it != ite; it++)
 	{
 		ch = *it;
+		std::cout << ch <<std::endl;
 		switch (state)
 		{
 		case start:
@@ -750,25 +751,25 @@ void Request::matching_server()
 
 		for (; itl != itle; itl++)
 		{
-			if (itl->getBlockPath() == "/" && method != "DELETE")
+			if (itl->getLocationPath() == "/" && method != "DELETE")
 				matched_location = itl;
 
-			if (first_dir != itl->getBlockPath())
+			if (first_dir != itl->getLocationPath())
 				continue;
 
 			matched_server = it;
 			matched_location = itl;
-			path = cycle->getServerPath() + matched_location->getStaticPath();
+			path = cycle->getMainRoot() + matched_location->getSubRoot();
 			return ;
 		}
 	}
 
 	matched_location = matched_server->getLocationList().begin();
 
-	if (method == "DELETE" && matched_location->getBlockPath() == "/")
+	if (method == "DELETE" && matched_location->getLocationPath() == "/")
 		throw NOT_FOUND;
 
-	path = cycle->getServerPath() + matched_location->getStaticPath();
+	path = cycle->getMainRoot() + matched_location->getSubRoot();
 }
 
 void Request::check_members()

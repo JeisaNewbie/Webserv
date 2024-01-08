@@ -1,7 +1,7 @@
 #ifndef CMD_HPP
 # define CMD_HPP
 
-# include "cycle.hpp"
+# include "../core/cycle.hpp"
 
 enum cmd_args {
 	CMD_NOARGS,
