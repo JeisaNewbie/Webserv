@@ -25,7 +25,7 @@ private:
 	Cycle											*cycle;
 	std::string										request_line;
 	std::string										uri;
-	std::string										request_target;
+	std::string										origin_path;
 	std::string										path;
 	int												port;
 	std::string										query;
@@ -44,8 +44,8 @@ private:
 	bool											chunked;
 	int												status_code;
 	bool											cgi;
-	Server											*matched_server;
-	Location										*matched_location;
+	std::list<Server>::iterator						matched_server;
+	std::list<Location>::iterator					matched_location;
 	void											parse_query_string(std::string &query);
 	void											parse_query_key_and_value(std::string &query_element);
 	void											parse_header_key_and_value(std::string &header_element);

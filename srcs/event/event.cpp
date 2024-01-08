@@ -36,6 +36,7 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 	std::map<int, std::string>	clients;
 	std::vector<struct kevent>	change_list, event_list(EVENT_LIST_INIT_SIZE);
 	std::map<int, Client>		server;
+	std::cout << "---------------------webserver start---------------------\n";
 
 	addEvent(change_list, listen_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 
