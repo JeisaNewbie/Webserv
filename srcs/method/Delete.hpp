@@ -7,9 +7,5 @@ class Delete :public Method {
 	private:
 		/* data */
 	public:
-		Delete();
-		Delete(const Delete& ref);
-		~Delete();
 
-		Delete& operator=(const Delete& ref);
 };

@@ -7,11 +7,6 @@ class Get : public Method {
 	private:
 		/* data */
 	public:
-		Get();
-		Get(const Get& ref);
-		~Get();
-
-		Get& operator=(const Get& ref);
-
+		static void create_response(Response &response);
 		static void	make_body(std::string &path);
 };

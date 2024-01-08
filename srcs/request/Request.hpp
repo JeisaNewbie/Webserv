@@ -22,7 +22,7 @@ class Request
 {
 private:
 	std::string										request_msg;
-	Cycle											cycle;
+	Cycle											*cycle;
 	std::string										request_line;
 	std::string										uri;
 	std::string										request_target;
@@ -44,8 +44,8 @@ private:
 	bool											chunked;
 	int												status_code;
 	bool											cgi;
-	Server											matched_server;
-	Location										matched_location;
+	Server											*matched_server;
+	Location										*matched_location;
 	void											parse_query_string(std::string &query);
 	void											parse_query_key_and_value(std::string &query_element);
 	void											parse_header_key_and_value(std::string &header_element);
@@ -67,7 +67,6 @@ private:
 	void											remove_spb(std::string &value, size_t end);
 public:
 	Request();
-	Request(std::string &msg);
 	~Request();
 	int												process_request_parsing(std::string &request_msg, Cycle &cycle);
 	void											parse_request();

@@ -40,6 +40,12 @@ void	Client::do_method_without_cgi(int path_property)
 		// else
 		// 	Get::
 	}
+
+	if (method == "DELETE")
+	{
+		if (path_property == DIR)
+			throw NOT_FOUND;
+	}
 }
 
 void	Client::assemble_response() {}

@@ -13,8 +13,6 @@ protected:
 	std::string body;
 
 public:
-	virtual ~Method();
-	static int	find_index(Request &request);
 	void create_response(Response &response);
 	enum {
 	GET,

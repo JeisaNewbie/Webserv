@@ -1,13 +1,13 @@
 
 #include "Request.hpp"
 
-Request::Request() {}
-Request::Request(std::string &msg)
-: request_msg(msg)
+Request::Request()
 {
 	this->pos = 0;
 	this->chunked = false;
 	this->port = 80;
+	this->matched_server = NULL;
+	this->matched_location = NULL;
 }
 
 Request::~Request()
@@ -29,7 +29,7 @@ int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 			decode_chunked();
 			return this->status_code = OK;
 		}
-		this->cycle = cycle;
+		this->cycle = &cycle;
 		// std::cout<< "parse_request\n";
 		parse_request ();
 		// std::cout<< "parse_request_line\n";
@@ -325,7 +325,7 @@ void	Request::parse_request_line()
 				this->uri = this->request_line.substr (pos, uri_end - uri_start);
 				check_uri_form();
 				this->request_target = this->path;
-				if (this->request_target.size() > cycle.getUriLimitLength())
+				if (this->request_target.size() > cycle->getUriLimitLength())
 					throw URI_TOO_LONG;
 				pos = uri_end + 1 - method_start;
 				break;
@@ -342,7 +342,7 @@ void	Request::parse_request_line()
 				this->uri = this->request_line.substr (pos, uri_end - uri_start);
 				check_uri_form();
 				this->request_target = this->request_line.substr (uri_start - method_start, query_end - path_start);
-				if (this->request_target.size() > cycle.getUriLimitLength())
+				if (this->request_target.size() > cycle->getUriLimitLength())
 					throw URI_TOO_LONG;
 				state = query_parsing;
 			}
@@ -598,7 +598,7 @@ void	Request::check_header_is_valid()
 
 void	Request::check_body_limits()
 {
-	if (content_length > cycle.getClientMaxBodySize())
+	if (content_length > cycle->getClientMaxBodySize())
 		throw REQUEST_ENTITY_TOO_LARGE;
 }
 
@@ -731,11 +731,12 @@ void	Request::check_uri_form()
 
 void Request::matching_server()
 {
-	std::list<Server> &servers = cycle.getServerList();
+	std::list<Server> &servers = cycle->getServerList();
 	std::list<Server>::iterator it = servers.begin();
 	std::list<Server>::iterator ite = servers.end();
 	std::string &host = header["host"];
-	matched_server = *it;
+	std::string	first_dir = path.substr (0, path.find ('/', 1));
+	matched_server = &(*it);
 
 	for (;it != ite; it++)
 	{
@@ -751,18 +752,20 @@ void Request::matching_server()
 
 		for (; itl != itle; itl++)
 		{
-			if (itl->getBlockPath() == "/")
-				matched_location = *itl;
+			if (itl->getBlockPath() == "/" && method != "DELETE")
+				matched_location = &(*itl);
 
-			if (path != itl->getBlockPath())
+			if (first_dir != itl->getBlockPath())
 				continue;
 
-			matched_server = *it;
-			matched_location = *itl;
-			path = matched_location.getStaticPath() + path;
+			matched_server = &(*it);
+			matched_location = &(*itl);
+			path = cycle->getServerPath() + matched_location->getStaticPath();
 			return ;
 		}
 	}
+	if (method == "DELETE" && matched_location == NULL)
+		throw NOT_FOUND;
 }
 
 void Request::check_members()
