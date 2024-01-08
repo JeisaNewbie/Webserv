@@ -23,7 +23,7 @@ void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getClientMaxBodySize() != 0)
 		setException(CONF_DIRECTIVE_OVERLAP);
 	int		n = stoi(tokens[1]);
-	char	c = tokens[1][tokens[1].length() - 1];
+	char	c = tokens[1].back();
 
 	if (c == 'K')
 		n *= KILO_BYTE;
@@ -47,9 +47,9 @@ void mainUriLimitLength(Cycle& cycle, std::string tokens[]) {
 }
 
 void mainRoot(Cycle& cycle, std::string tokens[]) {
-	if (cycle.getServerPath().length() != 0)
+	if (cycle.getMainRoot().length() != 0)
 		setException(CONF_DIRECTIVE_OVERLAP);
-	cycle.setServerPath(tokens[1]);
+	cycle.setMainRoot(tokens[1]);
 }
 
 void serverListen(Cycle& cycle, std::string tokens[]) {
@@ -66,12 +66,22 @@ void serverName(Cycle& cycle, std::string tokens[]) {
 	Server& server = cycle.getServerList().back();
 	if (server.getDomain().length() != 0)
 		setException(CONF_DIRECTIVE_OVERLAP);
+	if (tokens[1].find('/') != std::string::npos)
+		setException(CONF_INVALID_VALUE);
 	server.setDomain(tokens[1]);
 }
 
 void locationRoot(Cycle& cycle, std::string tokens[]) {
-	Location& location = cycle.getServerList().back().getLocationList().back();
-	if (location.getStaticPath().length() != 0)
+	Location&	location = cycle.getServerList().back().getLocationList().back();
+	int			location_type = location.getLocationType();
+	if (location.getSubRoot().length() != 0)
 		setException(CONF_DIRECTIVE_OVERLAP);
-	location.setStaticPath(tokens[1]);
+	if (location_type == LOC_DEFAULT \
+		&& tokens[1].back() == '/')
+		setException(CONF_INVALID_VALUE);
+	if ((location_type == LOC_ERROR \
+		|| location_type == LOC_CGI) \
+		&& tokens[1].back() != '/')
+		setException(CONF_INVALID_VALUE);
+	location.setSubRoot(tokens[1]);
 }

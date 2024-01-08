@@ -2,8 +2,8 @@
 
 Cmd::Cmd(void) {}
 
-Cmd::Cmd(std::string _name, int _arg_cnt, handler_t _handler) :	\
-	name(_name), arg_cnt(_arg_cnt), handler(_handler) {}
+Cmd::Cmd(std::string _name, int _arg_cnt, handler_t _handler) \
+	: name(_name), arg_cnt(_arg_cnt), handler(_handler) {}
 
 Cmd::Cmd(const Cmd& src) {
 	*this = src;

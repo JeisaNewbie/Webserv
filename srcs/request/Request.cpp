@@ -124,6 +124,7 @@ void	Request::parse_request_line()
 	for (size_t pos = 0; it != ite; it++)
 	{
 		ch = *it;
+		std::cout << ch <<std::endl;
 		switch (state)
 		{
 		case start:
@@ -195,6 +196,7 @@ void	Request::parse_request_line()
 			{
 				uri_start = it;
 				path_start = it;
+				pos = uri_start + 1 - method_start;
 				state = uri;
 				break;
 			}
@@ -289,6 +291,7 @@ void	Request::parse_request_line()
 					throw BAD_REQUEST;
 				state = uri;
 				uri_start = it + 1;
+				pos = uri_start - method_start;
 				break;
 			}
 			else
@@ -312,7 +315,7 @@ void	Request::parse_request_line()
 				path_end = it;
 				query_start = it + 1;
 				state = query;
-				this->path = this->request_line.substr (pos, path_end - path_start);
+				this->path = this->request_line.substr (path_start - method_start, path_end - path_start);
 				pos = uri_end + 1 - method_start;
 				break;
 			}
@@ -321,12 +324,12 @@ void	Request::parse_request_line()
 			{
 				uri_end = it;
 				state = http;
-				this->path = this->request_line.substr (pos, uri_end - path_start);
-				this->uri = this->request_line.substr (pos, uri_end - uri_start);
-				check_uri_form();
+				this->path = this->request_line.substr (path_start - method_start, uri_end - path_start);
+				this->uri = this->request_line.substr (uri_start - method_start, uri_end - uri_start);
+				// check_uri_form();
 				this->request_target = this->path;
-				if (this->request_target.size() > cycle->getUriLimitLength())
-					throw URI_TOO_LONG;
+				// if (this->request_target.size() > cycle->getUriLimitLength())
+				// 	throw URI_TOO_LONG;
 				pos = uri_end + 1 - method_start;
 				break;
 			}
@@ -338,12 +341,12 @@ void	Request::parse_request_line()
 			if (ch == ' ')
 			{
 				query_end = it;
-				this->query = this->request_line.substr (pos, query_end - query_start);
-				this->uri = this->request_line.substr (pos, uri_end - uri_start);
+				this->query = this->request_line.substr (query_start - method_start, query_end - query_start);
+				this->uri = this->request_line.substr (uri_start - method_start, query_end - uri_start);
 				check_uri_form();
 				this->request_target = this->request_line.substr (uri_start - method_start, query_end - path_start);
-				if (this->request_target.size() > cycle->getUriLimitLength())
-					throw URI_TOO_LONG;
+				// if (this->request_target.size() > cycle->getUriLimitLength())
+				// 	throw URI_TOO_LONG;
 				state = query_parsing;
 			}
 
@@ -752,15 +755,15 @@ void Request::matching_server()
 
 		for (; itl != itle; itl++)
 		{
-			if (itl->getBlockPath() == "/" && method != "DELETE")
+			if (itl->getLocationPath() == "/" && method != "DELETE")
 				matched_location = &(*itl);
 
-			if (first_dir != itl->getBlockPath())
+			if (first_dir != itl->getLocationPath())
 				continue;
 
 			matched_server = &(*it);
 			matched_location = &(*itl);
-			path = cycle->getServerPath() + matched_location->getStaticPath();
+			path = cycle->getMainRoot() + matched_location->getSubRoot();
 			return ;
 		}
 	}

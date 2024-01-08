@@ -8,7 +8,7 @@
 # define TOKEN_SIZE 5
 # define DEFAULT_FILE "default.conf"
 
-enum conf_location {
+enum conf_block_type {
 	CONF_MAIN,
 	CONF_SRV,
 	CONF_LOC

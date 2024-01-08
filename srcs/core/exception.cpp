@@ -17,8 +17,12 @@ Exception::Exception(int error_code) {
 		message = "Configuration form is invalid";
 	else if (error_code == CONF_INVALID_LOC)
 		message = "Configuration location is invalid";
+	else if (error_code == CONF_INVALID_LOC_TYPE)
+		message = "Configuration location type is invalid";
 	else if (error_code == CONF_INVALID_DIRECTIVE)
 		message = "Configuration directive is not matched";
+	else if (error_code == CONF_INVALID_CGI)
+		message = "Configuration cgi is not invalid";
 	else if (error_code == CONF_LACK_DIRECTIVE)
 		message = "Configuration directive is lacked";
 	else if (error_code == CONF_TOKENIZE_FAIL)
@@ -51,7 +55,6 @@ const char*	Exception::what() const {
 
 void setException(int _error_code) {
 	error_code = _error_code;
-	std::cout << error_code << "\n";
 	throw Exception(error_code);
 }
 

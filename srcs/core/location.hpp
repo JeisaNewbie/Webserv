@@ -3,21 +3,28 @@
 
 # include <iostream>
 
+enum loc_type {
+	LOC_DEFAULT,
+	LOC_ERROR,
+	LOC_CGI
+};
+
 class Location {
 	public:
-		Location(std::string _location_path);
+		Location(int location_type, std::string _location_path);
 		Location(const Location& obj);
 		~Location(void);
 
 		Location& operator =(const Location& src);
 
-		void setStaticPath(std::string _location_path);
+		void setSubRoot(std::string _location_path);
 
-		const std::string& getBlockPath(void) const;
-		const std::string& getStaticPath(void) const;
+		int					getLocationType(void) const;
+		const std::string&	getLocationPath(void) const;
+		const std::string&	getSubRoot(void) const;
 
 	private:
-
+		int			location_type;
 		std::string	location_path;
 		std::string	sub_root;
 };
