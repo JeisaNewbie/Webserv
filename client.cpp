@@ -56,7 +56,7 @@ int
 		== -1)
 		return 0;
 
-	char message[BUF_SIZE];
+	// char message[BUF_SIZE];
 	char r_message[BUF_SIZE];
 	int recieve_size;
 

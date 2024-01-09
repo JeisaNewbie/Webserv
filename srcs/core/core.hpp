@@ -4,6 +4,8 @@
 # include "cycle.hpp"
 # include "../config/conf.hpp"
 # include "../config/cmd.hpp"
+# include "../block/server.hpp"
+# include "../block/location.hpp"
 # include "../worker/worker.hpp"
 # include "../event/event.hpp"
 # include "../request/Request.hpp"

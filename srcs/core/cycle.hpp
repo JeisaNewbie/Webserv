@@ -3,6 +3,9 @@
 
 # include "../block/server.hpp"
 
+# include <list>
+# include <iostream>
+
 # define WORKER_PROCESS_MAX 2
 # define WORKER_CONNECTION_MAX 1024
 

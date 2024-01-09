@@ -1,9 +1,10 @@
 #ifndef CONF_HPP
 # define CONF_HPP
 
+# include "cmd.hpp"
+
 # include <fstream>
 # include <sstream>
-# include "cmd.hpp"
 
 # define TOKEN_SIZE 5
 # define DEFAULT_FILE "default.conf"

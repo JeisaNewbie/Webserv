@@ -1,15 +1,15 @@
 #include "../core/core.hpp"
 
 static void startConnect(Cycle &cycle, Worker &worker);
-static void addEvent(std::vector<struct kevent> &change_list, uintptr_t ident, int16_t filter, \
-					uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
+static void addEvent(std::vector<struct kevent> &change_list, uintptr_t ident, int16_t filter,				\
+						uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
 static bool acceptNewClient(Worker &worker, int listen_socket, std::map<int, std::string> &clients,
 							std::vector<struct kevent> &change_list);
-static bool recieveFromClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list, \
+static bool recieveFromClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list,	\
 								std::map<int, std::string> &clients);
-static bool sendToClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list, \
+static bool sendToClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list,		\
 							std::map<int, std::string> &clients);
-static void disconnectClient(int client_socket, std::vector<struct kevent>& change_list, \
+static void disconnectClient(int client_socket, std::vector<struct kevent>& change_list,					\
 								std::map<int, std::string> &clients);
 
 void prepConnect(Cycle &cycle, int id) {
@@ -38,7 +38,8 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 	std::map<int, Client>		server;
 	std::cout << "---------------------webserver start---------------------\n";
 
-	addEvent(change_list, listen_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	addEvent(change_list, listen_socket, EVFILT_READ,	\
+				EV_ADD | EV_ENABLE, 0, 0, NULL);
 
 	uint32_t		new_events;
 	struct kevent	*cur_event;
@@ -82,27 +83,31 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 					// 	server[cur_event->ident].do_method();
 					// server[cur_event->ident].assemble_response();
 					clients[cur_event->ident] = "";
-					addEvent(change_list, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+					addEvent(change_list, cur_event->ident, EVFILT_WRITE,	\
+								EV_ADD | EV_ENABLE, 0, 0, NULL);
 				}
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(worker, cur_event->ident, change_list, clients) == FALSE)
 					continue;
-				addEvent(change_list, cur_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
+				addEvent(change_list, cur_event->ident, EVFILT_WRITE,	\
+							EV_DISABLE, 0, 0, NULL);
 			}
 		}
 	}
 }
 
-static void addEvent(std::vector<struct kevent> &change_list, uintptr_t ident, int16_t filter, \
-					uint16_t flags, uint32_t fflags, intptr_t data, void *udata) {
+static void addEvent(std::vector<struct kevent> &change_list, 			\
+					uintptr_t ident, int16_t filter, uint16_t flags,	\
+					uint32_t fflags, intptr_t data, void *udata) {
 	struct kevent	temp;
 
 	EV_SET(&temp, ident, filter, flags, fflags, data, udata);
 	change_list.push_back(temp);
 }
 
-static bool acceptNewClient(Worker &worker, int listen_socket, std::map<int, std::string> &clients,
+static bool acceptNewClient(Worker &worker, int listen_socket,		\
+							std::map<int, std::string> &clients,	\
 							std::vector<struct kevent> &change_list) {
 	uintptr_t	client_socket;
 
@@ -117,7 +122,8 @@ static bool acceptNewClient(Worker &worker, int listen_socket, std::map<int, std
 	return TRUE;
 }
 
-static bool recieveFromClient(Worker &worker, int client_socket, std::vector<struct kevent>& change_list, \
+static bool recieveFromClient(Worker &worker, int client_socket,			\
+								std::vector<struct kevent>& change_list,	\
 								std::map<int, std::string> &clients) {
 	char	buf[BUF_SIZE] = {0,};
 	int		recieve_size;
@@ -128,7 +134,8 @@ static bool recieveFromClient(Worker &worker, int client_socket, std::vector<str
 		clients[client_socket] += tmp;
 	}
 	if (recieve_size == 0) {
-		std::cout << "worker: " << worker.getWorkerId() << ", Disconnection : client[" << client_socket << "]\n";
+		std::cout << "worker: " << worker.getWorkerId()	\
+					<< ", Disconnection : client[" << client_socket << "]\n";
 		disconnectClient(client_socket, change_list, clients);
 		return FALSE;
 	}
@@ -137,7 +144,9 @@ static bool recieveFromClient(Worker &worker, int client_socket, std::vector<str
 		handleEventException(worker.getErrorLog(), EVENT_RECV_FAIL, client_socket);
 		return FALSE;
 	}
-	std::cout << "worker: " << worker.getWorkerId() << ", " << clients[client_socket].length() << " " << clients[client_socket] << "\n";
+	std::cout << "worker: " << worker.getWorkerId() \
+				<< ", " << clients[client_socket].length() \
+				<< " " << clients[client_socket] << "\n";
 	return TRUE;
 }
 

@@ -92,16 +92,32 @@ void Conf::setCmd(void) {
 	srv_cmd = new Cmd[srv_cmd_max]();
 	loc_cmd = new Cmd[loc_cmd_max]();
 
-	main_cmd[0] = Cmd("worker_processes", CMD_TAKE1, mainWorkerProcesses);
-	main_cmd[1] = Cmd("worker_connections", CMD_TAKE1, mainWorkerConnections);
-	main_cmd[2] = Cmd("client_max_body_size", CMD_TAKE1, mainClientMaxBodySize);
-	main_cmd[3] = Cmd("uri_limit_length", CMD_TAKE1, mainUriLimitLength);
-	main_cmd[4] = Cmd("root", CMD_TAKE1, mainRoot);
+	main_cmd[0] = Cmd("worker_processes",		\
+						CMD_TAKE1,				\
+						mainWorkerProcesses);
+	main_cmd[1] = Cmd("worker_connections",		\
+						CMD_TAKE1,				\
+						mainWorkerConnections);
+	main_cmd[2] = Cmd("client_max_body_size",	\
+						CMD_TAKE1,				\
+						mainClientMaxBodySize);
+	main_cmd[3] = Cmd("uri_limit_length",		\
+						CMD_TAKE1,				\
+						mainUriLimitLength);
+	main_cmd[4] = Cmd("root",					\
+						CMD_TAKE1,				\
+						mainRoot);
 
-	srv_cmd[0] = Cmd("listen", CMD_TAKE1, serverListen);
-	srv_cmd[1] = Cmd("server_name", CMD_TAKE1, serverName);
+	srv_cmd[0] = Cmd("listen",					\
+						CMD_TAKE1,				\
+						serverListen);
+	srv_cmd[1] = Cmd("server_name", 			\
+						CMD_TAKE1,				\
+						serverName);
 
-	loc_cmd[0] = Cmd("root", CMD_TAKE1, locationRoot);
+	loc_cmd[0] = Cmd("root",					\
+						CMD_TAKE1,				\
+						locationRoot);
 }
 
 const Cmd* Conf::getCmdListConst(int loc_type) const {
@@ -178,10 +194,10 @@ static void parseMain(Cycle &cycle, Conf &conf, std::ifstream& file) {
 	}
 	checkGetlineError(file);
 
-	if (cycle.getWorkerProcesses() == 0 \
-		|| cycle.getWorkerConnections() == 0 \
-		|| cycle.getClientMaxBodySize() == 0 \
-		|| cycle.getUriLimitLength() == 0 \
+	if (cycle.getWorkerProcesses() == 0			\
+		|| cycle.getWorkerConnections() == 0	\
+		|| cycle.getClientMaxBodySize() == 0	\
+		|| cycle.getUriLimitLength() == 0		\
 		|| cycle.getMainRoot() == "")
 		setException(CONF_LACK_DIRECTIVE);
 }
@@ -216,8 +232,8 @@ static void parseServer(Cycle &cycle, Conf &conf, std::ifstream& file) {
 	}
 	checkGetlineError(file);
 
-	if (server_list.back().getPort() == 0 || \
-		server_list.back().getDomain() == "")
+	if (server_list.back().getPort() == 0	\
+		|| server_list.back().getDomain() == "")
 		setException(CONF_LACK_DIRECTIVE);
 }
 
@@ -295,7 +311,8 @@ static int checkConfLocation(std::string str[]) {
 }
 
 static void checkGetlineError(std::ifstream& file) {
-	if (file.eof() != TRUE && (file.fail() == TRUE || file.bad() == TRUE))
+	if (file.eof() != TRUE \
+		&& (file.fail() == TRUE || file.bad() == TRUE))
 		setException(CONF_READ_FAIL);
 }
 

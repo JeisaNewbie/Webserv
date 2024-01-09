@@ -34,6 +34,4 @@ class Worker {
 
 void startWorker(Cycle &cycle);
 
-# include "../event/event.hpp"
-
 #endif
