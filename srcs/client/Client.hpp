@@ -14,6 +14,8 @@
 #include "../core/cycle.hpp"
 // #include "../method/Method.hpp"
 #include "../method/Get.hpp"
+#include "../method/Post.hpp"
+#include "../method/Delete.hpp"
 #include "../utils/Utils.hpp"
 
 #define	FILE	1000
@@ -41,7 +43,7 @@ class Client {
 		void		do_parse(std::string &request_msg, Cycle &cycle);
 		void		do_method();
 		void		do_method_with_cgi();
-		void		do_method_without_cgi(int path_property);
+		void		do_method_without_cgi(std::string &path, int path_property);
 		void		assemble_response();
 
 		Request		&get_request_instance ();

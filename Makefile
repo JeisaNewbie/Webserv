@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: eunwolee <eunwolee@student.42seoul.kr>     +#+  +:+       +#+         #
+#    By: jhwang2 <jhwang2@student.42seoul.kr>       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/08 21:05:07 by eunwolee         ###   ########.fr        #
+#    Updated: 2024/01/09 10:10:15 by jhwang2          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,6 +33,8 @@ SRCS =	core/main.cpp \
 		response/Response.cpp \
 		method/Method.cpp \
 		method/Get.cpp \
+		method/Post.cpp \
+		method/Delete.cpp \
 		client/Client.cpp \
 		utils/exception.cpp \
 		utils/Utils.cpp

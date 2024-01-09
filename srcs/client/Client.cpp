@@ -13,20 +13,29 @@ void	Client::do_parse(std::string &request_msg, Cycle &cycle)
 
 void	Client::do_method()
 {
-	int		path_property = check_path_property(get_request_instance().get_path());
-	bool	cgi = get_cgi();
+	std::string	&path = get_request_instance().get_path();
+	int			path_property = check_path_property(path);
+	bool		cgi = get_cgi();
 
-	if (cgi == true && path_property == FILE)
-		do_method_with_cgi();
-	else if (cgi == false && (path_property == FILE | path_property == DIR))
-		do_method_without_cgi(path_property);
-	else
-		return set_status_code(NOT_FOUND);
+	try
+	{
+		if (cgi == true && path_property == FILE)
+			do_method_with_cgi();
+		else if (cgi == false && (path_property == FILE | path_property == DIR))
+			do_method_without_cgi(path, path_property);
+		else
+			throw NOT_FOUND;
+	}
+	catch(int e)
+	{
+		set_status_code(e);
+	}
+
 }
 
 void	Client::do_method_with_cgi() {}
 
-void	Client::do_method_without_cgi(int path_property)
+void	Client::do_method_without_cgi(std::string &path, int path_property)
 {
 	std::string	&method = get_request_instance().get_method();
 
@@ -36,19 +45,23 @@ void	Client::do_method_without_cgi(int path_property)
 	if (method == "GET")
 	{
 		if (path_property == FILE)
-			Get::make_body(get_request_instance().get_path());
+			Get::make_body(path);
 		// else
 		// 	Get::
 	}
 
 	if (method == "DELETE")
 	{
-		if (path_property == DIR)
-			throw NOT_FOUND;
+		Delete::remove_file(path);
+		Delete::create_response(response);
 	}
 }
 
-void	Client::assemble_response() {}
+void	Client::assemble_response()
+{
+	response.set_header_line (get_status_code());
+	response.assemble_message ();
+}
 
 //------------------------getter && setter---------------------------
 Phase	Client::get_current_phase() {return this->phase;}

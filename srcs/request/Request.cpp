@@ -123,7 +123,6 @@ void	Request::parse_request_line()
 	for (size_t pos = 0; it != ite; it++)
 	{
 		ch = *it;
-		std::cout << ch <<std::endl;
 		switch (state)
 		{
 		case start:
@@ -767,7 +766,7 @@ void Request::matching_server()
 	matched_location = matched_server->getLocationList().begin();
 
 	if (method == "DELETE" && matched_location->getLocationPath() == "/")
-		throw NOT_FOUND;
+		throw FORBIDDEN;
 
 	path = cycle->getMainRoot() + matched_location->getSubRoot();
 }
