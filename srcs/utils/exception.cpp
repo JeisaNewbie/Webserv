@@ -1,52 +1,99 @@
 #include "../core/core.hpp"
 
 Exception::Exception(int error_code) {
-	if (error_code == PROG_INVALID_ARG_CNT)
+	switch (error_code) {
+	case PROG_INVALID_ARG_CNT:
 		message = "Program has 1 or 2 arguments";
-	else if (error_code == CONF_OPEN_FAIL)
-		message = "Open configuration file is failed";
-	else if (error_code == CONF_READ_FAIL)
-		message = "Read configuration file is failed";
-	else if (error_code == CONF_DIRECTIVE_OVERLAP)
-		message = "Configuration directive is overlaped";
-	else if (error_code == CONF_INVALID_ARG_CNT)
-		message = "Number of directive argument is not correct";
-	else if (error_code == CONF_INVALID_VALUE)
-		message = "Configuraion value is invalid";
-	else if (error_code == CONF_INVALID_FORM)
-		message = "Configuration form is invalid";
-	else if (error_code == CONF_INVALID_LOC)
-		message = "Configuration location is invalid";
-	else if (error_code == CONF_INVALID_LOC_TYPE)
-		message = "Configuration location type is invalid";
-	else if (error_code == CONF_INVALID_DIRECTIVE)
-		message = "Configuration directive is not matched";
-	else if (error_code == CONF_INVALID_CGI)
-		message = "Configuration cgi is not invalid";
-	else if (error_code == CONF_LACK_DIRECTIVE)
-		message = "Configuration directive is lacked";
-	else if (error_code == CONF_TOKENIZE_FAIL)
-		message = "Tokenize configure command is failed";
-	else if (error_code == WORK_OPEN_FAIL)
-		message = "Open log file is failed";
-	else if (error_code == WORK_CREATE_KQ_FAIL)
-		message = "Create kqueue is failed";
-	else if (error_code == WORK_CREATE_SOCKET_FAIL)
-		message = "Create socket is failed";
-	else if (error_code == EVENT_BIND_FAIL)
-		message = "Function bind is failed";
-	else if (error_code == EVENT_LISTEN_FAIL)
-		message = "Function listen failed";
-	else if (error_code == EVENT_ERROR_FLAG)
-		message = "Event flag set to error";
-	else if (error_code == EVENT_ACCEPT_FAIL)
-		message = "Function accept is failed";
-	else if (error_code == EVENT_RECV_FAIL)
-		message = "Function recv is failed";
-	else if (error_code == EVENT_SEND_FAIL)
-		message = "Function send is failed";
-	else
+		break;
+	
+	case CONF_FAIL_OPEN:
+		message = "Failed to open configure file";
+		break;
+
+	case CONF_FAIL_READ:
+		message = "Failed to read configure file";
+		break;
+
+	case CONF_DUP_DIRCTV:
+		message = "Directives is duplicated";
+		break;
+
+	case CONF_INVALID_BLOCK_FORM:
+		message = "Form of configure block is invalid";
+		break;
+
+	case CONF_INVALID_BLOCK_LOC:
+		message = "Position of block is incorrect";
+		break;
+
+	case CONF_INVALID_LOC_PATH:
+		message = "Path of location block is invalid";
+		break;
+
+	case CONF_INVALID_DIRCTV:
+		message = "Directive is not matched";
+		break;
+
+	case CONF_INVALID_DIRCTV_ARG_CNT:
+		message = "Number of directive arguments is incorrect";
+		break;
+
+	case CONF_INVALID_DIRCTV_VALUE:
+		message = "Value of directive is invalid";
+		break;
+
+	case CONF_INVALID_CGI:
+		message = "Type of cgi is invalid";
+		break;
+
+	case CONF_LACK_DIRCTV:
+		message = "Directive is incomplete";
+		break;
+
+	case CONF_FAIL_TOKENIZE:
+		message = "Failed to tokenize configure command";
+		break;
+
+	case WORK_FAIL_OPEN:
+		message = "Failed to open log file";
+		break;
+
+	case WORK_FAIL_CREATE_KQ:
+		message = "Failed to create kqueue";
+		break;
+
+	case WORK_FAIL_CREATE_SOCKET:
+		message = "Failed to create socket";
+		break;
+
+	case EVENT_FAIL_BIND:
+		message = "Bind function failed";
+		break;
+
+	case EVENT_FAIL_LISTEN:
+		message = "Listen function failed";
+		break;
+
+	case EVENT_FAIL_ACCEPT:
+		message = "Accept fucntion failed";
+		break;
+
+	case EVENT_FAIL_RECV:
+		message = "Recv function failed";
+		break;
+
+	case EVENT_FAIL_SEND:
+		message = "Send function failed";
+		break;
+
+	case EVENT_SET_ERROR_FLAG:
+		message = "Event flag is set to error";
+		break;
+
+	default:
 		message = "Error code is not defined";
+		break;
+	}
 }
 
 const char*	Exception::what() const {
