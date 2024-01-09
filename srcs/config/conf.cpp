@@ -4,16 +4,17 @@ const int Conf::main_cmd_max = 5;
 const int Conf::srv_cmd_max = 2;
 const int Conf::loc_cmd_max = 1;
 
-static void parseMain(Cycle &cycle, Conf &conf, std::ifstream& file);
-static void parseServer(Cycle &cycle, Conf &conf, std::ifstream& file);
-static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const std::string& location_path);
-static void callCmd(Cycle &cycle, Conf &conf, int location, \
-						std::string *tokens, int token_cnt);
-static int tokenizer(char *str, std::string *tokens);
+static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file);
+static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file);
+static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
+							const std::string& location_path);
+static void callCmd(Cycle& cycle, Conf& conf, int location,					\
+						std::string* tokens, int token_cnt);
+static int tokenizer(char* str, std::string* tokens);
 static int checkConfLocation(std::string str[]);
 static void checkGetlineError(std::ifstream& file);
-static void checkLocationType(std::string location_path, int &location_type);
-static void checkUseCgi(Cycle &cycle, std::string type);
+static void checkLocationType(std::string location_path, int& location_type);
+static void checkUseCgi(Cycle& cycle, std::string type);
 
 Conf::Conf(void) {
 	main_cmd = NULL;
@@ -140,7 +141,7 @@ int Conf::getCmdMaxConst(int loc_type) const {
 	return -1;
 }
 
-void setConf(Conf &conf, int argc, char *file_name) {
+void setConf(Conf& conf, int argc, char* file_name) {
 	if (argc != 1 && argc != 2)
 		setException(PROG_INVALID_ARG_CNT);
 	if (argc == 1)
@@ -149,7 +150,7 @@ void setConf(Conf &conf, int argc, char *file_name) {
 		conf = Conf(file_name);
 }
 
-void parseConf(Cycle &cycle, Conf &conf) {
+void parseConf(Cycle& cycle, Conf& conf) {
 	char			buf[BUF_SIZE];
 	std::string		tokens[TOKEN_SIZE];
 	int				token_cnt;
@@ -174,7 +175,7 @@ void parseConf(Cycle &cycle, Conf &conf) {
 	checkGetlineError(file);
 }
 
-static void parseMain(Cycle &cycle, Conf &conf, std::ifstream& file) {
+static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 	char			buf[BUF_SIZE];
 	std::string		tokens[TOKEN_SIZE];
 	int				token_cnt;
@@ -202,7 +203,7 @@ static void parseMain(Cycle &cycle, Conf &conf, std::ifstream& file) {
 		setException(CONF_LACK_DIRECTIVE);
 }
 
-static void parseServer(Cycle &cycle, Conf &conf, std::ifstream& file) {
+static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 	char				buf[BUF_SIZE];
 	std::string			tokens[TOKEN_SIZE];
 	int					token_cnt;
@@ -237,7 +238,8 @@ static void parseServer(Cycle &cycle, Conf &conf, std::ifstream& file) {
 		setException(CONF_LACK_DIRECTIVE);
 }
 
-static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const std::string& location_path) {
+static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
+							const std::string& location_path) {
 	char					buf[BUF_SIZE];
 	std::string				tokens[TOKEN_SIZE];
 	int						token_cnt, location_type;
@@ -267,11 +269,11 @@ static void parseLocation(Cycle& cycle, Conf &conf, std::ifstream& file, const s
 		setException(CONF_LACK_DIRECTIVE);
 }
 
-static void callCmd(Cycle &cycle, Conf &conf, int location, \
-						std::string *tokens, int token_cnt) {
+static void callCmd(Cycle& cycle, Conf& conf, int location, \
+						std::string* tokens, int token_cnt) {
 	handler_t	handler;
 	int 		idx;
-	const Cmd 	*cmd = conf.getCmdListConst(location);
+	const Cmd*	cmd = conf.getCmdListConst(location);
 	int			cmd_max = conf.getCmdMaxConst(location);
 
 	for (idx = 0; idx < cmd_max; idx++) {
@@ -287,7 +289,7 @@ static void callCmd(Cycle &cycle, Conf &conf, int location, \
 		setException(CONF_INVALID_DIRECTIVE);
 }
 
-static int tokenizer(char *str, std::string *tokens) {
+static int tokenizer(char* str, std::string* tokens) {
 	std::istringstream	istr(str);
 	std::string			token;
 	int					idx = 0;
@@ -316,7 +318,7 @@ static void checkGetlineError(std::ifstream& file) {
 		setException(CONF_READ_FAIL);
 }
 
-static void checkLocationType(std::string location_path, int &location_type) {
+static void checkLocationType(std::string location_path, int& location_type) {
 	if (location_path == "/")
 		location_type = LOC_DEFAULT;
 	else if (location_path == "/error")
@@ -327,7 +329,7 @@ static void checkLocationType(std::string location_path, int &location_type) {
 		setException(CONF_INVALID_LOC_TYPE);
 }
 
-static void checkUseCgi(Cycle &cycle, std::string type) {
+static void checkUseCgi(Cycle& cycle, std::string type) {
 	if (type == ".php")
 			cycle.setUseCgi(TRUE);
 	else

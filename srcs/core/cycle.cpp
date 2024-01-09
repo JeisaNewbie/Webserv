@@ -2,7 +2,7 @@
 
 Cycle::Cycle(void) {}
 
-Cycle::Cycle(const char **_envp) \
+Cycle::Cycle(const char** _envp) \
 	: envp(_envp), use_cgi(FALSE), worker_processes(0), \
 		worker_connections(0), client_max_body_size(0), \
 		uri_limit_length(0)  {}

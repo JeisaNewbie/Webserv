@@ -58,7 +58,7 @@ void setException(int _error_code) {
 	throw Exception(error_code);
 }
 
-void handleWorkerException(std::ofstream &error_log, int _error_code) {
+void handleWorkerException(std::ofstream& error_log, int _error_code) {
 	std::string	tmp;
 	Exception	e(_error_code);
 
@@ -73,7 +73,7 @@ void handleWorkerException(std::ofstream &error_log, int _error_code) {
 	throw e;
 }
 
-void handleEventException(std::ofstream &error_log, int _error_code, uintptr_t client_fd) {
+void handleEventException(std::ofstream& error_log, int _error_code, uintptr_t client_fd) {
 	std::string	tmp;
 	error_code = _error_code;
 

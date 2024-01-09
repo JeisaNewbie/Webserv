@@ -1,8 +1,9 @@
 #include "../core/core.hpp"
 
-static void createWorker(Cycle &cycle, worker_array &worker_list, int i);
+static void createWorker(Cycle& cycle, worker_array& worker_list, int i);
 
-Worker::Worker(int id) : worker_id(id), cur_connection(0) {
+// Worker::Worker(int id) : worker_id(id), cur_connection(0) {
+Worker::Worker(int id) : worker_id(id) {
 	event_queue = kqueue();
 	if (event_queue == -1)
 		setException(WORK_CREATE_KQ_FAIL);
@@ -51,7 +52,15 @@ std::ofstream& Worker::getErrorLog(void) {
 	return error_log;
 }
 
-void startWorker(Cycle &cycle) {
+clients_t& Worker::getClients(void) {
+	return clients;
+}
+
+kevent_t& Worker::getChangeList(void) {
+	return change_list;
+}
+
+void startWorker(Cycle& cycle) {
 	worker_array	worker_list = cycle.getWorkerList();
 
 	for (int i = 0; i < cycle.getWorkerProcesses(); i++)
@@ -67,7 +76,7 @@ void startWorker(Cycle &cycle) {
 	}
 }
 
-static void createWorker(Cycle &cycle, worker_array &worker_list, int i) {
+static void createWorker(Cycle& cycle, worker_array& worker_list, int i) {
 	worker_list[i] = fork();
 	if (worker_list[i] == CHILD) {
 		try {

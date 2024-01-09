@@ -43,7 +43,7 @@ class Exception {
 };
 
 void setException(int _error_code);
-void handleWorkerException(std::ofstream &error_log, int _error_code);
-void handleEventException(std::ofstream &error_log, int _error_code, uintptr_t client_fd);
+void handleWorkerException(std::ofstream& error_log, int _error_code);
+void handleEventException(std::ofstream& error_log, int _error_code, uintptr_t client_fd);
 
 #endif

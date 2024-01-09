@@ -2,8 +2,8 @@
 
 int error_code;
 
-int main(int argc, char **argv, char **envp) {
-	Cycle	cycle(const_cast<const char **>(envp));
+int main(int argc, char** argv, char** envp) {
+	Cycle	cycle(const_cast<const char**>(envp));
 	Conf	conf;
 
 	cycle.getEnvp();

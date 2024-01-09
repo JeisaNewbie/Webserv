@@ -36,15 +36,15 @@ class Conf {
 		std::ifstream		file;
 		std::string			file_name;
 
-		Cmd					*main_cmd;
-		Cmd					*srv_cmd;
-		Cmd					*loc_cmd;
+		Cmd*				main_cmd;
+		Cmd*				srv_cmd;
+		Cmd*				loc_cmd;
 		static const int	main_cmd_max;
 		static const int	srv_cmd_max;
 		static const int	loc_cmd_max;
 };
 
-void setConf(Conf &conf, int argc, char *file_name);
+void setConf(Conf &conf, int argc, char* file_name);
 void parseConf(Cycle &cycle, Conf &conf);
 
 #endif
