@@ -55,11 +55,40 @@ Status	status_line[] = {
 	{"505", "HTTP Version Not Supported"}
 };
 
-Response::Response() {}
+Response::Response()
+{
+	body_flag = false;
+}
+
 Response::Response(const Response& ref) {}
 Response::~Response() {}
 
 Response& Response::operator=(const Response& ref) {}
+
+void	Response::assemble_message()
+{
+	response_msg = get_header_line();
+	response_msg += get_header_field();
+	response_msg += "\r\n";
+	if (body_flag == true)
+		response_msg += get_body();
+}
+
+std::string	&Response::get_header_line () {return this->header_line;}
+
+std::string	Response::get_header_field ()
+{
+	std::map<std::string, std::string>::iterator	it = header.begin();
+	std::map<std::string, std::string>::iterator	ite = header.end();
+	std::string	header_fields;
+
+	for (; it != ite; it++)
+		header_fields += it->first + ": " + it->second + "\r\n";
+
+	return header_fields;
+}
+
+std::string	&Response::get_body() {return this->body;}
 
 void	Response::set_header_line (int status_code)
 {
@@ -68,4 +97,9 @@ void	Response::set_header_line (int status_code)
 	header_line += " ";
 	header_line += status_line[status_code].text;
 	header_line += "\r\n";
+}
+
+void	Response::set_header_field (const std::string &key, const std::string &value)
+{
+	header[key] = value;
 }

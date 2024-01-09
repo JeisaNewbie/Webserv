@@ -36,6 +36,7 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 	std::map<int, std::string>	clients;
 	std::vector<struct kevent>	change_list, event_list(EVENT_LIST_INIT_SIZE);
 	std::map<int, Client>		server;
+	std::cout << "---------------------webserver start---------------------\n";
 
 	addEvent(change_list, listen_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 
@@ -80,7 +81,7 @@ static void startConnect(Cycle &cycle, Worker &worker) {
 					// if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
 					// 	server[cur_event->ident].do_method();
 					// server[cur_event->ident].assemble_response();
-					// clients[cur_event->ident] = "";
+					clients[cur_event->ident] = "";
 					addEvent(change_list, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 				}
 			}

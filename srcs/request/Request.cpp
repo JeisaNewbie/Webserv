@@ -6,8 +6,6 @@ Request::Request()
 	this->pos = 0;
 	this->chunked = false;
 	this->port = 80;
-	this->matched_server = NULL;
-	this->matched_location = NULL;
 }
 
 Request::~Request()
@@ -23,7 +21,8 @@ int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 {
 	try
 	{
-		this->request_msg = request_msg;
+		this->request_msg = "DELETE http://www.example.com/products?category=books&sort=price&order=desc&limit=20&page=2&filter=new HTTP/1.1\r\nHost:             www.example.com         \r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 32\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nCookie: sessionId=abc123; preferences=darkmode\r\nReferer: http://www.example.com/form\r\nConnection: keep-alive\r\n\r\nusername=user&password=pass123\r\n";
+		// this->request_msg = request_msg;
 		if (get_chunked() == true)
 		{
 			decode_chunked();
@@ -124,7 +123,6 @@ void	Request::parse_request_line()
 	for (size_t pos = 0; it != ite; it++)
 	{
 		ch = *it;
-		std::cout << ch <<std::endl;
 		switch (state)
 		{
 		case start:
@@ -299,7 +297,7 @@ void	Request::parse_request_line()
 
 			break;
 
-		case uri: //scheme[http], authority[userinfo@]host[:port], path, query
+		case uri:
 
 			if (('a' <= ch && ch <= 'z') || ch == '.')
 				break;
@@ -326,10 +324,9 @@ void	Request::parse_request_line()
 				state = http;
 				this->path = this->request_line.substr (path_start - method_start, uri_end - path_start);
 				this->uri = this->request_line.substr (uri_start - method_start, uri_end - uri_start);
-				// check_uri_form();
-				this->request_target = this->path;
-				// if (this->request_target.size() > cycle->getUriLimitLength())
-				// 	throw URI_TOO_LONG;
+				check_uri_form();
+				if (this->uri.size() > cycle->getUriLimitLength())
+					throw URI_TOO_LONG;
 				pos = uri_end + 1 - method_start;
 				break;
 			}
@@ -344,9 +341,8 @@ void	Request::parse_request_line()
 				this->query = this->request_line.substr (query_start - method_start, query_end - query_start);
 				this->uri = this->request_line.substr (uri_start - method_start, query_end - uri_start);
 				check_uri_form();
-				this->request_target = this->request_line.substr (uri_start - method_start, query_end - path_start);
-				// if (this->request_target.size() > cycle->getUriLimitLength())
-				// 	throw URI_TOO_LONG;
+				if (this->uri.size() > cycle->getUriLimitLength())
+					throw URI_TOO_LONG;
 				state = query_parsing;
 			}
 
@@ -637,7 +633,7 @@ void	Request::check_host()
 				throw BAD_REQUEST;
 			if (port_num > 65535)
 				throw BAD_REQUEST;
-			port_num = port_num * 10 + host[i] - '0';
+			port_num = port_num * 10 + (host[i] - '0');
 			port_len++;
 			continue;
 		}
@@ -645,8 +641,9 @@ void	Request::check_host()
 		if (!std::isalnum (host[i]) && host[i] != '.' && host[i] != '-')
 			throw BAD_REQUEST;
 	}
-	// if (port_num != this->port)
-	// 	throw BAD_REQUEST;
+
+	port = port_num;
+
 }
 
 void	Request::check_transfer_encoding_and_content_length()
@@ -662,7 +659,6 @@ void	Request::check_transfer_encoding_and_content_length()
 	else
 		check_content_length();
 }
-
 
 void	Request::check_transfer_encoding()
 {
@@ -728,8 +724,6 @@ void	Request::check_uri_form()
 
 	if (pos != std::string::npos)
 		throw NOT_FOUND;
-
-
 }
 
 void Request::matching_server()
@@ -739,7 +733,8 @@ void Request::matching_server()
 	std::list<Server>::iterator ite = servers.end();
 	std::string &host = header["host"];
 	std::string	first_dir = path.substr (0, path.find ('/', 1));
-	matched_server = &(*it);
+	matched_server = cycle->getServerList().begin();
+	origin_path = path;
 
 	for (;it != ite; it++)
 	{
@@ -756,19 +751,24 @@ void Request::matching_server()
 		for (; itl != itle; itl++)
 		{
 			if (itl->getLocationPath() == "/" && method != "DELETE")
-				matched_location = &(*itl);
+				matched_location = itl;
 
 			if (first_dir != itl->getLocationPath())
 				continue;
 
-			matched_server = &(*it);
-			matched_location = &(*itl);
+			matched_server = it;
+			matched_location = itl;
 			path = cycle->getMainRoot() + matched_location->getSubRoot();
 			return ;
 		}
 	}
-	if (method == "DELETE" && matched_location == NULL)
-		throw NOT_FOUND;
+
+	matched_location = matched_server->getLocationList().begin();
+
+	if (method == "DELETE" && matched_location->getLocationPath() == "/")
+		throw FORBIDDEN;
+
+	path = cycle->getMainRoot() + matched_location->getSubRoot();
 }
 
 void Request::check_members()
@@ -779,9 +779,9 @@ void Request::check_members()
 	std::cout << std::endl;
 	std::cout << "Request_method: " << this->method << std::endl;
 	std::cout << std::endl;
-	std::cout << "Request_target: " << this->request_target << std::endl;
-	std::cout << std::endl;
 	std::cout << "Request_uri: " << this->uri << std::endl;
+	std::cout << std::endl;
+	std::cout << "Request_path: " << this->path << std::endl;
 	std::cout << std::endl;
 	std::cout << "Request_query: " << this->query << std::endl;
 	std::cout << std::endl;
