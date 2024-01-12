@@ -17,14 +17,36 @@ static void checkLocationType(std::string location_path, int& location_type);
 static void checkUseCgi(Cycle& cycle, std::string type);
 
 Conf::Conf(void) {
-	main_cmd = NULL;
-	srv_cmd = NULL;
-	loc_cmd = NULL;
-}
+	main_cmd = new Cmd[main_cmd_max]();
+	srv_cmd = new Cmd[srv_cmd_max]();
+	loc_cmd = new Cmd[loc_cmd_max]();
 
-Conf::Conf(std::string _name) {
-	setFile(_name);
-	setCmd();
+	main_cmd[0] = Cmd("worker_processes",		\
+						CMD_TAKE1,				\
+						mainWorkerProcesses);
+	main_cmd[1] = Cmd("worker_connections",		\
+						CMD_TAKE1,				\
+						mainWorkerConnections);
+	main_cmd[2] = Cmd("client_max_body_size",	\
+						CMD_TAKE1,				\
+						mainClientMaxBodySize);
+	main_cmd[3] = Cmd("uri_limit_length",		\
+						CMD_TAKE1,				\
+						mainUriLimitLength);
+	main_cmd[4] = Cmd("root",					\
+						CMD_TAKE1,				\
+						mainRoot);
+
+	srv_cmd[0] = Cmd("listen",					\
+						CMD_TAKE1,				\
+						serverListen);
+	srv_cmd[1] = Cmd("server_name", 			\
+						CMD_TAKE1,				\
+						serverName);
+
+	loc_cmd[0] = Cmd("root",					\
+						CMD_TAKE1,				\
+						locationRoot);
 }
 
 Conf::Conf(const Conf& src) {
@@ -88,39 +110,6 @@ const std::ifstream& Conf::getFileConst(void) const {
 	return file;
 }
 
-void Conf::setCmd(void) {
-	main_cmd = new Cmd[main_cmd_max]();
-	srv_cmd = new Cmd[srv_cmd_max]();
-	loc_cmd = new Cmd[loc_cmd_max]();
-
-	main_cmd[0] = Cmd("worker_processes",		\
-						CMD_TAKE1,				\
-						mainWorkerProcesses);
-	main_cmd[1] = Cmd("worker_connections",		\
-						CMD_TAKE1,				\
-						mainWorkerConnections);
-	main_cmd[2] = Cmd("client_max_body_size",	\
-						CMD_TAKE1,				\
-						mainClientMaxBodySize);
-	main_cmd[3] = Cmd("uri_limit_length",		\
-						CMD_TAKE1,				\
-						mainUriLimitLength);
-	main_cmd[4] = Cmd("root",					\
-						CMD_TAKE1,				\
-						mainRoot);
-
-	srv_cmd[0] = Cmd("listen",					\
-						CMD_TAKE1,				\
-						serverListen);
-	srv_cmd[1] = Cmd("server_name", 			\
-						CMD_TAKE1,				\
-						serverName);
-
-	loc_cmd[0] = Cmd("root",					\
-						CMD_TAKE1,				\
-						locationRoot);
-}
-
 const Cmd* Conf::getCmdListConst(int loc_type) const {
 	if (loc_type == CONF_MAIN)
 		return main_cmd;
@@ -145,9 +134,9 @@ void setConf(Conf& conf, int argc, char* file_name) {
 	if (argc != 1 && argc != 2)
 		setException(PROG_INVALID_ARG_CNT);
 	if (argc == 1)
-		conf = Conf(DEFAULT_FILE);
+		conf.setFile(DEFAULT_FILE);
 	else
-		conf = Conf(file_name);
+		conf.setFile(file_name);
 }
 
 void parseConf(Cycle& cycle, Conf& conf) {

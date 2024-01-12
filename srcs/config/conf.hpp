@@ -18,14 +18,12 @@ enum conf_block_type {
 class Conf {
 	public:
 		Conf(void);
-		Conf(std::string _file_name);
 		Conf(const Conf& src);
 		~Conf(void);
 
 		Conf&	operator =(const Conf& src);
 
 		void					setFile(std::string _file_name);
-		void					setCmd(void);
 
 		std::ifstream&			getFile(void);
 		const std::ifstream&	getFileConst(void) const;
