@@ -35,7 +35,7 @@ const handler_t& Cmd::getHandler(void) const {
 void mainWorkerProcesses(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getWorkerProcesses() != 0)
 		throw Exception(CONF_DUP_DIRCTV);
-	int n = stoi(tokens[1]); //stoi는 catch로 예외처리
+	int n = stoi(tokens[1]);
 	if (n <= 0) //최대 개수 제한은 몇개로?
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
 	cycle.setWorkerProcesses(n);
