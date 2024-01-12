@@ -1,9 +1,5 @@
 #include "../core/core.hpp"
 
-const int Conf::main_cmd_max = 5;
-const int Conf::srv_cmd_max = 2;
-const int Conf::loc_cmd_max = 1;
-
 static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file);
 static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file);
 static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
@@ -17,10 +13,6 @@ static void checkLocationType(std::string location_path, int& location_type);
 static void checkUseCgi(Cycle& cycle, std::string type);
 
 Conf::Conf(void) {
-	main_cmd = new Cmd[main_cmd_max]();
-	srv_cmd = new Cmd[srv_cmd_max]();
-	loc_cmd = new Cmd[loc_cmd_max]();
-
 	main_cmd[0] = Cmd("worker_processes",		\
 						CMD_TAKE1,				\
 						mainWorkerProcesses);
@@ -49,23 +41,13 @@ Conf::Conf(void) {
 						locationRoot);
 }
 
-Conf::~Conf(void) {
-	if (file.is_open() == TRUE)
-		file.close();
-
-	if (main_cmd)
-		delete[](main_cmd);
-	if (srv_cmd)
-		delete[](srv_cmd);
-	if (loc_cmd)
-		delete[](loc_cmd);
-}
+Conf::~Conf(void) {}
 
 void Conf::setFile(std::string _name) {
 	file_name = _name;
 	file.open(file_name);
 	if (file.is_open() == FALSE)
-		setException(CONF_FAIL_OPEN);
+		throw Exception(CONF_FAIL_OPEN);
 }
 
 std::ifstream& Conf::getFile(void) {
@@ -88,17 +70,17 @@ const Cmd* Conf::getCmdListConst(int loc_type) const {
 
 int Conf::getCmdMaxConst(int loc_type) const {
 	if (loc_type == CONF_MAIN)
-		return main_cmd_max;
+		return CMD_MAIN_MAX;
 	if (loc_type == CONF_SRV)
-		return srv_cmd_max;
+		return CMD_SRV_MAX;
 	if (loc_type == CONF_LOC)
-		return loc_cmd_max;
+		return CMD_LOC_MAX;
 	return -1;
 }
 
 void setConf(Conf& conf, int argc, char* file_name) {
 	if (argc != 1 && argc != 2)
-		setException(PROG_INVALID_ARG_CNT);
+		throw Exception(PROG_INVALID_ARG_CNT);
 	if (argc == 1)
 		conf.setFile(DEFAULT_FILE);
 	else
@@ -120,7 +102,7 @@ void parseConf(Cycle& cycle, Conf& conf) {
 
 		token_cnt = tokenizer(buf, tokens);
 		if (token_cnt != 2 || tokens[1] != "{")
-			setException(CONF_INVALID_BLOCK_FORM);
+			throw Exception(CONF_INVALID_BLOCK_FORM);
 
 		if (checkConfLocation(tokens) == CONF_MAIN)
 			parseMain(cycle, conf, file);
@@ -155,7 +137,7 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 		|| cycle.getClientMaxBodySize() == 0	\
 		|| cycle.getUriLimitLength() == 0		\
 		|| cycle.getMainRoot() == "")
-		setException(CONF_LACK_DIRCTV);
+		throw Exception(CONF_LACK_DIRCTV);
 }
 
 static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
@@ -180,7 +162,7 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 
 		if (tokens[0] == "location") {
 			if (token_cnt != 3 || tokens[2] != "{")
-				setException(CONF_INVALID_BLOCK_FORM);
+				throw Exception(CONF_INVALID_BLOCK_FORM);
 			parseLocation(cycle, conf, file, tokens[1]);
 			continue;
 		}
@@ -190,7 +172,7 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 
 	if (server_list.back().getPort() == 0	\
 		|| server_list.back().getDomain() == "")
-		setException(CONF_LACK_DIRCTV);
+		throw Exception(CONF_LACK_DIRCTV);
 }
 
 static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
@@ -221,7 +203,7 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 	checkGetlineError(file);
 
 	if (location_list.back().getSubRoot() == "")
-		setException(CONF_LACK_DIRCTV);
+		throw Exception(CONF_LACK_DIRCTV);
 }
 
 static void callCmd(Cycle& cycle, Conf& conf, int location, \
@@ -234,14 +216,20 @@ static void callCmd(Cycle& cycle, Conf& conf, int location, \
 	for (idx = 0; idx < cmd_max; idx++) {
 		if (cmd[idx].getName() == tokens[0]) {
 			if (cmd[idx].getArgCnt() != token_cnt - 1)
-				setException(CONF_INVALID_DIRCTV_ARG_CNT);
+				throw Exception(CONF_INVALID_DIRCTV_ARG_CNT);
 			handler = cmd[idx].getHandler();
-			handler(cycle, tokens);
+			try {
+				handler(cycle, tokens);
+			} catch (const std::invalid_argument& e) {
+				throw Exception(PROG_FAIL_FUNC);
+			} catch (const std::out_of_range& e) {
+				throw Exception(PROG_FAIL_FUNC);
+			}
 			break;
 		}
 	}
 	if (idx == cmd_max)
-		setException(CONF_INVALID_DIRCTV);
+		throw Exception(CONF_INVALID_DIRCTV);
 }
 
 static int tokenizer(char* str, std::string* tokens) {
@@ -254,7 +242,7 @@ static int tokenizer(char* str, std::string* tokens) {
 			tokens[idx++] = token;
 
 	if (istr.eof() == FALSE)
-		setException(CONF_FAIL_TOKENIZE);
+		throw Exception(CONF_FAIL_TOKENIZE);
 	return idx;
 }
 
@@ -263,14 +251,14 @@ static int checkConfLocation(std::string str[]) {
 		return CONF_MAIN;
 	if (str[0] == "server")
 		return CONF_SRV;
-	setException(CONF_INVALID_BLOCK_LOC);
+	throw Exception(CONF_INVALID_BLOCK_LOC);
 	return 0;
 }
 
 static void checkGetlineError(std::ifstream& file) {
 	if (file.eof() != TRUE \
 		&& (file.fail() == TRUE || file.bad() == TRUE))
-		setException(CONF_FAIL_READ);
+		throw Exception(CONF_FAIL_READ);
 }
 
 static void checkLocationType(std::string location_path, int& location_type) {
@@ -281,12 +269,12 @@ static void checkLocationType(std::string location_path, int& location_type) {
 	else if (location_path[0] == '.')
 		location_type = LOC_CGI;
 	else
-		setException(CONF_INVALID_LOC_PATH);
+		throw Exception(CONF_INVALID_LOC_PATH);
 }
 
 static void checkUseCgi(Cycle& cycle, std::string type) {
 	if (type == ".php")
 			cycle.setUseCgi(TRUE);
 	else
-		setException(CONF_INVALID_CGI);
+		throw Exception(CONF_INVALID_CGI);
 }

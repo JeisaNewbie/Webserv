@@ -6,14 +6,14 @@ static void createWorker(Cycle& cycle, worker_array& worker_list, int i);
 Worker::Worker(int id) : worker_id(id) {
 	event_queue = kqueue();
 	if (event_queue == -1)
-		setException(WORK_FAIL_CREATE_KQ);
+		throw Exception(WORK_FAIL_CREATE_KQ);
 	listen_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listen_socket == -1)
-		setException(WORK_FAIL_CREATE_SOCKET);
+		throw Exception(WORK_FAIL_CREATE_SOCKET);
 
 	error_log.open("log/" + std::to_string(id) + ".log");
 	if (error_log.is_open() == FALSE)
-		setException(WORK_FAIL_OPEN);
+		throw Exception(WORK_FAIL_OPEN);
 
 	std::string	tmp = std::to_string(id);
 	error_log.write(tmp.c_str(), tmp.length());

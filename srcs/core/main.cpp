@@ -13,8 +13,8 @@ int main(int argc, char** argv, char** envp) {
 	} catch(Exception& e){
 		std::cerr << "error code [" << error_code << "] : " \
 					<< e.what() << std::endl;
-		if (errno != 0)
-			std::cerr << ": " << strerror(errno) << std::endl;
+		if (e.getErrorNum() != 0)
+			std::cerr << ": " << strerror(e.getErrorNum()) << std::endl;
 		return error_code;
 	}
 	startWorker(cycle);

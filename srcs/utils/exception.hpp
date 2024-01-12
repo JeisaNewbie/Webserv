@@ -5,6 +5,7 @@
 
 enum error_code_type {
 	PROG_INVALID_ARG_CNT = 1,
+	PROG_FAIL_FUNC,
 
 	CONF_FAIL_OPEN,
 	CONF_FAIL_READ,
@@ -33,22 +34,22 @@ enum error_code_type {
 
 class Exception {
 	public:
-		Exception(int error_code);
+		Exception(int _error_code);
 		Exception(const Exception& src);
 		~Exception(void);
 
 		Exception& operator =(const Exception& src);
 		
-		const char* what() const;
+		int			getErrorNum(void) const;
+		const char* what(void) const;
 
 	private:
 		Exception(void);
 
-
+		int			error_num;
 		std::string	message;
 };
 
-void setException(int _error_code);
 void handleWorkerException(std::ofstream& error_log, int _error_code);
 void handleEventException(std::ofstream& error_log, int _error_code, uintptr_t client_fd);
 

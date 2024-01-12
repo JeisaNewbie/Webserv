@@ -8,6 +8,9 @@
 
 # define TOKEN_SIZE 5
 # define DEFAULT_FILE "default.conf"
+# define CMD_MAIN_MAX 5
+# define CMD_SRV_MAX 2
+# define CMD_LOC_MAX 1
 
 enum conf_block_type {
 	CONF_MAIN,
@@ -35,12 +38,9 @@ class Conf {
 		std::ifstream		file;
 		std::string			file_name;
 
-		Cmd*				main_cmd;
-		Cmd*				srv_cmd;
-		Cmd*				loc_cmd;
-		static const int	main_cmd_max;
-		static const int	srv_cmd_max;
-		static const int	loc_cmd_max;
+		Cmd				main_cmd[CMD_MAIN_MAX];
+		Cmd				srv_cmd[CMD_SRV_MAX];
+		Cmd				loc_cmd[CMD_LOC_MAX];
 };
 
 void setConf(Conf &conf, int argc, char* file_name);

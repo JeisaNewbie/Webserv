@@ -1,9 +1,16 @@
 #include "../core/core.hpp"
 
-Exception::Exception(int error_code) {
+Exception::Exception(int _error_code) {
+	error_num = errno;
+	error_code = _error_code;
+
 	switch (error_code) {
 	case PROG_INVALID_ARG_CNT:
 		message = "Program has 1 or 2 arguments";
+		break;
+	
+	case PROG_FAIL_FUNC:
+		message = "Failed to standard function";
 		break;
 	
 	case CONF_FAIL_OPEN:
@@ -108,13 +115,12 @@ Exception& Exception::operator =(const Exception& src) {
 	return *this;
 }
 
-const char*	Exception::what() const {
-	return message.c_str();
+int Exception::getErrorNum(void) const {
+	return error_num;
 }
 
-void setException(int _error_code) {
-	error_code = _error_code;
-	throw Exception(error_code);
+const char*	Exception::what(void) const {
+	return message.c_str();
 }
 
 void handleWorkerException(std::ofstream& error_log, int _error_code) {
@@ -125,7 +131,7 @@ void handleWorkerException(std::ofstream& error_log, int _error_code) {
 	error_log.write(tmp.c_str(), tmp.length());
 	error_log.write("\n: ", 1);
 
-	tmp = strerror(errno);
+	tmp = strerror(e.getErrorNum());
 	error_log.write(tmp.c_str(), tmp.length());
 	error_log.write("\n\n", 2);
 	error_log.flush();
