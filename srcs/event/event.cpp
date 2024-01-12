@@ -21,9 +21,9 @@ void prepConnect(Cycle& cycle, int id) {
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
-		handleWorkerException(worker.getErrorLog(), EVENT_FAIL_BIND);
+		workerException(worker.getErrorLog(), EVENT_FAIL_BIND);
 	if (listen(listen_socket, LISTEN_QUEUE_SIZE) == -1)
-		handleWorkerException(worker.getErrorLog(), EVENT_FAIL_LISTEN);
+		workerException(worker.getErrorLog(), EVENT_FAIL_LISTEN);
 	fcntl(listen_socket, F_SETFL, O_NONBLOCK);
 	startConnect(cycle, worker);
 }
@@ -61,7 +61,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 			if (cur_event->flags & EV_ERROR) {
 				if (cur_event->flags & EV_DELETE)
 					continue;
-				handleEventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
+				eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
 				disconnectClient(worker, cur_event->ident);
 			}
 			if (cur_event->filter == EVFILT_READ) {
@@ -108,7 +108,7 @@ static bool acceptNewClient(Worker& worker) {
 	uintptr_t	client_socket;
 
 	if ((client_socket = accept(listen_socket, NULL, NULL)) == -1) {
-		handleEventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
+		eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
 		return FALSE;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
@@ -136,7 +136,7 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 	}
 	else if (recieve_size == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		disconnectClient(worker, client_socket);
-		handleEventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
+		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
 	std::cout << "worker: " << worker.getWorkerId() \
@@ -150,7 +150,7 @@ static bool sendToClient(Worker& worker, int client_socket) {
 
 	if (send(client_socket, response.c_str(), response.length() + 1, 0) == -1) {
 		disconnectClient(worker, client_socket);
-		handleEventException(worker.getErrorLog(), EVENT_FAIL_SEND, client_socket);
+		eventException(worker.getErrorLog(), EVENT_FAIL_SEND, client_socket);
 		return FALSE;
 	}
 	return TRUE;

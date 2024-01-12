@@ -18,6 +18,4 @@
 # define TRUE 1
 # define BUF_SIZE 1024
 
-extern int error_code;
-
 #endif

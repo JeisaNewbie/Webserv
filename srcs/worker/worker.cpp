@@ -69,7 +69,7 @@ static void createWorker(Cycle& cycle, worker_array& worker_list, int i) {
 		try {
 			prepConnect(cycle, i);
 		} catch(Exception& e){
-			std::exit(error_code);
+			std::exit(e.getCostomError());
 		}
 	}	
 }

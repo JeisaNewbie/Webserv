@@ -41,7 +41,7 @@ int
 	sockaddr_in server_addr;
 
 	char sAddr[15] = "127.0.0.1";
-	int sPort = 8080;
+	int sPort = 80;
 
 	client_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (client_socket == -1)

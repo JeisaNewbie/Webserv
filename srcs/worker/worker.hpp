@@ -10,7 +10,7 @@
 # include <netinet/ip.h>
 
 # define CHILD 0
-# define PORT 8080
+# define PORT 80
 
 typedef std::map<int, std::string> clients_t;
 typedef std::vector<struct kevent> kevent_t;

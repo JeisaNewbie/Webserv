@@ -1,10 +1,10 @@
 #include "../core/core.hpp"
 
-Exception::Exception(int _error_code) {
-	error_num = errno;
-	error_code = _error_code;
+Exception::Exception(int _costom_error) {
+	system_error = errno;
+	costom_error = _costom_error;
 
-	switch (error_code) {
+	switch (costom_error) {
 	case PROG_INVALID_ARG_CNT:
 		message = "Program has 1 or 2 arguments";
 		break;
@@ -115,39 +115,50 @@ Exception& Exception::operator =(const Exception& src) {
 	return *this;
 }
 
-int Exception::getErrorNum(void) const {
-	return error_num;
+int Exception::getSystemError(void) const {
+	return system_error;
+}
+
+int Exception::getCostomError(void) const {
+	return costom_error;
 }
 
 const char*	Exception::what(void) const {
 	return message.c_str();
 }
 
-void handleWorkerException(std::ofstream& error_log, int _error_code) {
+int mainException(Exception& e) {
+	std::cerr << "error code [" << e.getCostomError() << "] : " \
+				<< e.what() << std::endl;
+	if (e.getSystemError() != 0)
+		std::cerr << ": " << strerror(e.getSystemError()) << std::endl;
+	return e.getCostomError();
+}
+
+void workerException(std::ofstream& error_log, int _costom_error) {
 	std::string	tmp;
-	Exception	e(_error_code);
+	Exception	e(_costom_error);
 
 	tmp = std::string(e.what());
 	error_log.write(tmp.c_str(), tmp.length());
-	error_log.write("\n: ", 1);
+	error_log.write("\n: ", 3);
 
-	tmp = strerror(e.getErrorNum());
+	tmp = strerror(e.getSystemError());
 	error_log.write(tmp.c_str(), tmp.length());
 	error_log.write("\n\n", 2);
 	error_log.flush();
 	throw e;
 }
 
-void handleEventException(std::ofstream& error_log, int _error_code, uintptr_t client_fd) {
+void eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd) {
 	std::string	tmp;
-	error_code = _error_code;
 
 	if (client_fd != 0) {
 		tmp = std::to_string(client_fd);
 		error_log.write(tmp.c_str(), tmp.length());
 		error_log.write(": ", 2);
 	}
-	tmp = std::string(Exception(error_code).what());
+	tmp = std::string(Exception(_costom_error).what());
 	error_log.write(tmp.c_str(), tmp.length());
 	error_log.write("\n\n", 2);
 	error_log.flush();

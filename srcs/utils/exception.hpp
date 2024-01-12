@@ -3,7 +3,7 @@
 
 # include <iostream>
 
-enum error_code_type {
+enum costom_error_type {
 	PROG_INVALID_ARG_CNT = 1,
 	PROG_FAIL_FUNC,
 
@@ -34,23 +34,26 @@ enum error_code_type {
 
 class Exception {
 	public:
-		Exception(int _error_code);
+		Exception(int _costom_error);
 		Exception(const Exception& src);
 		~Exception(void);
 
 		Exception& operator =(const Exception& src);
 		
-		int			getErrorNum(void) const;
+		int			getSystemError(void) const;
+		int			getCostomError(void) const;
 		const char* what(void) const;
 
 	private:
 		Exception(void);
 
-		int			error_num;
+		int			system_error;
+		int			costom_error;
 		std::string	message;
 };
 
-void handleWorkerException(std::ofstream& error_log, int _error_code);
-void handleEventException(std::ofstream& error_log, int _error_code, uintptr_t client_fd);
+int		mainException(Exception& e);
+void	workerException(std::ofstream& error_log, int _costom_error);
+void	eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd);
 
 #endif
