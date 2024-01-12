@@ -1,4 +1,4 @@
-#include "server.hpp"
+#include "../core/core.hpp"
 
 Server::Server(void) : port(0) {}
 

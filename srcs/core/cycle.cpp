@@ -1,8 +1,6 @@
 #include "core.hpp"
 
-Cycle::Cycle(void) {}
-
-Cycle::Cycle(const char **_envp) \
+Cycle::Cycle(const char** _envp) \
 	: envp(_envp), use_cgi(FALSE), worker_processes(0), \
 		worker_connections(0), client_max_body_size(0), \
 		uri_limit_length(0)  {}
@@ -15,11 +13,14 @@ Cycle::~Cycle(void) {}
 
 Cycle& Cycle::operator =(const Cycle& src) {
 	if (this != &src) {
+		use_cgi = src.use_cgi;
+
 		worker_processes = src.worker_processes;
 		worker_connections = src.worker_connections;
 		client_max_body_size = src.client_max_body_size;
 		uri_limit_length = src.uri_limit_length;
 		main_root = src.main_root;
+		
 		server_list = src.server_list;
 		worker_list = src.worker_list;
 	}

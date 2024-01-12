@@ -3,47 +3,57 @@
 
 # include <iostream>
 
-enum error_code_type {
+enum costom_error_type {
 	PROG_INVALID_ARG_CNT = 1,
-	CONF_OPEN_FAIL,
-	CONF_READ_FAIL,
-	CONF_DIRECTIVE_OVERLAP,
-	CONF_INVALID_ARG_CNT,
-	CONF_INVALID_LOC,
-	CONF_INVALID_LOC_TYPE,
-	CONF_INVALID_FORM,
-	CONF_INVALID_VALUE,
-	CONF_INVALID_DIRECTIVE,
-	CONF_INVALID_CGI,
-	CONF_LACK_DIRECTIVE,
-	CONF_TOKENIZE_FAIL,
+	PROG_FAIL_FUNC,
 
-	WORK_OPEN_FAIL,
-	WORK_CREATE_KQ_FAIL,
-	WORK_CREATE_SOCKET_FAIL,
+	CONF_FAIL_OPEN,
+	CONF_FAIL_READ,
+	CONF_DUP_DIRCTV,
+	CONF_INVALID_BLOCK_FORM,
+	CONF_INVALID_BLOCK_LOC,
+	CONF_INVALID_LOC_PATH,
+	CONF_INVALID_DIRCTV,
+	CONF_INVALID_DIRCTV_ARG_CNT,
+	CONF_INVALID_DIRCTV_VALUE,
+	CONF_INVALID_CGI,
+	CONF_LACK_DIRCTV,
+	CONF_FAIL_TOKENIZE,
+
+	WORK_FAIL_OPEN,
+	WORK_FAIL_CREATE_KQ,
+	WORK_FAIL_CREATE_SOCKET,
 	
-	EVENT_BIND_FAIL,
-	EVENT_LISTEN_FAIL,
-	EVENT_ACCEPT_FAIL,
-	EVENT_RECV_FAIL,
-	EVENT_SEND_FAIL,
-	EVENT_ERROR_FLAG,
+	EVENT_FAIL_BIND,
+	EVENT_FAIL_LISTEN,
+	EVENT_FAIL_ACCEPT,
+	EVENT_FAIL_RECV,
+	EVENT_FAIL_SEND,
+	EVENT_SET_ERROR_FLAG,
 };
 
 class Exception {
 	public:
-		Exception(int error_code);
-		//orthodox??
-		const char* what() const;
+		Exception(int _costom_error);
+		Exception(const Exception& src);
+		~Exception(void);
+
+		Exception& operator =(const Exception& src);
+		
+		int			getSystemError(void) const;
+		int			getCostomError(void) const;
+		const char* what(void) const;
 
 	private:
 		Exception(void);
-		
+
+		int			system_error;
+		int			costom_error;
 		std::string	message;
 };
 
-void setException(int _error_code);
-void handleWorkerException(std::ofstream &error_log, int _error_code);
-void handleEventException(std::ofstream &error_log, int _error_code, uintptr_t client_fd);
+int		mainException(Exception& e);
+void	workerException(std::ofstream& error_log, int _costom_error);
+void	eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd);
 
 #endif

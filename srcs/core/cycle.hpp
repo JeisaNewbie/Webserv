@@ -3,6 +3,9 @@
 
 # include "../block/server.hpp"
 
+# include <list>
+# include <iostream>
+
 # define WORKER_PROCESS_MAX 2
 # define WORKER_CONNECTION_MAX 1024
 
@@ -10,7 +13,7 @@ typedef std::array<pid_t, WORKER_PROCESS_MAX> worker_array;
 
 class Cycle {
 	public:
-		Cycle(const char **_envp);
+		Cycle(const char** _envp);
 		Cycle(const Cycle& obj);
 		~Cycle(void);
 
@@ -38,7 +41,7 @@ class Cycle {
 	private:
 		Cycle(void);
 
-		const char			**envp;
+		const char**		envp;
 		bool				use_cgi;
 
 		int					worker_processes;

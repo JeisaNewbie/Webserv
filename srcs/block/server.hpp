@@ -1,8 +1,10 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <list>
 # include "location.hpp"
+
+# include <list>
+# include <iostream>
 
 class Server {
 	public:
