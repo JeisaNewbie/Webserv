@@ -1,88 +1,164 @@
 #include "../core/core.hpp"
 
-Exception::Exception(int error_code) {
-	if (error_code == PROG_INVALID_ARG_CNT)
+Exception::Exception(int _costom_error) {
+	system_error = errno;
+	costom_error = _costom_error;
+
+	switch (costom_error) {
+	case PROG_INVALID_ARG_CNT:
 		message = "Program has 1 or 2 arguments";
-	else if (error_code == CONF_OPEN_FAIL)
-		message = "Open configuration file is failed";
-	else if (error_code == CONF_READ_FAIL)
-		message = "Read configuration file is failed";
-	else if (error_code == CONF_DIRECTIVE_OVERLAP)
-		message = "Configuration directive is overlaped";
-	else if (error_code == CONF_INVALID_ARG_CNT)
-		message = "Number of directive argument is not correct";
-	else if (error_code == CONF_INVALID_VALUE)
-		message = "Configuraion value is invalid";
-	else if (error_code == CONF_INVALID_FORM)
-		message = "Configuration form is invalid";
-	else if (error_code == CONF_INVALID_LOC)
-		message = "Configuration location is invalid";
-	else if (error_code == CONF_INVALID_LOC_TYPE)
-		message = "Configuration location type is invalid";
-	else if (error_code == CONF_INVALID_DIRECTIVE)
-		message = "Configuration directive is not matched";
-	else if (error_code == CONF_INVALID_CGI)
-		message = "Configuration cgi is not invalid";
-	else if (error_code == CONF_LACK_DIRECTIVE)
-		message = "Configuration directive is lacked";
-	else if (error_code == CONF_TOKENIZE_FAIL)
-		message = "Tokenize configure command is failed";
-	else if (error_code == WORK_OPEN_FAIL)
-		message = "Open log file is failed";
-	else if (error_code == WORK_CREATE_KQ_FAIL)
-		message = "Create kqueue is failed";
-	else if (error_code == WORK_CREATE_SOCKET_FAIL)
-		message = "Create socket is failed";
-	else if (error_code == EVENT_BIND_FAIL)
-		message = "Function bind is failed";
-	else if (error_code == EVENT_LISTEN_FAIL)
-		message = "Function listen failed";
-	else if (error_code == EVENT_ERROR_FLAG)
-		message = "Event flag set to error";
-	else if (error_code == EVENT_ACCEPT_FAIL)
-		message = "Function accept is failed";
-	else if (error_code == EVENT_RECV_FAIL)
-		message = "Function recv is failed";
-	else if (error_code == EVENT_SEND_FAIL)
-		message = "Function send is failed";
-	else
+		break;
+	
+	case PROG_FAIL_FUNC:
+		message = "Failed to standard function";
+		break;
+	
+	case CONF_FAIL_OPEN:
+		message = "Failed to open configure file";
+		break;
+
+	case CONF_FAIL_READ:
+		message = "Failed to read configure file";
+		break;
+
+	case CONF_DUP_DIRCTV:
+		message = "Directives is duplicated";
+		break;
+
+	case CONF_INVALID_BLOCK_FORM:
+		message = "Form of configure block is invalid";
+		break;
+
+	case CONF_INVALID_BLOCK_LOC:
+		message = "Position of block is incorrect";
+		break;
+
+	case CONF_INVALID_LOC_PATH:
+		message = "Path of location block is invalid";
+		break;
+
+	case CONF_INVALID_DIRCTV:
+		message = "Directive is not matched";
+		break;
+
+	case CONF_INVALID_DIRCTV_ARG_CNT:
+		message = "Number of directive arguments is incorrect";
+		break;
+
+	case CONF_INVALID_DIRCTV_VALUE:
+		message = "Value of directive is invalid";
+		break;
+
+	case CONF_INVALID_CGI:
+		message = "Type of cgi is invalid";
+		break;
+
+	case CONF_LACK_DIRCTV:
+		message = "Directive is incomplete";
+		break;
+
+	case CONF_FAIL_TOKENIZE:
+		message = "Failed to tokenize configure command";
+		break;
+
+	case WORK_FAIL_OPEN:
+		message = "Failed to open log file";
+		break;
+
+	case WORK_FAIL_CREATE_KQ:
+		message = "Failed to create kqueue";
+		break;
+
+	case WORK_FAIL_CREATE_SOCKET:
+		message = "Failed to create socket";
+		break;
+
+	case EVENT_FAIL_BIND:
+		message = "Bind function failed";
+		break;
+
+	case EVENT_FAIL_LISTEN:
+		message = "Listen function failed";
+		break;
+
+	case EVENT_FAIL_ACCEPT:
+		message = "Accept fucntion failed";
+		break;
+
+	case EVENT_FAIL_RECV:
+		message = "Recv function failed";
+		break;
+
+	case EVENT_FAIL_SEND:
+		message = "Send function failed";
+		break;
+
+	case EVENT_SET_ERROR_FLAG:
+		message = "Event flag is set to error";
+		break;
+
+	default:
 		message = "Error code is not defined";
+		break;
+	}
 }
 
-const char*	Exception::what() const {
+Exception::Exception(const Exception& src) {
+	*this = src;
+}
+
+Exception::~Exception(void) {}
+
+Exception& Exception::operator =(const Exception& src) {
+	if (this != &src)
+		message = src.message;
+	return *this;
+}
+
+int Exception::getSystemError(void) const {
+	return system_error;
+}
+
+int Exception::getCostomError(void) const {
+	return costom_error;
+}
+
+const char*	Exception::what(void) const {
 	return message.c_str();
 }
 
-void setException(int _error_code) {
-	error_code = _error_code;
-	throw Exception(error_code);
+int mainException(Exception& e) {
+	std::cerr << "error code [" << e.getCostomError() << "] : " \
+				<< e.what() << std::endl;
+	if (e.getSystemError() != 0)
+		std::cerr << ": " << strerror(e.getSystemError()) << std::endl;
+	return e.getCostomError();
 }
 
-void handleWorkerException(std::ofstream &error_log, int _error_code) {
+void workerException(std::ofstream& error_log, int _costom_error) {
 	std::string	tmp;
-	Exception	e(_error_code);
+	Exception	e(_costom_error);
 
 	tmp = std::string(e.what());
 	error_log.write(tmp.c_str(), tmp.length());
-	error_log.write("\n: ", 1);
+	error_log.write("\n: ", 3);
 
-	tmp = strerror(errno);
+	tmp = strerror(e.getSystemError());
 	error_log.write(tmp.c_str(), tmp.length());
 	error_log.write("\n\n", 2);
 	error_log.flush();
 	throw e;
 }
 
-void handleEventException(std::ofstream &error_log, int _error_code, uintptr_t client_fd) {
+void eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd) {
 	std::string	tmp;
-	error_code = _error_code;
 
 	if (client_fd != 0) {
 		tmp = std::to_string(client_fd);
 		error_log.write(tmp.c_str(), tmp.length());
 		error_log.write(": ", 2);
 	}
-	tmp = std::string(Exception(error_code).what());
+	tmp = std::string(Exception(_costom_error).what());
 	error_log.write(tmp.c_str(), tmp.length());
 	error_log.write("\n\n", 2);
 	error_log.flush();

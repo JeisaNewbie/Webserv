@@ -1,12 +1,16 @@
 #ifndef CONF_HPP
 # define CONF_HPP
 
+# include "cmd.hpp"
+
 # include <fstream>
 # include <sstream>
-# include "cmd.hpp"
 
 # define TOKEN_SIZE 5
 # define DEFAULT_FILE "default.conf"
+# define CMD_MAIN_MAX 5
+# define CMD_SRV_MAX 2
+# define CMD_LOC_MAX 1
 
 enum conf_block_type {
 	CONF_MAIN,
@@ -17,14 +21,9 @@ enum conf_block_type {
 class Conf {
 	public:
 		Conf(void);
-		Conf(std::string _file_name);
-		Conf(const Conf& src);
 		~Conf(void);
 
-		Conf&	operator =(const Conf& src);
-
 		void					setFile(std::string _file_name);
-		void					setCmd(void);
 
 		std::ifstream&			getFile(void);
 		const std::ifstream&	getFileConst(void) const;
@@ -32,18 +31,19 @@ class Conf {
 		int						getCmdMaxConst(int loc_type) const;
 
 	private:
+		Conf(const Conf& src);
+
+		Conf& operator =(const Conf& src);
+
 		std::ifstream		file;
 		std::string			file_name;
 
-		Cmd					*main_cmd;
-		Cmd					*srv_cmd;
-		Cmd					*loc_cmd;
-		static const int	main_cmd_max;
-		static const int	srv_cmd_max;
-		static const int	loc_cmd_max;
+		Cmd				main_cmd[CMD_MAIN_MAX];
+		Cmd				srv_cmd[CMD_SRV_MAX];
+		Cmd				loc_cmd[CMD_LOC_MAX];
 };
 
-void setConf(Conf &conf, int argc, char *file_name);
+void setConf(Conf &conf, int argc, char* file_name);
 void parseConf(Cycle &cycle, Conf &conf);
 
 #endif
