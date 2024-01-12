@@ -17,10 +17,7 @@ typedef std::vector<struct kevent> kevent_t;
 class Worker {
 	public:
 		Worker(int id);
-		Worker(const Worker& obj);
 		~Worker(void);
-
-		Worker& operator =(const Worker& src);
 
 		pid_t			getWorkerId(void) const;
 		int				getEventQueue(void) const;
@@ -31,6 +28,9 @@ class Worker {
 
 	private:
 		Worker(void);
+		Worker(const Worker& obj);
+		
+		Worker& operator =(const Worker& src);
 
 		pid_t			worker_id;
 		int				event_queue;

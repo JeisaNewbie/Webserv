@@ -49,10 +49,6 @@ Conf::Conf(void) {
 						locationRoot);
 }
 
-Conf::Conf(const Conf& src) {
-	*this = src;
-}
-
 Conf::~Conf(void) {
 	if (file.is_open() == TRUE)
 		file.close();
@@ -63,36 +59,6 @@ Conf::~Conf(void) {
 		delete[](srv_cmd);
 	if (loc_cmd)
 		delete[](loc_cmd);
-}
-
-Conf& Conf::operator =(const Conf& src) {
-	if (this != &src) {
-		file_name = src.file_name;
-		if (file.is_open() == TRUE)
-			file.close();
-		file.open(file_name);
-		if (file.is_open() == FALSE)
-			setException(CONF_FAIL_OPEN);
-
-		if (main_cmd)
-			delete[](main_cmd);
-		main_cmd = new Cmd[main_cmd_max]();
-		for (int i = 0; i < main_cmd_max; i++)
-			main_cmd[i] = src.main_cmd[i];
-
-		if (srv_cmd)
-			delete[](srv_cmd);
-		srv_cmd = new Cmd[srv_cmd_max]();
-		for (int i = 0; i < srv_cmd_max; i++)
-			srv_cmd[i] = src.srv_cmd[i]; 
-
-		if (loc_cmd)
-			delete[](loc_cmd);
-		loc_cmd = new Cmd[loc_cmd_max]();
-		for (int i = 0; i < loc_cmd_max; i++)
-			loc_cmd[i] = src.loc_cmd[i];
-	}
-	return (*this);
 }
 
 void Conf::setFile(std::string _name) {

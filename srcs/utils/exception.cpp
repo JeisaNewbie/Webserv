@@ -96,6 +96,18 @@ Exception::Exception(int error_code) {
 	}
 }
 
+Exception::Exception(const Exception& src) {
+	*this = src;
+}
+
+Exception::~Exception(void) {}
+
+Exception& Exception::operator =(const Exception& src) {
+	if (this != &src)
+		message = src.message;
+	return *this;
+}
+
 const char*	Exception::what() const {
 	return message.c_str();
 }

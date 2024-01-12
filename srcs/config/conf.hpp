@@ -18,10 +18,7 @@ enum conf_block_type {
 class Conf {
 	public:
 		Conf(void);
-		Conf(const Conf& src);
 		~Conf(void);
-
-		Conf&	operator =(const Conf& src);
 
 		void					setFile(std::string _file_name);
 
@@ -31,6 +28,10 @@ class Conf {
 		int						getCmdMaxConst(int loc_type) const;
 
 	private:
+		Conf(const Conf& src);
+
+		Conf& operator =(const Conf& src);
+
 		std::ifstream		file;
 		std::string			file_name;
 

@@ -34,12 +34,17 @@ enum error_code_type {
 class Exception {
 	public:
 		Exception(int error_code);
-		//orthodox??
+		Exception(const Exception& src);
+		~Exception(void);
+
+		Exception& operator =(const Exception& src);
+		
 		const char* what() const;
 
 	private:
 		Exception(void);
-		
+
+
 		std::string	message;
 };
 

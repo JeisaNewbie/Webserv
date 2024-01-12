@@ -21,22 +21,9 @@ Worker::Worker(int id) : worker_id(id) {
 	error_log.flush(); //왜 필요한거지?
 }
 
-Worker::Worker(const Worker& src) {
-	*this = src;
-}
-
 Worker::~Worker(void) {}
 
-Worker& Worker::operator =(const Worker& src) {
-	if (this != &src) {
-		worker_id = src.worker_id;
-		event_queue = src.event_queue;
-		listen_socket = src.listen_socket;
-	}
-	return (*this);
-}
-
-pid_t	Worker::getWorkerId(void) const {
+pid_t Worker::getWorkerId(void) const {
 	return worker_id;;
 }
 
