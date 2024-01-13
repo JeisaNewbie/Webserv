@@ -25,6 +25,7 @@ class Response {
 		std::string	&get_header_line ();
 		std::string	get_header_field ();
 		std::string	&get_body();
+		void	set_body(std::string body);
 		void	set_header_line (int status_code);
 		void	set_header_field (const std::string &key, const std::string &value);
 		void	assemble_message();

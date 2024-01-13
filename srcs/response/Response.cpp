@@ -103,3 +103,8 @@ void	Response::set_header_field (const std::string &key, const std::string &valu
 {
 	header[key] = value;
 }
+
+void	Response::set_body(std::string body)
+{
+	this->body = body;
+}

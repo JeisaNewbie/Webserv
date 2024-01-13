@@ -40,14 +40,18 @@ void	Client::do_method_without_cgi(std::string &path, int path_property)
 	std::string	&method = get_request_instance().get_method();
 
 	if (method == "POST")
-		throw ;
+		throw NO_CONTENT;
 
 	if (method == "GET")
 	{
 		if (path_property == FILE)
-			Get::make_body(path);
-		// else
-		// 	Get::
+		{
+			Get::make_body(response, path);
+			Get::create_response(response);
+			throw OK;
+		}
+		else
+			throw NOT_FOUND;
 	}
 
 	if (method == "DELETE")

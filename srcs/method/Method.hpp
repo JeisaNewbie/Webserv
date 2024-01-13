@@ -4,6 +4,8 @@
 #include "../request/Request.hpp"
 #include "../response/Response.hpp"
 #include "../utils/Utils.hpp"
+#include <fstream>
+#include <sstream>
 
 class Method
 {
@@ -14,9 +16,4 @@ protected:
 
 public:
 	void create_response(Response &response);
-	enum {
-	GET,
-	POST,
-	DELETE
-	};
 };
