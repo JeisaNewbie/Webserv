@@ -21,8 +21,8 @@ int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 {
 	try
 	{
-		this->request_msg = "DELETE http://www.example.com/products?category=books&sort=price&order=desc&limit=20&page=2&filter=new HTTP/1.1\r\nHost:             www.example.com         \r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 32\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nCookie: sessionId=abc123; preferences=darkmode\r\nReferer: http://www.example.com/form\r\nConnection: keep-alive\r\n\r\nusername=user&password=pass123\r\n";
-		// this->request_msg = request_msg;
+		// this->request_msg = "DELETE http://www.example.com/products?category=books&sort=price&order=desc&limit=20&page=2&filter=new HTTP/1.1\r\nHost:             www.example.com         \r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 32\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nCookie: sessionId=abc123; preferences=darkmode\r\nReferer: http://www.example.com/form\r\nConnection: keep-alive\r\n\r\nusername=user&password=pass123\r\n";
+		this->request_msg = request_msg;
 		if (get_chunked() == true)
 		{
 			decode_chunked();

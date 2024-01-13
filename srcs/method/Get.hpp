@@ -8,5 +8,5 @@ class Get : public Method {
 		/* data */
 	public:
 		static void create_response(Response &response);
-		static void	make_body(std::string &path);
+		static void	make_body(Response &response, std::string &path);
 };
