@@ -93,9 +93,9 @@ std::string	&Response::get_body() {return this->body;}
 void	Response::set_header_line (int status_code)
 {
 	header_line = "HTTP/1.1 ";
-	header_line += status_line[status_code].code;
+	header_line += std::string (status_line[status_code].code);
 	header_line += " ";
-	header_line += status_line[status_code].text;
+	header_line += std::string (status_line[status_code].text);
 	header_line += "\r\n";
 }
 
