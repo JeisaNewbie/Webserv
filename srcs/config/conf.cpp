@@ -185,8 +185,8 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 
 	checkLocationType(location_path, location_type);
 	location_list.push_back(Location(location_type, location_path)); //복사해서 추가함
-	if (location_type == LOC_CGI)
-		checkUseCgi(cycle, location_path);
+	if (location_type == LOC_CGI && location_path != ".php")
+		throw Exception(CONF_INVALID_CGI);
 
 	while (file.getline(buf, sizeof(buf))) {
 		str_buf = static_cast<std::string>(buf);
@@ -273,8 +273,4 @@ static void checkLocationType(std::string location_path, int& location_type) {
 }
 
 static void checkUseCgi(Cycle& cycle, std::string type) {
-	if (type == ".php")
-			cycle.setUseCgi(TRUE);
-	else
-		throw Exception(CONF_INVALID_CGI);
 }

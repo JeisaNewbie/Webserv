@@ -19,7 +19,6 @@ class Cycle {
 
 		Cycle& operator =(const Cycle& src);
 
-		void						setUseCgi(bool state);
 		void						setWorkerProcesses(u_int32_t n);
 		void						setWorkerConnections(u_int32_t n);
 		void						setClientMaxBodySize(u_int32_t n);
@@ -28,7 +27,6 @@ class Cycle {
 		void						setWorkerList(int idx, pid_t pid);
 
 		const char**				getEnvp(void) const;
-		bool						getUseCgi(void) const;
 		int							getWorkerProcesses(void) const;
 		int							getWorkerConnections(void) const;
 		int							getClientMaxBodySize(void) const;
@@ -42,7 +40,6 @@ class Cycle {
 		Cycle(void);
 
 		const char**		envp;
-		bool				use_cgi;
 
 		int					worker_processes;
 		int					worker_connections;
