@@ -6,6 +6,7 @@ Request::Request()
 	this->pos = 0;
 	this->chunked = false;
 	this->port = 80;
+	this->cgi = false;
 }
 
 Request::~Request()
@@ -805,7 +806,7 @@ void Request::check_members()
 
 int	Request::get_status_code() {return this->status_code;}
 std::string& Request::get_method() {return this->method;}
-bool Request::get_cgi() {return cycle->getUseCgi();}
+bool Request::get_cgi() {return this->cgi;}
 bool Request::get_chunked() {return this->chunked;}
 std::string& Request::get_path() {return this->path;}
 void Request::set_status_code(int status_code) {this->status_code = status_code;}

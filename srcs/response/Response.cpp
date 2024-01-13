@@ -68,10 +68,13 @@ Response::~Response() {}
 void	Response::assemble_message()
 {
 	response_msg = get_header_line();
+	// std::cout<< "response_msg: " << response_msg << std::endl;
 	response_msg += get_header_field();
+	// std::cout<< "response_msg: " << response_msg << std::endl;
 	response_msg += "\r\n";
 	if (body_flag == true)
 		response_msg += get_body();
+	// std::cout<< "response_msg: " << response_msg << std::endl;
 }
 
 std::string	&Response::get_header_line () {return this->header_line;}
@@ -92,11 +95,31 @@ std::string	&Response::get_body() {return this->body;}
 
 void	Response::set_header_line (int status_code)
 {
+	int status = status_code;
+	if (OK <= status && status < LAST_2XX)
+		status -= OK;
+	else if (MOVED_PERMANENTLY <= status && status < LAST_3XX)
+		status = status - MOVED_PERMANENTLY + OFF_3XX;
+	else if (BAD_REQUEST <= status && status < LAST_4XX)
+		status = status - BAD_REQUEST + OFF_4XX;
+	else
+		status = status - INTERNAL_SERVER_ERROR + OFF_5XX;
+
+	// std::cout <<"set_header_line_status_code: "<<status_code<<std::endl;
+	std::string code (status_line[status].code);
+	std::string text (status_line[status].text);
+
+	// std::cout<<"code: "<<status_line[status].code<<std::endl;
+	// std::cout<<"text: "<<status_line[status].text<<std::endl;
+	// std::cout << "set_header_line_start\n";
+
 	header_line = "HTTP/1.1 ";
-	header_line += std::string (status_line[status_code].code);
+	header_line += code;
 	header_line += " ";
-	header_line += std::string (status_line[status_code].text);
+	header_line += text;
 	header_line += "\r\n";
+
+	// std::cout <<header_line;
 }
 
 void	Response::set_header_field (const std::string &key, const std::string &value)
@@ -107,4 +130,5 @@ void	Response::set_header_field (const std::string &key, const std::string &valu
 void	Response::set_body(std::string body)
 {
 	this->body = body;
+	body_flag = true;
 }

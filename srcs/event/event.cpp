@@ -73,7 +73,8 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 					if (recieveFromClient(worker, cur_event->ident) == FALSE)
 						continue;
 					server[cur_event->ident].do_parse(clients[cur_event->ident], cycle);
-					// server[cur_event->ident].get_request_instance().check_members();
+					std::cout << "STATUS_CODE: "<< server[cur_event->ident].get_status_code() << std::endl;
+					server[cur_event->ident].get_request_instance().check_members();
 					// if (server[cur_event->ident].get_chunked() == true)
 					// 	continue ;
 					if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
