@@ -65,6 +65,7 @@ void	Client::assemble_response()
 {
 	response.set_header_line (get_status_code());
 	response.assemble_message ();
+	return ;
 }
 
 //------------------------getter && setter---------------------------
