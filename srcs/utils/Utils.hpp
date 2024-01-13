@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 
-#define	FILE	1000
-#define	DIR		1001
+#define	_FILE	1000
+#define	_DIR	1001
 
 int	check_path_property(std::string &path);

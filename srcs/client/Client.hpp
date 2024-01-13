@@ -18,8 +18,8 @@
 #include "../method/Delete.hpp"
 #include "../utils/Utils.hpp"
 
-#define	FILE	1000
-#define	DIR		1001
+// #define	_FILE	1000
+// #define	_DIR		1001
 
 enum Phase {
 	PARSING,
@@ -38,7 +38,7 @@ class Client {
 		Client(const Client& ref);
 		~Client();
 
-		Client& operator=(const Client& ref);
+		// Client& operator=(const Client& ref);
 
 		void		do_parse(std::string &request_msg, Cycle &cycle);
 		void		do_method();
