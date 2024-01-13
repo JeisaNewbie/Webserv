@@ -16,6 +16,8 @@ void	Client::do_method()
 	std::string	&path = get_request_instance().get_path();
 	int			path_property = check_path_property(path);
 	bool		cgi = get_cgi();
+	std::cout << "CGI_FLAG: " << cgi << std::endl;
+	std::cout << "path: " << path << std::endl;
 
 	try
 	{
@@ -38,6 +40,7 @@ void	Client::do_method_with_cgi() {}
 void	Client::do_method_without_cgi(std::string &path, int path_property)
 {
 	std::string	&method = get_request_instance().get_method();
+	std::cout<<"METHOD_WITHOUT_CGI_START\n";
 
 	if (method == "POST")
 		throw NO_CONTENT;
@@ -65,7 +68,6 @@ void	Client::assemble_response()
 {
 	response.set_header_line (get_status_code());
 	response.assemble_message ();
-	return ;
 }
 
 //------------------------getter && setter---------------------------
