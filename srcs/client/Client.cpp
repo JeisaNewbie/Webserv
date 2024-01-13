@@ -18,6 +18,7 @@ void	Client::do_method()
 	bool		cgi = get_cgi();
 	std::cout << "CGI_FLAG: " << cgi << std::endl;
 	std::cout << "path: " << path << std::endl;
+	std::cout << "path_property: " << path_property << std::endl;
 
 	try
 	{
@@ -31,14 +32,16 @@ void	Client::do_method()
 	catch(int e)
 	{
 		set_status_code(e);
+		std::cout <<"do_method_status_code: "<< get_status_code() << std::endl;
 	}
 
 }
 
-void	Client::do_method_with_cgi() {}
+void	Client::do_method_with_cgi() {std::cout<<"METHOD_WITH_CGI_START\n";}
 
 void	Client::do_method_without_cgi(std::string &path, int path_property)
 {
+	std::cout<<"aaaaaa\n";
 	std::string	&method = get_request_instance().get_method();
 	std::cout<<"METHOD_WITHOUT_CGI_START\n";
 

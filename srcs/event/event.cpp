@@ -77,8 +77,8 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 					server[cur_event->ident].get_request_instance().check_members();
 					// if (server[cur_event->ident].get_chunked() == true)
 					// 	continue ;
-					// if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
-					// 	server[cur_event->ident].do_method();
+					if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
+						server[cur_event->ident].do_method();
 					server[cur_event->ident].assemble_response();
 					clients[cur_event->ident] = "";
 					addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
