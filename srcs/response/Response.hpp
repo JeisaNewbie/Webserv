@@ -19,7 +19,7 @@ class Response {
 		Response(const Response& ref);
 		~Response();
 
-		Response& operator=(const Response& ref);
+		// Response& operator=(const Response& ref);
 
 
 		std::string	&get_header_line ();

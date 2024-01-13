@@ -13,7 +13,7 @@ void	Get::make_body(Response &response, std::string &path)
 	file.close();
 }
 
-void create_response(Response &response)
+void Get::create_response(Response &response)
 {
 	response.set_header_field("Content-Length", std::stringstream (response.get_body().size()).str());
 }

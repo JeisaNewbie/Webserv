@@ -8,10 +8,10 @@ int	check_path_property(std::string &path)
 		return -1;
 
 	if (S_ISREG(file_status.st_mode))
-		return FILE;
+		return _FILE;
 
 	if (S_ISDIR(file_status.st_mode))
-		return DIR;
+		return _DIR;
 
 	return -1;
 }

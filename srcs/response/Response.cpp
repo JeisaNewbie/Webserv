@@ -63,7 +63,7 @@ Response::Response()
 Response::Response(const Response& ref) {}
 Response::~Response() {}
 
-Response& Response::operator=(const Response& ref) {}
+// Response& Response::operator=(const Response& ref) {}
 
 void	Response::assemble_message()
 {

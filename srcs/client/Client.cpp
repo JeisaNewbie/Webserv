@@ -4,7 +4,7 @@ Client::Client(){}
 Client::Client(const Client& ref) {}
 Client::~Client() {}
 
-Client&	Client::operator=(const Client& ref) {}
+// Client&	Client::operator=(const Client& ref) {}
 
 void	Client::do_parse(std::string &request_msg, Cycle &cycle)
 {
@@ -19,9 +19,9 @@ void	Client::do_method()
 
 	try
 	{
-		if (cgi == true && path_property == FILE)
+		if (cgi == true && path_property == _FILE)
 			do_method_with_cgi();
-		else if (cgi == false && (path_property == FILE | path_property == DIR))
+		else if (cgi == false && (path_property == _FILE | path_property == _DIR))
 			do_method_without_cgi(path, path_property);
 		else
 			throw NOT_FOUND;
@@ -44,7 +44,7 @@ void	Client::do_method_without_cgi(std::string &path, int path_property)
 
 	if (method == "GET")
 	{
-		if (path_property == FILE)
+		if (path_property == _FILE)
 		{
 			Get::make_body(response, path);
 			Get::create_response(response);
