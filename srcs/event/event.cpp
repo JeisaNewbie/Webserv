@@ -6,7 +6,7 @@ static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 						intptr_t data, void* udata);
 static bool acceptNewClient(Worker& worker);
 static bool recieveFromClient(Worker& worker, int client_socket);
-static bool sendToClient(Worker& worker, int client_socket);
+static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
 
 void prepConnect(Cycle& cycle, int id) {
@@ -85,7 +85,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				}
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
-				if (sendToClient(worker, cur_event->ident) == FALSE)
+				if (sendToClient(worker, cur_event->ident, server[cur_event->ident]) == FALSE)
 					continue;
 				addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 			}
@@ -146,10 +146,9 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 	return TRUE;
 }
 
-static bool sendToClient(Worker& worker, int client_socket) {
-	std::string	response("test response message");
-
-	if (send(client_socket, response.c_str(), response.length() + 1, 0) == -1) {
+static bool sendToClient(Worker& worker, int client_socket, Client& client) {
+	std::string response_msg = client.get_response_instance().get_response_message();
+	if (send(client_socket, response_msg.c_str(), response_msg.length() + 1, 0) == -1) {
 		disconnectClient(worker, client_socket);
 		eventException(worker.getErrorLog(), EVENT_FAIL_SEND, client_socket);
 		return FALSE;

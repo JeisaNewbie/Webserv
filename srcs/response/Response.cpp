@@ -132,3 +132,7 @@ void	Response::set_body(std::string body)
 	this->body = body;
 	body_flag = true;
 }
+
+std::string &Response::get_response_message() {
+	return response_msg;
+}

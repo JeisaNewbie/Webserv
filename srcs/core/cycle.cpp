@@ -1,7 +1,7 @@
 #include "core.hpp"
 
 Cycle::Cycle(const char** _envp) \
-	: envp(_envp), use_cgi(FALSE), worker_processes(0), \
+	: envp(_envp), worker_processes(0), \
 		worker_connections(0), client_max_body_size(0), \
 		uri_limit_length(0)  {}
 
@@ -13,8 +13,6 @@ Cycle::~Cycle(void) {}
 
 Cycle& Cycle::operator =(const Cycle& src) {
 	if (this != &src) {
-		use_cgi = src.use_cgi;
-
 		worker_processes = src.worker_processes;
 		worker_connections = src.worker_connections;
 		client_max_body_size = src.client_max_body_size;
@@ -29,14 +27,6 @@ Cycle& Cycle::operator =(const Cycle& src) {
 
 const char** Cycle::getEnvp(void) const {
 	return envp;
-}
-
-void Cycle::setUseCgi(bool state) {
-	use_cgi = state;
-}
-
-bool Cycle::getUseCgi(void) const {
-	return use_cgi;
 }
 
 void Cycle::setWorkerProcesses(u_int32_t n) {

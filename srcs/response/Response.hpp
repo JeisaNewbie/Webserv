@@ -21,7 +21,7 @@ class Response {
 
 		// Response& operator=(const Response& ref);
 
-
+		std::string &get_response_message();
 		std::string	&get_header_line ();
 		std::string	get_header_field ();
 		std::string	&get_body();
