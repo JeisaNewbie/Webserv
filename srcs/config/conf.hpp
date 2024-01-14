@@ -38,9 +38,9 @@ class Conf {
 		std::ifstream		file;
 		std::string			file_name;
 
-		Cmd				main_cmd[CMD_MAIN_MAX];
-		Cmd				srv_cmd[CMD_SRV_MAX];
-		Cmd				loc_cmd[CMD_LOC_MAX];
+		Cmd					main_cmd[CMD_MAIN_MAX];
+		Cmd					srv_cmd[CMD_SRV_MAX];
+		Cmd					loc_cmd[CMD_LOC_MAX];
 };
 
 void setConf(Conf &conf, int argc, char* file_name);

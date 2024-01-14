@@ -87,6 +87,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(worker, cur_event->ident, server[cur_event->ident]) == FALSE)
 					continue;
+				server.erase(cur_event->ident); // 초기화
 				addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 			}
 		}
@@ -130,7 +131,7 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 		clients[client_socket] += tmp;
 	}
 	if (recieve_size == 0) {
-		std::cout << "worker: " << worker.getWorkerId()	\
+		std::cout << "------------------- worker: " << worker.getWorkerId()	\
 					<< ", Disconnection : client[" << client_socket << "]\n";
 		disconnectClient(worker, client_socket);
 		return FALSE;
@@ -141,8 +142,8 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 		return FALSE;
 	}
 	std::cout << "worker: " << worker.getWorkerId() \
-				<< ", " << clients[client_socket].length() \
-				<< " " << clients[client_socket] << "\n";
+				<< ", size: " << clients[client_socket].length() \
+				<< "\n" << clients[client_socket] << "\n";
 	return TRUE;
 }
 
