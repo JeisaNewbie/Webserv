@@ -8,9 +8,9 @@ int main(int argc, char** argv, char** envp) {
 	try{
 		setConf(conf, argc, argv[1]);
 		parseConf(cycle, conf);
+		prepConnect(cycle);
 	} catch(Exception& e){
 		return mainException(e);
 	}
-	startWorker(cycle);
 	return 0;
 }

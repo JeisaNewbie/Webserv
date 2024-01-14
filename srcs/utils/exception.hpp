@@ -53,7 +53,6 @@ class Exception {
 };
 
 int		mainException(Exception& e);
-void	workerException(std::ofstream& error_log, int _costom_error);
 void	eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd);
 
 #endif

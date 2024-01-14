@@ -16,10 +16,9 @@ typedef std::map<int, std::string> clients_t;
 typedef std::vector<struct kevent> kevent_t;
 class Worker {
 	public:
-		Worker(int id);
+		Worker(void);
 		~Worker(void);
 
-		pid_t			getWorkerId(void) const;
 		int				getEventQueue(void) const;
 		int				getListenSocket(void) const;
 		clients_t&		getClients(void);
@@ -27,12 +26,10 @@ class Worker {
 		std::ofstream&	getErrorLog(void);
 
 	private:
-		Worker(void);
 		Worker(const Worker& obj);
 		
 		Worker& operator =(const Worker& src);
 
-		pid_t			worker_id;
 		int				event_queue;
 		int				listen_socket;
 		// uint32_t		cur_connection;
@@ -40,7 +37,5 @@ class Worker {
 		kevent_t		change_list;
 		std::ofstream	error_log;
 };
-
-void startWorker(Cycle& cycle);
 
 #endif

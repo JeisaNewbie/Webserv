@@ -10,22 +10,18 @@ static int tokenizer(char* str, std::string* tokens);
 static int checkConfLocation(std::string str[]);
 static void checkGetlineError(std::ifstream& file);
 static void checkLocationType(std::string location_path, int& location_type);
-static void checkUseCgi(Cycle& cycle, std::string type);
 
 Conf::Conf(void) {
-	main_cmd[0] = Cmd("worker_processes",		\
-						CMD_TAKE1,				\
-						mainWorkerProcesses);
-	main_cmd[1] = Cmd("worker_connections",		\
+	main_cmd[0] = Cmd("worker_connections",		\
 						CMD_TAKE1,				\
 						mainWorkerConnections);
-	main_cmd[2] = Cmd("client_max_body_size",	\
+	main_cmd[1] = Cmd("client_max_body_size",	\
 						CMD_TAKE1,				\
 						mainClientMaxBodySize);
-	main_cmd[3] = Cmd("uri_limit_length",		\
+	main_cmd[2] = Cmd("uri_limit_length",		\
 						CMD_TAKE1,				\
 						mainUriLimitLength);
-	main_cmd[4] = Cmd("root",					\
+	main_cmd[3] = Cmd("root",					\
 						CMD_TAKE1,				\
 						mainRoot);
 
@@ -132,8 +128,7 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 	}
 	checkGetlineError(file);
 
-	if (cycle.getWorkerProcesses() == 0			\
-		|| cycle.getWorkerConnections() == 0	\
+	if (cycle.getWorkerConnections() == 0	\
 		|| cycle.getClientMaxBodySize() == 0	\
 		|| cycle.getUriLimitLength() == 0		\
 		|| cycle.getMainRoot() == "")

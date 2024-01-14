@@ -9,8 +9,8 @@ static bool recieveFromClient(Worker& worker, int client_socket);
 static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
 
-void prepConnect(Cycle& cycle, int id) {
-	Worker		worker(id);
+void prepConnect(Cycle& cycle) {
+	Worker		worker;
 	sockaddr_in	server_addr;
 	int			listen_socket = worker.getListenSocket();
 
@@ -21,9 +21,9 @@ void prepConnect(Cycle& cycle, int id) {
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
-		workerException(worker.getErrorLog(), EVENT_FAIL_BIND);
+		throw Exception(EVENT_FAIL_BIND);
 	if (listen(listen_socket, LISTEN_QUEUE_SIZE) == -1)
-		workerException(worker.getErrorLog(), EVENT_FAIL_LISTEN);
+		throw Exception(EVENT_FAIL_LISTEN);
 	fcntl(listen_socket, F_SETFL, O_NONBLOCK);
 	startConnect(cycle, worker);
 }
@@ -131,8 +131,7 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 		clients[client_socket] += tmp;
 	}
 	if (recieve_size == 0) {
-		std::cout << "------------------- worker: " << worker.getWorkerId()	\
-					<< ", Disconnection : client[" << client_socket << "]\n";
+		std::cout << "------------------- Disconnection : client[" << client_socket << "]\n";
 		disconnectClient(worker, client_socket);
 		return FALSE;
 	}
@@ -141,9 +140,7 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
-	std::cout << "worker: " << worker.getWorkerId() \
-				<< ", size: " << clients[client_socket].length() \
-				<< "\n" << clients[client_socket] << "\n";
+	std::cout << "worker: " << clients[client_socket] << "\n";
 	return TRUE;
 }
 
