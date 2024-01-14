@@ -59,7 +59,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 			cur_event =& event_list[i];
 
 			if (cur_event->flags & EV_ERROR) {
-				if (cur_event->flags & EV_DELETE)
+				if (cur_event->flags & EV_DELETE || errno == EAGAIN)
 					continue;
 				eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
 				disconnectClient(worker, cur_event->ident);
@@ -130,16 +130,14 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 		std::string	tmp(buf, recieve_size);
 		clients[client_socket] += tmp;
 	}
-	if (recieve_size == 0) {
+	if (recieve_size == -1 && errno != EAGAIN) {
 		std::cout << "------------------- Disconnection : client[" << client_socket << "]\n";
-		disconnectClient(worker, client_socket);
-		return FALSE;
-	}
-	else if (recieve_size == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		disconnectClient(worker, client_socket);
 		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
+	else if (recieve_size == 0 && errno == EAGAIN)
+		return FALSE;
 	std::cout << "worker: " << clients[client_socket] << "\n";
 	return TRUE;
 }
