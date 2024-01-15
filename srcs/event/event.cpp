@@ -28,6 +28,21 @@ void prepConnect(Cycle& cycle) {
 	startConnect(cycle, worker);
 }
 
+void printState(struct kevent* cur_event) {
+	std::cout << "client[" << cur_event->ident << "] flags: " << cur_event->flags << ", filter: " << cur_event->filter << "\n";
+	if (cur_event->flags & EV_EOF)
+		std::cout << "EOF\n";
+	if (cur_event->flags & EV_DELETE)
+		std::cout << "DELETE\n";
+	if (cur_event->filter == EVFILT_READ)
+		std::cout << "READ\n";
+	if (cur_event->filter == EVFILT_WRITE)
+		std::cout << "WRITE\n";
+	if (errno == EAGAIN)
+		std::cout << "EAGAIN\n";
+	std::cout << "\n";
+}
+
 static void startConnect(Cycle& cycle, Worker& worker) {
 	uintptr_t				listen_socket = worker.getListenSocket();
 	clients_t&				clients = worker.getClients();
@@ -46,6 +61,11 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		timeout.tv_nsec = 0;
 		//시간 나중에 수정하기
 
+		// for(int i = 0; i<change_list.size(); i++){
+		// 	std::cout << change_list[i].ident << "  " << change_list[i].filter << "\n";
+		// }
+		// std::cout << "\n";
+
 		new_events = kevent(worker.getEventQueue(),& change_list[0], change_list.size(), \
 							&event_list[0], event_list.size(),& timeout);
 		if (new_events > event_list.size()) {
@@ -56,7 +76,8 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		change_list.clear();
 
 		for (uint32_t i = 0; i < new_events; i++) {
-			cur_event =& event_list[i];
+			cur_event = &event_list[i];
+			// printState(cur_event);
 
 			if (cur_event->flags & EV_ERROR) {
 				if (cur_event->flags & EV_DELETE || errno == EAGAIN)
@@ -81,7 +102,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 						server[cur_event->ident].do_method();
 					server[cur_event->ident].assemble_response();
 					clients[cur_event->ident] = "";
-					addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
+					addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
 				}
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
@@ -100,7 +121,7 @@ static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 	kevent_t&		change_list = worker.getChangeList();
 	struct kevent	temp;
 
-	EV_SET(&temp, ident, filter, flags, fflags, data, udata);
+	EV_SET(&temp, ident, filter, flags | EV_CLEAR, fflags, data, udata);
 	change_list.push_back(temp);
 }
 
@@ -116,6 +137,7 @@ static bool acceptNewClient(Worker& worker) {
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
 
 	addEvent(worker, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	addEvent(worker, client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
 	clients[client_socket] = "";
 	return TRUE;
 }
@@ -130,15 +152,16 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 		std::string	tmp(buf, recieve_size);
 		clients[client_socket] += tmp;
 	}
+	// std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
 	if (recieve_size == -1 && errno != EAGAIN) {
-		std::cout << "------------------- Disconnection : client[" << client_socket << "]\n";
+		std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
 		disconnectClient(worker, client_socket);
 		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
 	else if (recieve_size == 0 && errno == EAGAIN)
 		return FALSE;
-	std::cout << "worker: " << clients[client_socket] << "\n";
+	std::cout << "recieve message: \n" << clients[client_socket] << "\n";
 	return TRUE;
 }
 
