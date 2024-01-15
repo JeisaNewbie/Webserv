@@ -9,8 +9,8 @@ static bool recieveFromClient(Worker& worker, int client_socket);
 static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
 
-void prepConnect(Cycle& cycle, int id) {
-	Worker		worker(id);
+void prepConnect(Cycle& cycle) {
+	Worker		worker;
 	sockaddr_in	server_addr;
 	int			listen_socket = worker.getListenSocket();
 
@@ -21,9 +21,9 @@ void prepConnect(Cycle& cycle, int id) {
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
-		workerException(worker.getErrorLog(), EVENT_FAIL_BIND);
+		throw Exception(EVENT_FAIL_BIND);
 	if (listen(listen_socket, LISTEN_QUEUE_SIZE) == -1)
-		workerException(worker.getErrorLog(), EVENT_FAIL_LISTEN);
+		throw Exception(EVENT_FAIL_LISTEN);
 	fcntl(listen_socket, F_SETFL, O_NONBLOCK);
 	startConnect(cycle, worker);
 }
@@ -59,7 +59,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 			cur_event =& event_list[i];
 
 			if (cur_event->flags & EV_ERROR) {
-				if (cur_event->flags & EV_DELETE)
+				if (cur_event->flags & EV_DELETE || errno == EAGAIN)
 					continue;
 				eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
 				disconnectClient(worker, cur_event->ident);
@@ -87,6 +87,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(worker, cur_event->ident, server[cur_event->ident]) == FALSE)
 					continue;
+				server.erase(cur_event->ident); // 초기화
 				addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 			}
 		}
@@ -129,20 +130,15 @@ static bool recieveFromClient(Worker& worker, int client_socket) {
 		std::string	tmp(buf, recieve_size);
 		clients[client_socket] += tmp;
 	}
-	if (recieve_size == 0) {
-		std::cout << "worker: " << worker.getWorkerId()	\
-					<< ", Disconnection : client[" << client_socket << "]\n";
-		disconnectClient(worker, client_socket);
-		return FALSE;
-	}
-	else if (recieve_size == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+	if (recieve_size == -1 && errno != EAGAIN) {
+		std::cout << "------------------- Disconnection : client[" << client_socket << "]\n";
 		disconnectClient(worker, client_socket);
 		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
-	std::cout << "worker: " << worker.getWorkerId() \
-				<< ", " << clients[client_socket].length() \
-				<< " " << clients[client_socket] << "\n";
+	else if (recieve_size == 0 && errno == EAGAIN)
+		return FALSE;
+	std::cout << "worker: " << clients[client_socket] << "\n";
 	return TRUE;
 }
 
