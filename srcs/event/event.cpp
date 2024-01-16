@@ -72,19 +72,27 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					if (recieveFromClient(worker, cur_event->ident) == FALSE)
 						continue;
-					if (clients[cur_event->ident] == "CGI")
-						server[cur_event->ident].get_cgi_instance().get_response_from_cgi();
+
+					std::string&	request_msg = clients[cur_event->ident];
+					Client&			event_client = server[cur_event->ident];
+
+					if (request_msg == "CGI")
+						event_client.get_cgi_instance().get_response_from_cgi(); //cgi process 회수 && response parse
 					else
 					{
-						server[cur_event->ident].do_parse(clients[cur_event->ident], cycle);
-						// server[cur_event->ident].get_request_instance().check_members();
-						// if (server[cur_event->ident].get_chunked() == true)
+						event_client.do_parse(request_msg, cycle);
+						// event_client.get_request_instance().check_members();
+						// if (event_client.get_chunked() == true)
 						// 	continue ;
-						if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
-							server[cur_event->ident].do_method();
+						if (event_client.get_status_code() < BAD_REQUEST)
+						{
+							event_client.do_method();
+							if (event_client.get_cgi() == true)
+								continue;
+						}
 					}
-					server[cur_event->ident].assemble_response();
-					clients[cur_event->ident] = "";
+					event_client.assemble_response();
+					request_msg = "";
 					addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
 					std::cout << "---------------end of assebling message--------------\n";
 				}

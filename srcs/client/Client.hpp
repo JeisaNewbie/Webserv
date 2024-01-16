@@ -34,6 +34,7 @@ class Client {
 		Request		request;
 		Response	response;
 		Cgi			cgi;
+		uintptr_t	client_soket;
 	public:
 		Phase phase;
 		Client();
@@ -55,8 +56,11 @@ class Client {
 		int			get_status_code();
 		bool		get_cgi();
 		bool		get_chunked();
+		uintptr_t	get_client_soket();
 		void		set_phase (Phase state);
 		void		set_status_code(int status_code);
+		void		set_cgi (bool flag);
+		void		set_client_soket(uintptr_t client_soket);
 
 
 };

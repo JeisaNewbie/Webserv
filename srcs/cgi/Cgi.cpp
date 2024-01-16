@@ -1,6 +1,12 @@
 #include "Cgi.hpp"
 
-Cgi::Cgi() {}
+Cgi::Cgi()
+{
+	this->f_in = tmpfile();
+	this->f_out = tmpfile();
+	this->fd_file_in = fileno (this->f_in);
+	this->fd_file_out = fileno (this->f_out);
+}
 
 Cgi::Cgi(const Cgi& ref)
 {
@@ -18,7 +24,13 @@ Cgi& Cgi::operator=(const Cgi& ref)
 	return ;
 }
 
-void		Cgi::set_env(Request &request) {}
+void		Cgi::set_env(Request &request, uintptr_t client_soket)
+{
+	set_body (request.get_message_body());
+	set_name (request.get_path());
+	env["REQUEST_METHOD"] = request.get_method();
+	env["CLIENT_SOKET"] = to_string (client_soket);
+}
 
 char**		Cgi::get_char_arr_of_env()
 {
@@ -38,30 +50,25 @@ char**		Cgi::get_char_arr_of_env()
 	return arr;
 }
 
-std::string	Cgi::execute_cgi(std::string &cgi_name, std::string &body)
+void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 {
 	char	**env;
 	pid_t	pid;
 
 	try
 	{
-		env = get_char_arr_of_env();
+		env = cgi.get_char_arr_of_env();
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << e.what() << '\n';
-		return "500";
+		request.set_cgi(false);
+		throw INTERNAL_SERVER_ERROR;
 	}
 
-	this->f_in = tmpfile();
-	this->f_out = tmpfile();
-
-	this->fd_file_in = fileno (f_in);
-	this->fd_file_out = fileno (f_out);
-
-	write (fd_file_in, body.c_str(), body.size());
-	fflush (f_in);
-	fseek (f_in, 0, SEEK_SET);
+	// write (cgi.fd_file_in, body.c_str(), body.size());
+	fputs (cgi.cgi_body.c_str(), cgi.f_in);
+	fflush (cgi.f_in);
+	fseek (cgi.f_in, 0, SEEK_SET);
 
 	pid = fork();
 
@@ -70,16 +77,17 @@ std::string	Cgi::execute_cgi(std::string &cgi_name, std::string &body)
 		for (size_t i = 0; env[i]; i++)
 			delete []env[i];
 		delete []env;
-		return "500";
+		request.set_cgi(false);
+		throw INTERNAL_SERVER_ERROR;
 	}
 
 	if (pid == 0)
 	{
-		dup2 (fd_file_in, STDIN_FILENO);
-		dup2 (fd_file_out, STDOUT_FILENO);
-		execve (cgi_name.c_str(), NULL, env);
-		//write (CLIENT_SOKET, "500", 4); //client_soket에 write
-		exit (0);
+		dup2 (cgi.fd_file_in, STDIN_FILENO);
+		dup2 (cgi.fd_file_out, STDOUT_FILENO);
+		execve (cgi.cgi_name.c_str(), NULL, env);
+		//write (CLIENT_SOKET, "CGI", 4); //client_soket에 write
+		exit (1);
 	}
 
 	for (size_t i = 0; env[i] != NULL; i++)
@@ -92,8 +100,19 @@ std::string	Cgi::execute_cgi(std::string &cgi_name, std::string &body)
 std::string	&Cgi::get_response_from_cgi()
 {
 	int	len = 1;
+	int	status = 0;
 
-	waitpid (-1, NULL, 0);
+	waitpid (-1, &status, 0);
+	if (WIFEXITED(status) == 1)
+	{
+		fclose (this->f_in);
+		fclose (this->f_out);
+		close (this->fd_file_in);
+		close (this->fd_file_out);
+		cgi_body = "";
+		return cgi_body;
+	}
+
 	lseek (this->fd_file_out, 0, SEEK_SET);
 
 	while (len)
@@ -109,3 +128,6 @@ std::string	&Cgi::get_response_from_cgi()
 
 	return cgi_body;
 }
+
+void	Cgi::set_body (std::string &body) {this->cgi_body = body;}
+void	Cgi::set_name (std::string &name) {this->cgi_name = name;}
