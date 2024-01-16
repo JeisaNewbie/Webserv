@@ -9,3 +9,11 @@
 #define	_DIR	1001
 
 int	check_path_property(std::string &path);
+
+template <class T>
+std::string	to_string(T num)
+{
+	std::stringstream ss;
+	ss << num;
+	return ss.str();
+}

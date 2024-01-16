@@ -6,7 +6,7 @@
 #    By: jhwang2 <jhwang2@student.42seoul.kr>       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/09 10:10:15 by jhwang2          ###   ########.fr        #
+#    Updated: 2024/01/16 09:59:19 by jhwang2          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,6 +36,7 @@ SRCS =	core/main.cpp \
 		method/Post.cpp \
 		method/Delete.cpp \
 		client/Client.cpp \
+		cgi/Cgi.cpp \
 		utils/exception.cpp \
 		utils/Utils.cpp
 
@@ -89,6 +90,7 @@ $(OBJS_DIR):
 	@mkdir ${OBJS_DIR}/request
 	@mkdir ${OBJS_DIR}/response
 	@mkdir ${OBJS_DIR}/client
+	@mkdir ${OBJS_DIR}/cgi
 	@mkdir ${OBJS_DIR}/method
 	@mkdir ${OBJS_DIR}/utils
 	@mkdir log
