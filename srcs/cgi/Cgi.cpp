@@ -15,7 +15,7 @@ Cgi& Cgi::operator=(const Cgi& ref)
 {
 	if (this != &ref)
 		this->env = ref.env;
-	return ;
+	return *this;
 }
 
 void		Cgi::set_env(Request &request) {}
@@ -86,7 +86,7 @@ std::string	Cgi::execute_cgi(std::string &cgi_name, std::string &body)
 		delete []env[i];
 	delete []env;
 
-	return;
+	return "";
 }
 
 std::string	&Cgi::get_response_from_cgi()
