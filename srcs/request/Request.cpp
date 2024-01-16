@@ -734,8 +734,19 @@ void Request::matching_server()
 	std::list<Server>::iterator ite = servers.end();
 	std::string &host = header["host"];
 	std::string	first_dir = path.substr (0, path.find ('/', 1));
+
 	matched_server = cycle->getServerList().begin();
 	origin_path = path;
+
+	if (first_dir.find(".cpp") != std::string::npos)
+	{
+		if (first_dir.find("/cgi.cpp") == std::string::npos)
+			throw NOT_FOUND;
+
+		path = cycle->getMainRoot() + "/serve/cgi/cgi.cpp";
+		this->set_cgi (true);
+		return;
+	}
 
 	for (;it != ite; it++)
 	{
