@@ -72,12 +72,16 @@ public:
 	void											parse_request();
 	void											parse_request_line();
 	void											parse_header_fields();
+
+	//-----------------------------getter && setter------------------------------
 	bool											get_cgi();
 	int												get_status_code();
 	std::string&									get_method();
 	bool											get_chunked();
 	std::string&									get_path();
+	std::string&									get_message_body();
 	void											set_status_code(int status_code);
+	void											set_cgi (bool flag);
 
 	void check_members();
 };

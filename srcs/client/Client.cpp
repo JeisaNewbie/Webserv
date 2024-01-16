@@ -15,7 +15,7 @@ void	Client::do_method()
 {
 	try
 	{
-		bool		cgi = get_cgi();
+		bool	cgi = get_cgi();
 		// std::cout << "CGI_FLAG: " << cgi << std::endl;
 		// std::cout << "path: " << path << std::endl;
 		// std::cout << "path_property: " << path_property << std::endl;
@@ -46,17 +46,13 @@ void	Client::do_method_with_cgi(Request &request)
 	int			path_property = check_path_property (path);
 
 	if (path_property == -1)
+	{
+		set_cgi(false);
 		throw NOT_FOUND;
+	}
 
-	std::string &method = request.get_method();
-
-	if (method == "GET")
-	;
-
-	if (method == "POST")
-	;
-
-
+	this->get_cgi_instance().set_env(request, get_client_soket());
+	Cgi::execute_cgi(request, get_cgi_instance());
 }
 
 void	Client::do_method_without_cgi(Request &request)
@@ -109,3 +105,6 @@ bool	Client::get_cgi() {return this->get_request_instance().get_cgi();}
 bool	Client::get_chunked() {return this->get_request_instance().get_chunked();}
 void	Client::set_phase (Phase state) {this->phase = state;}
 void	Client::set_status_code(int status_code) {get_request_instance().set_status_code(status_code);}
+void	Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
+uintptr_t	Client::get_client_soket() {return this->client_soket;}
+void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}

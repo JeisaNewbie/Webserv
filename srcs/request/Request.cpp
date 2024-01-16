@@ -807,12 +807,16 @@ void Request::check_members()
 	std::cout<< "--------------------------------------------------------------\n";
 }
 
-int	Request::get_status_code() {return this->status_code;}
-std::string& Request::get_method() {return this->method;}
-bool Request::get_cgi() {return this->cgi;}
-bool Request::get_chunked() {return this->chunked;}
-std::string& Request::get_path() {return this->path;}
-void Request::set_status_code(int status_code) {this->status_code = status_code;}
+//-----------------------------getter && setter------------------------------
+
+int				Request::get_status_code() {return this->status_code;}
+std::string&	Request::get_method() {return this->method;}
+bool 			Request::get_cgi() {return this->cgi;}
+bool			Request::get_chunked() {return this->chunked;}
+std::string&	Request::get_message_body() {return this->message_body;}
+std::string&	Request::get_path() {return this->path;}
+void 			Request::set_status_code(int status_code) {this->status_code = status_code;}
+void			Request::set_cgi (bool flag) {this->cgi = flag;}
 
 //----------------------------------------utils---------------------------------------
 
