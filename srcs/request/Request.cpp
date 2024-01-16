@@ -765,11 +765,14 @@ void Request::matching_server()
 	}
 
 	matched_location = matched_server->getLocationList().begin();
+	std::cout <<"matching_server_DELETE: " << path << std::endl;
 
 	if (method == "DELETE" && matched_location->getLocationPath() == "/")
 		throw FORBIDDEN;
 
 	path = cycle->getMainRoot() + matched_location->getSubRoot();
+
+	std::cout <<"end_of_matching_server=====================\n";
 }
 
 void Request::check_members()

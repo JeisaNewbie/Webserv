@@ -13,21 +13,22 @@ void	Client::do_parse(std::string &request_msg, Cycle &cycle)
 
 void	Client::do_method()
 {
-	std::string	&path = get_request_instance().get_path();
-	int			path_property = check_path_property(path);
-	bool		cgi = get_cgi();
-	std::cout << "CGI_FLAG: " << cgi << std::endl;
-	std::cout << "path: " << path << std::endl;
-	std::cout << "path_property: " << path_property << std::endl;
-
 	try
 	{
-		if (cgi == true && path_property == _FILE)
-			do_method_with_cgi();
-		else if (cgi == false && (path_property == _FILE | path_property == _DIR))
-			do_method_without_cgi(path, path_property);
+		bool		cgi = get_cgi();
+		// std::cout << "CGI_FLAG: " << cgi << std::endl;
+		// std::cout << "path: " << path << std::endl;
+		// std::cout << "path_property: " << path_property << std::endl;
+		// if (cgi == true && path_property == _FILE)
+		// 	do_method_with_cgi();
+		// else if (cgi == false && (path_property == _FILE | path_property == _DIR))
+		// 	do_method_without_cgi(path, path_property);
+		// else
+		// 	throw NOT_FOUND;
+		if (cgi == true)
+			do_method_with_cgi (get_request_instance());
 		else
-			throw NOT_FOUND;
+			do_method_without_cgi (get_request_instance());
 	}
 	catch(int e)
 	{
@@ -37,16 +38,38 @@ void	Client::do_method()
 
 }
 
-void	Client::do_method_with_cgi() {std::cout<<"METHOD_WITH_CGI_START\n";}
-
-void	Client::do_method_without_cgi(std::string &path, int path_property)
+void	Client::do_method_with_cgi(Request &request)
 {
-	std::cout<<"aaaaaa\n";
-	std::string	&method = get_request_instance().get_method();
-	std::cout<<"METHOD_WITHOUT_CGI_START\n";
+	// std::cout<<"METHOD_WITH_CGI_START\n";
+
+	std::string &path = request.get_path();
+	int			path_property = check_path_property (path);
+
+	if (path_property == -1)
+		throw NOT_FOUND;
+
+	std::string &method = request.get_method();
+
+	if (method == "GET")
+	;
 
 	if (method == "POST")
-		throw NO_CONTENT;
+	;
+
+
+}
+
+void	Client::do_method_without_cgi(Request &request)
+{
+	// std::cout<<"METHOD_WITHOUT_CGI_START\n";
+
+	std::string &path = request.get_path();
+	int			path_property = check_path_property (path);
+
+	if (path_property == -1)
+		throw NOT_FOUND;
+
+	std::string	&method = request.get_method();
 
 	if (method == "GET")
 	{
@@ -59,6 +82,9 @@ void	Client::do_method_without_cgi(std::string &path, int path_property)
 		else
 			throw NOT_FOUND;
 	}
+
+	if (method == "POST")
+		throw NO_CONTENT;
 
 	if (method == "DELETE")
 	{
@@ -77,6 +103,7 @@ void	Client::assemble_response()
 Phase	Client::get_current_phase() {return this->phase;}
 Request& Client::get_request_instance () {return this->request;}
 Response& Client::get_response_instance () {return this->response;}
+Cgi&	Client::get_cgi_instance() {return this->cgi;}
 int		Client::get_status_code() {return get_request_instance().get_status_code();}
 bool	Client::get_cgi() {return this->get_request_instance().get_cgi();}
 bool	Client::get_chunked() {return this->get_request_instance().get_chunked();}

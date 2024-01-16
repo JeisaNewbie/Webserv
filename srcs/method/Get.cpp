@@ -16,8 +16,5 @@ void	Get::make_body(Response &response, std::string &path)
 
 void Get::create_response(Response &response)
 {
-	std::stringstream ss;
-	ss << response.get_body().size();
-	response.set_header_field("Content-Length", ss.str());
-	std::cout << response.get_header_field();
+	response.set_header_field("Content-Length", to_string(response.get_body().size()));
 }
