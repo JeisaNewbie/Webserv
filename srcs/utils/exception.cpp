@@ -135,21 +135,6 @@ int mainException(Exception& e) {
 	return e.getCostomError();
 }
 
-void workerException(std::ofstream& error_log, int _costom_error) {
-	std::string	tmp;
-	Exception	e(_costom_error);
-
-	tmp = std::string(e.what());
-	error_log.write(tmp.c_str(), tmp.length());
-	error_log.write("\n: ", 3);
-
-	tmp = strerror(e.getSystemError());
-	error_log.write(tmp.c_str(), tmp.length());
-	error_log.write("\n\n", 2);
-	error_log.flush();
-	throw e;
-}
-
 void eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd) {
 	std::string	tmp;
 

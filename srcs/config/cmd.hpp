@@ -32,7 +32,6 @@ class Cmd {
 		handler_t	handler;
 };
 
-void mainWorkerProcesses(Cycle& cycle, std::string tokens[]);
 void mainWorkerConnections(Cycle& cycle, std::string tokens[]);
 void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]);
 void mainUriLimitLength(Cycle& cycle, std::string tokens[]);

@@ -21,7 +21,7 @@ Cgi& Cgi::operator=(const Cgi& ref)
 {
 	if (this != &ref)
 		this->env = ref.env;
-	return ;
+	return *this;
 }
 
 void		Cgi::set_env(Request &request, uintptr_t client_soket)
@@ -94,7 +94,7 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 		delete []env[i];
 	delete []env;
 
-	return;
+	return "";
 }
 
 std::string	&Cgi::get_response_from_cgi()
