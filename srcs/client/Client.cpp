@@ -40,11 +40,12 @@ void	Client::do_method()
 
 void	Client::do_method_with_cgi(Request &request)
 {
-	// std::cout<<"METHOD_WITH_CGI_START\n";
+	std::cout<<"METHOD_WITH_CGI_START\n";
 
 	std::string &path = request.get_path();
 	int			path_property = check_path_property (path);
 
+	std::cout<<"Path: "<<path<<std::endl;
 	if (path_property == -1)
 	{
 		set_cgi(false);

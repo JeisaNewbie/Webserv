@@ -65,11 +65,13 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 		throw INTERNAL_SERVER_ERROR;
 	}
 
+	std::cout<<"after_get_env\n";
 	// write (cgi.fd_file_in, body.c_str(), body.size());
 	fputs (cgi.cgi_body.c_str(), cgi.f_in);
 	fflush (cgi.f_in);
 	fseek (cgi.f_in, 0, SEEK_SET);
 
+	std::cout<<"after_set_file\n";
 	pid = fork();
 
 	if (pid == -1)
@@ -90,11 +92,13 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 		exit (1);
 	}
 
+	std::cout<<"after_fork\n";
+
 	for (size_t i = 0; env[i] != NULL; i++)
 		delete []env[i];
 	delete []env;
 
-	return "";
+	throw OK;
 }
 
 std::string	&Cgi::get_response_from_cgi()
