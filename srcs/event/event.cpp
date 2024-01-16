@@ -93,16 +93,21 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					if (recieveFromClient(worker, cur_event->ident) == FALSE)
 						continue;
-					server[cur_event->ident].do_parse(clients[cur_event->ident], cycle);
-					std::cout << "STATUS_CODE: "<< server[cur_event->ident].get_status_code() << std::endl;
-					server[cur_event->ident].get_request_instance().check_members();
-					// if (server[cur_event->ident].get_chunked() == true)
-					// 	continue ;
-					if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
-						server[cur_event->ident].do_method();
+					if (clients[cur_event->ident] == "CGI")
+						server[cur_event->ident].get_cgi_instance().get_response_from_cgi();
+					else
+					{
+						server[cur_event->ident].do_parse(clients[cur_event->ident], cycle);
+						// server[cur_event->ident].get_request_instance().check_members();
+						// if (server[cur_event->ident].get_chunked() == true)
+						// 	continue ;
+						if (server[cur_event->ident].get_status_code() < BAD_REQUEST)
+							server[cur_event->ident].do_method();
+					}
 					server[cur_event->ident].assemble_response();
 					clients[cur_event->ident] = "";
 					addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+					std::cout << "---------------end of assebling message--------------\n";
 				}
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
