@@ -1,15 +1,15 @@
 #include "../core/core.hpp"
 
-static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file);
-static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file);
-static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
+static void	parseMain(Cycle& cycle, Conf& conf, std::ifstream& file);
+static void	parseServer(Cycle& cycle, Conf& conf, std::ifstream& file);
+static void	parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 							const std::string& location_path);
-static void callCmd(Cycle& cycle, Conf& conf, int location,					\
+static void	callCmd(Cycle& cycle, Conf& conf, int location,					\
 						std::string* tokens, int token_cnt);
-static int tokenizer(char* str, std::string* tokens);
-static int checkConfLocation(std::string str[]);
-static void checkGetlineError(std::ifstream& file);
-static void checkLocationType(std::string location_path, int& location_type);
+static int	tokenizer(char* str, std::string* tokens);
+static int	checkConfLocation(std::string str[]);
+static void	checkGetlineError(std::ifstream& file);
+static void	checkLocationType(std::string location_path, int& location_type);
 
 Conf::Conf(void) {
 	main_cmd[0] = Cmd("worker_connections",		\
@@ -46,13 +46,8 @@ void Conf::setFile(std::string _name) {
 		throw Exception(CONF_FAIL_OPEN);
 }
 
-std::ifstream& Conf::getFile(void) {
-	return file;
-}
-
-const std::ifstream& Conf::getFileConst(void) const {
-	return file;
-}
+std::ifstream&			Conf::getFile(void) { return file; }
+const std::ifstream&	Conf::getFileConst(void) const { return file; }
 
 const Cmd* Conf::getCmdListConst(int loc_type) const {
 	if (loc_type == CONF_MAIN)

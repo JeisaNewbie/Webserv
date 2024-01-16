@@ -94,7 +94,7 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 		delete []env[i];
 	delete []env;
 
-	return "";
+	throw OK;
 }
 
 std::string	&Cgi::get_response_from_cgi()

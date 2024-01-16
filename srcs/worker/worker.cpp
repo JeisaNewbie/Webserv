@@ -16,22 +16,8 @@ Worker::Worker(void) {
 
 Worker::~Worker(void) {}
 
-int	Worker::getEventQueue(void) const {
-	return event_queue;
-}
-
-int	Worker::getListenSocket(void) const {
-	return listen_socket;
-}
-
-std::ofstream& Worker::getErrorLog(void) {
-	return error_log;
-}
-
-clients_t& Worker::getClients(void) {
-	return clients;
-}
-
-kevent_t& Worker::getChangeList(void) {
-	return change_list;
-}
+int				Worker::getEventQueue(void) const { return event_queue; }
+int				Worker::getListenSocket(void) const { return listen_socket; }
+std::ofstream&	Worker::getErrorLog(void) { return error_log; }
+clients_t&		Worker::getClients(void) { return clients; }
+kevent_t&		Worker::getChangeList(void) { return change_list; }

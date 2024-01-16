@@ -32,14 +32,14 @@ class Cmd {
 		handler_t	handler;
 };
 
-void mainWorkerConnections(Cycle& cycle, std::string tokens[]);
-void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]);
-void mainUriLimitLength(Cycle& cycle, std::string tokens[]);
-void mainRoot(Cycle& cycle, std::string tokens[]);
+void	mainWorkerConnections(Cycle& cycle, std::string tokens[]);
+void	mainClientMaxBodySize(Cycle& cycle, std::string tokens[]);
+void	mainUriLimitLength(Cycle& cycle, std::string tokens[]);
+void	mainRoot(Cycle& cycle, std::string tokens[]);
 
-void serverListen(Cycle& cycle, std::string tokens[]);
-void serverName(Cycle& cycle, std::string tokens[]);
+void	serverListen(Cycle& cycle, std::string tokens[]);
+void	serverName(Cycle& cycle, std::string tokens[]);
 
-void locationRoot(Cycle& cycle, std::string tokens[]);
+void	locationRoot(Cycle& cycle, std::string tokens[]);
 
 #endif
