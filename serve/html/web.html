@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Posts With File List</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #postContainer {
+            margin-top: 20px;
+        }
+
+        #buttonContainer {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        #postButton, #deleteButton {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the User Posts Page</h1>
+    <div id="postContainer"></div>
+    <div id="buttonContainer">
+        <button id="postButton" onclick="promptForPost()">Add Post</button>
+        <button id="deleteButton" onclick="promptForDelete()">Delete Post</button>
+    </div>
+
+    <script>
+        //cgi로 GET이 들어오면 어떻게 하기로 했지?? 서버에서 예외처리? 여기서 예외처리? cgi로 들어가서 예외처리?
+        function getServerData(url, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    callback(xhr.responseText);
+                }
+            };
+            xhr.open("GET", url, true);
+            xhr.send();
+        }
+
+        function sendServerData(url, method, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    callback(xhr.responseText);
+                }
+            };
+            xhr.open(method, url, true);
+            xhr.send();
+        }
+
+        function promptForPost() {
+            var postData = prompt("Enter the data to post:");
+            if (postData)
+                sendServerData("cgi.cpp?postdata=" + postData, "POST", function(response) {});
+        }
+
+        function promptForDelete() {
+            var fileName = prompt("Enter the file name to delete: example.txt");
+            if (fileName)
+                sendServerData("cgi.cpp?filename=" + fileName, "DELETE", function(response) {});
+        }
+    </script>
+</body>
+</html>

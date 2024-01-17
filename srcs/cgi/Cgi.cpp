@@ -27,7 +27,13 @@ Cgi& Cgi::operator=(const Cgi& ref)
 void		Cgi::set_env(Request &request, uintptr_t client_soket)
 {
 	set_body (request.get_message_body());
-	set_name (request.get_path());
+
+	// 실행파일명이 전달될 수 있도록 임시로 수정했습니다
+	int i = request.get_path().find(".cpp");
+	std::string tmp = request.get_path().substr(0, i);
+	set_name (tmp);
+	
+	// set_name (request.get_path());
 	env["REQUEST_METHOD"] = request.get_method();
 	env["CLIENT_SOKET"] = to_string (client_soket);
 }
