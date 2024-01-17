@@ -4,7 +4,7 @@ static void startConnect(Cycle& cycle, Worker& worker);
 static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 						uint16_t flags,	uint32_t fflags,				\
 						intptr_t data, void* udata);
-static bool acceptNewClient(Worker& worker);
+static void acceptNewClient(Worker& worker);
 static bool recieveFromClient(Worker& worker, int client_socket);
 static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
@@ -17,7 +17,6 @@ void prepConnect(Cycle& cycle) {
 	std::memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(PORT);
-	//TIME_WAIT 상태기 때문에 같은 포트 연속으로 사용 시 bind 에러. 어떻게 해결하지?
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
@@ -28,6 +27,7 @@ void prepConnect(Cycle& cycle) {
 	startConnect(cycle, worker);
 }
 
+// 삭제하기
 void printState(struct kevent* cur_event) {
 	std::cout << "client[" << cur_event->ident << "] flags: " << cur_event->flags << ", filter: " << cur_event->filter << "\n";
 	if (cur_event->flags & EV_EOF)
@@ -61,11 +61,6 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		timeout.tv_nsec = 0;
 		//시간 나중에 수정하기
 
-		// for(int i = 0; i<change_list.size(); i++){
-		// 	std::cout << change_list[i].ident << "  " << change_list[i].filter << "\n";
-		// }
-		// std::cout << "\n";
-
 		new_events = kevent(worker.getEventQueue(),& change_list[0], change_list.size(), \
 							&event_list[0], event_list.size(),& timeout);
 		if (new_events > event_list.size()) {
@@ -87,8 +82,10 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 			}
 			if (cur_event->filter == EVFILT_READ) {
 				if (cur_event->ident == listen_socket) {
-					if (acceptNewClient(worker) == FALSE)
-						continue;
+					if (worker.getCurConnection() < cycle.getWorkerConnections())
+						acceptNewClient(worker);
+					else // 연결 되지 않는 클라이언트는 어떻게 되는거지?
+						eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
 				}
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					if (recieveFromClient(worker, cur_event->ident) == FALSE)
@@ -138,21 +135,21 @@ static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 	change_list.push_back(temp);
 }
 
-static bool acceptNewClient(Worker& worker) {
+static void acceptNewClient(Worker& worker) {
 	clients_t&	clients = worker.getClients();
 	uintptr_t	listen_socket = worker.getListenSocket();
 	uintptr_t	client_socket;
 
 	if ((client_socket = accept(listen_socket, NULL, NULL)) == -1) {
 		eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
-		return FALSE;
+		return ;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
 
 	addEvent(worker, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	addEvent(worker, client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+	worker.incCurConnection();
 	clients[client_socket] = "";
-	return TRUE;
 }
 
 static bool recieveFromClient(Worker& worker, int client_socket) {
@@ -195,4 +192,5 @@ static void disconnectClient(Worker& worker, int client_socket) {
 	addEvent(worker, client_socket, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
 	close(client_socket);
 	clients.erase(client_socket);
+	worker.decCurConnection();
 }

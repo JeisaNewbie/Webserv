@@ -9,7 +9,10 @@ enum cmd_args {
 	CMD_TAKE2
 };
 
+# define VALID 0
 # define KILO_BYTE 1024
+# define MEGA_BYTE (KILO_BYTE * KILO_BYTE)
+# define GIGA_BYTE (KILO_BYTE * KILO_BYTE * KILO_BYTE)
 
 typedef void (*handler_t)(Cycle&, std::string[]);
 
