@@ -20,16 +20,16 @@
 
         #buttonContainer {
             display: flex;
-            margin-top: 10px;
         }
 
         #postButton, #deleteButton {
             margin-right: 10px;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to the User Posts Page</h1>
+    <h1>Welcome to our Webserv</h1>
     <div id="postContainer"></div>
     <div id="buttonContainer">
         <button id="postButton" onclick="promptForPost()">Add Post</button>
@@ -39,11 +39,11 @@
     <script>
         function sendServerData(url, method) {
             var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    callback(xhr.responseText);
-                }
-            };
+            // xhr.onreadystatechange = function () {
+            //     if (xhr.readyState === 4) {
+            //         callback(xhr.responseText);
+            //     }
+            // };
             xhr.open(method, url, true);
             xhr.send();
         }

@@ -6,6 +6,7 @@
 #include <ctime>
 #include <string>
 #include <sys/socket.h>
+#include <unistd.h>
 
 std::string createUniqueFileName() {
     time_t		now = time(nullptr);
@@ -21,7 +22,6 @@ int main() {
     const std::string	request_method(getenv("REQUEST_METHOD"));
 
     if (request_method == "POST") {
-
 		// 여기서 try catch 하면 어떻게 되지? 오빠가 만든 to_string 가져올까?
         
         // const std::string	content_length_str = getenv("CONTENT_LENGTH");
@@ -30,10 +30,9 @@ int main() {
 
         std::cout << "Content-Type: text/plain\n\n";
 
-        // content 길이 제한 ??
+        // content 길이 제한 둘까??
         if (post_data.length() > 0) {
-
-        //redirect 디렉토리 유무 확인하고 여는 코드 추가하기
+            
     		const std::string	directory_path(getenv("REDIRECT_PATH"));
             std::string			new_file_name = createUniqueFileName();
             std::ofstream		new_file;
@@ -45,10 +44,12 @@ int main() {
 			//response 작성
             std::cout << "Status_code: 201\r\n";
 
-			const std::string	client_soket_str(getenv("CLIENT_SOCKET"));
-			int					client_soket = stoi(client_soket_str);
+			const std::string	client_socket_str(getenv("CLIENT_SOKET"));
+			int					client_socket = stoi(client_socket_str);
 
-			send(client_soket, "CGI", 4, 0);
+            std::cerr << "\nclient_socket: " << client_socket << "\n\n";
+
+			send(client_socket, "CGI", 4, 0);
         }
     }
 

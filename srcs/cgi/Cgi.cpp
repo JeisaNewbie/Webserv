@@ -28,12 +28,10 @@ void		Cgi::set_env(Request &request, uintptr_t client_soket)
 {
 	set_body (request.get_message_body());
 
-	// 실행파일명이 전달될 수 있도록 임시로 수정했습니다
 	int i = request.get_path().find(".cpp");
 	std::string tmp = request.get_path().substr(0, i);
 	set_name (tmp);
 	
-	// set_name (request.get_path());
 	env["REQUEST_METHOD"] = request.get_method();
 	env["CLIENT_SOKET"] = to_string (client_soket);
 	env["QUERY_STRING"] = request.get_query_value("postdata");
@@ -49,7 +47,7 @@ char**		Cgi::get_char_arr_of_env()
 
 	arr[this->env.size()] = NULL;
 
-	for (int i = 0; it != ite; it++)
+	for (int i = 0; it != ite; it++, i++)
 	{
 		std::string	env_elem = it->first + "=" + it->second;
 		arr[i] = new char [env_elem.size() + 1];
