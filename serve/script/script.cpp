@@ -33,6 +33,7 @@ int main() {
         // content 길이 제한 ??
         if (post_data.length() > 0) {
 
+        //redirect 디렉토리 유무 확인하고 여는 코드 추가하기
     		const std::string	directory_path(getenv("REDIRECT_PATH"));
             std::string			new_file_name = createUniqueFileName();
             std::ofstream		new_file;
@@ -43,7 +44,6 @@ int main() {
 
 			//response 작성
             std::cout << "Status_code: 201\r\n";
-            // std::cout << "Content_length: \r\n";
 
 			const std::string	client_soket_str(getenv("CLIENT_SOCKET"));
 			int					client_soket = stoi(client_soket_str);
