@@ -53,7 +53,9 @@ int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 		// check_members();
 		// std::cout<< "check_header_is_valid\n";
 		check_header_is_valid ();
+		// std::cout << "matching_server\n";
 		matching_server(); // port와 listen이 일치하는지 확인 &&  host와 server_name 일치 확인 -> location과 uri(path)와 일치하는지 확인 (만약 path가 absolute form으로 올경우 그중 path를 파싱해서 path 와 location 비교)
+		// std::cout<<"finish_mathcing_server\n";
 	}
 	catch(int e)
 	{
@@ -584,6 +586,7 @@ void	Request::check_header_is_valid()
 	check_te();
 	// std::cout<< "check_content_encoding\n";
 	check_content_encoding();
+	// std::cout<<"check_body_limits\n";
 	// check_header_limits(); // config로 설정한 서버의 header limits size를 넘으면 return 413
 	check_body_limits();
 }
@@ -681,7 +684,7 @@ void	Request::check_content_length()
 	if (this->content_length > 2147483647)
 		throw REQUEST_ENTITY_TOO_LARGE;
 	// std::cout<< "check_content_length_3\n";
-	if (this->header["content-length"][0] == '0' && this->header["content-length"].size() > 1)
+	if (this->header["content-length"][0] == '0' && this->header["content-length"].substr(0, this->header["content-length"].find("\r\n")).size() > 1)
 		throw BAD_REQUEST;
 	// std::cout<< "check_content_length_4\n";
 	if (this->content_length < this->message_body.size() || this->content_length > this->message_body.size())
@@ -740,7 +743,7 @@ void Request::matching_server()
 			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
 			return ;
 		}
-		path = cycle->getMainRoot() + "/serve/cgi/script.cpp";
+		path = cycle->getMainRoot() + "/serve/script/script.cpp";
 		this->set_cgi (true);
 		return;
 	}
