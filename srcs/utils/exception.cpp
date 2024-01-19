@@ -103,9 +103,7 @@ Exception::Exception(int _costom_error) {
 	}
 }
 
-Exception::Exception(const Exception& src) {
-	*this = src;
-}
+Exception::Exception(const Exception& src) { *this = src; }
 
 Exception::~Exception(void) {}
 
@@ -115,17 +113,10 @@ Exception& Exception::operator =(const Exception& src) {
 	return *this;
 }
 
-int Exception::getSystemError(void) const {
-	return system_error;
-}
+int Exception::getSystemError(void) const { return system_error; }
+int Exception::getCostomError(void) const { return costom_error; }
 
-int Exception::getCostomError(void) const {
-	return costom_error;
-}
-
-const char*	Exception::what(void) const {
-	return message.c_str();
-}
+const char*	Exception::what(void) const { return message.c_str(); }
 
 int mainException(Exception& e) {
 	std::cerr << "error code [" << e.getCostomError() << "] : " \

@@ -43,7 +43,7 @@ class Conf {
 		Cmd					loc_cmd[CMD_LOC_MAX];
 };
 
-void setConf(Conf &conf, int argc, char* file_name);
-void parseConf(Cycle &cycle, Conf &conf);
+void	setConf(Conf &conf, int argc, char* file_name);
+void	parseConf(Cycle &cycle, Conf &conf);
 
 #endif

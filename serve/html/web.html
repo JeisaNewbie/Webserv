@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Posts With File List</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #postContainer {
+            margin-top: 20px;
+        }
+
+        #buttonContainer {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        #postButton, #deleteButton {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the User Posts Page</h1>
+    <div id="postContainer"></div>
+    <div id="buttonContainer">
+        <button id="postButton" onclick="promptForPost()">Add Post</button>
+        <button id="deleteButton" onclick="promptForDelete()">Delete Post</button>
+    </div>
+
+    <script>
+        function sendServerData(url, method) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    callback(xhr.responseText);
+                }
+            };
+            xhr.open(method, url, true);
+            xhr.send();
+        }
+
+        function promptForPost() {
+            var postData = prompt("Enter the data to post:");
+            if (postData)
+                sendServerData("script.cpp?postdata=" + postData, "POST");
+        }
+
+        function promptForDelete() {
+            var deleteData = prompt("Enter the file name to delete: example.txt");
+            if (deleteData)
+                sendServerData("script.cpp?deletedata=" + deleteData, "DELETE");
+        }
+    </script>
+</body>
+</html>

@@ -21,9 +21,13 @@ class Worker {
 
 		int				getEventQueue(void) const;
 		int				getListenSocket(void) const;
+		int				getCurConnection(void) const;
 		clients_t&		getClients(void);
 		kevent_t&		getChangeList(void);
 		std::ofstream&	getErrorLog(void);
+
+		void			incCurConnection(void);
+		void			decCurConnection(void);
 
 	private:
 		Worker(const Worker& obj);
@@ -32,7 +36,7 @@ class Worker {
 
 		int				event_queue;
 		int				listen_socket;
-		// uint32_t		cur_connection;
+		uint32_t		cur_connection;
 		clients_t		clients;
 		kevent_t		change_list;
 		std::ofstream	error_log;
