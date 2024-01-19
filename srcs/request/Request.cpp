@@ -64,7 +64,7 @@ void	Request::parse_request()
 			throw BAD_REQUEST;
 	}
 
-	this->request_line = msg.substr (pos, delimeter - pos);
+	this->request_line = msg.substr (this->pos, delimeter - this->pos);
 
 	while (delimeter != std::string::npos)
 	{
@@ -73,10 +73,10 @@ void	Request::parse_request()
 
 		if (this->pos == delimeter)
 		{
-			this->message_body = msg.substr (pos + 2,  msg.find ("\r\n", this->pos + 2) + 2);
+			this->message_body = msg.substr (this->pos + 2,  msg.find ("\r\n", this->pos + 2) + 2);
 			break ;
 		}
-		this->headers.push_back (msg.substr (pos, delimeter - pos + 2));
+		this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
 	}
 }
 

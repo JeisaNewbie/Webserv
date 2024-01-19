@@ -90,9 +90,34 @@ void	Client::do_method_without_cgi(Request &request)
 	}
 }
 
+void	Client::parse_cgi_response(Cgi &cgi)
+{
+	std::string body = cgi.get_response_from_cgi();
+	size_t 		delimeter = 0;
+	size_t		pos = 0;
+
+	while (delimeter != std::string::npos)
+	{
+		delimeter = body.find ("\r\n", pos);
+
+		if (pos == delimeter)
+		{
+			get_response_instance().set_body(body.substr (pos + 2,  body.find ("\r\n", pos + 2) + 2));
+			break ;
+		}
+
+		get_response_instance().set_header_field(body.substr (pos, delimeter - pos + 2));
+		pos = delimeter + 2;
+	}
+
+	set_status_code(std::atoi(get_response_instance().get_header_field("Status_code").c_str()));
+}
+
 void	Client::assemble_response()
 {
 	response.set_header_line (get_status_code());
+	// response.set_header_field ("key", "value");
+	// status_code에 따라 body 수정 필요
 	response.assemble_message ();
 }
 

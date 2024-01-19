@@ -47,6 +47,7 @@ class Client {
 		void		do_method();
 		void		do_method_with_cgi(Request &request);
 		void		do_method_without_cgi(Request &request);
+		void		parse_cgi_response(Cgi &cgi);
 		void		assemble_response();
 
 		Request		&get_request_instance ();
