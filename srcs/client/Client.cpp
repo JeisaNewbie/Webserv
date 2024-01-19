@@ -46,7 +46,7 @@ void	Client::do_method_with_cgi(Request &request)
 	int			path_property = check_path_property (path);
 
 	std::cout<<"Path: "<<path<<std::endl;
-	if (path_property == -1)
+	if (path_property == -1 || request.get_method() == "GET")
 	{
 		set_cgi(false);
 		throw NOT_FOUND;
