@@ -79,16 +79,22 @@ void	Response::assemble_message()
 
 std::string	&Response::get_header_line () {return this->header_line;}
 
-std::string	Response::get_header_field ()
+std::string	&Response::get_header_field ()
 {
 	std::map<std::string, std::string>::iterator	it = header.begin();
 	std::map<std::string, std::string>::iterator	ite = header.end();
-	std::string	header_fields;
 
 	for (; it != ite; it++)
-		header_fields += it->first + ": " + it->second + "\r\n";
+		headers += it->first + ": " + it->second + "\r\n";
 
-	return header_fields;
+	return headers;
+}
+
+std::string	Response::get_header_field (const char *key)
+{
+	if (header.find(key) != header.end())
+		return header[key];
+	return "500";
 }
 
 std::string	&Response::get_body() {return this->body;}
@@ -124,6 +130,14 @@ void	Response::set_header_line (int status_code)
 
 void	Response::set_header_field (const std::string &key, const std::string &value)
 {
+	header[key] = value;
+}
+
+void	Response::set_header_field (const std::string &key_value)
+{
+	std::string key = key_value.substr(0, key_value.find(":"));
+	std::string	value = key_value.substr(key_value.find(": ") + 2);
+
 	header[key] = value;
 }
 

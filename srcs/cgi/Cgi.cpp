@@ -36,6 +36,9 @@ void		Cgi::set_env(Request &request, uintptr_t client_soket)
 	// set_name (request.get_path());
 	env["REQUEST_METHOD"] = request.get_method();
 	env["CLIENT_SOKET"] = to_string (client_soket);
+	env["QUERY_STRING"] = request.get_query_value("postdata");
+	env["CONTENT_LENGTH"] = request.get_header_field("content_length");
+	env["REDIRECT_PATH"] = request.get_cycle_instance().getMainRoot() + request.get_header_field("redirect_path");
 }
 
 char**		Cgi::get_char_arr_of_env()

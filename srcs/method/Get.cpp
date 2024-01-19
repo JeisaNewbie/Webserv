@@ -16,5 +16,7 @@ void	Get::make_body(Response &response, std::string &path)
 
 void Get::create_response(Response &response)
 {
+	response.set_header_field("Content-Type", "text/html; charset=UTF-8");
 	response.set_header_field("Content-Length", to_string(response.get_body().size()));
+
 }

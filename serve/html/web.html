@@ -37,18 +37,6 @@
     </div>
 
     <script>
-        //cgi로 GET이 들어오면 어떻게 하기로 했지?? 서버에서 예외처리? 여기서 예외처리? cgi로 들어가서 예외처리?
-        function getServerData(url, callback) {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    callback(xhr.responseText);
-                }
-            };
-            xhr.open("GET", url, true);
-            xhr.send();
-        }
-
         function sendServerData(url, method) {
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
