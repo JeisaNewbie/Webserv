@@ -732,7 +732,7 @@ void Request::matching_server()
 
 	if (first_dir.find(".cpp") != std::string::npos)
 	{
-		if (first_dir.find("/cgi.cpp") == std::string::npos)
+		if (first_dir.find("/script.cpp") == std::string::npos)
 			throw NOT_FOUND;
 
 		if (method == "DELETE")
@@ -740,7 +740,7 @@ void Request::matching_server()
 			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
 			return ;
 		}
-		path = cycle->getMainRoot() + "/serve/cgi/cgi.cpp";
+		path = cycle->getMainRoot() + "/serve/cgi/script.cpp";
 		this->set_cgi (true);
 		return;
 	}
