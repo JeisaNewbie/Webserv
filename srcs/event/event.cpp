@@ -19,6 +19,9 @@ void prepConnect(Cycle& cycle) {
 	server_addr.sin_port = htons(PORT);
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+	// 제출 전 지우기
+	setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, NULL, 0);
+
 	if (bind(listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
 		throw Exception(EVENT_FAIL_BIND);
 	if (listen(listen_socket, LISTEN_QUEUE_SIZE) == -1)
