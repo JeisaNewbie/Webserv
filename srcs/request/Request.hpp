@@ -49,7 +49,6 @@ private:
 	void											parse_query_string(std::string &query);
 	void											parse_query_key_and_value(std::string &query_element);
 	void											parse_header_key_and_value(std::string &header_element);
-	void											set_header_key_and_value(std::string &key, std::string &value);
 	void											check_header_is_valid();
 	void											matching_server();
 	void											check_body_limits();
@@ -60,7 +59,7 @@ private:
 	void											check_te();
 	void											check_content_encoding();
 	void											check_uri_form();
-	void											decode_chunked();
+	void											decode_chunked(std::string &msg);
 	//////-------------utils--------------------------------------------------
 	std::string										lower(const char *key, size_t end);
 	void											remove_spf(std::string &value, size_t end);
@@ -74,14 +73,20 @@ public:
 	void											parse_header_fields();
 
 	//-----------------------------getter && setter------------------------------
+	Cycle&											get_cycle_instance();
 	bool											get_cgi();
 	int												get_status_code();
 	std::string&									get_method();
 	bool											get_chunked();
 	std::string&									get_path();
 	std::string&									get_message_body();
+	std::string&									get_header_field(const char *key);
+	std::string&									get_query_value(const char *key);
 	void											set_status_code(int status_code);
 	void											set_cgi (bool flag);
+	void											set_chunked (bool flag);
+	void											set_header_key_and_value(std::string &key, std::string &value);
+	void											set_header_key_and_value(const char *key, const char *value);
 
 	void check_members();
 };

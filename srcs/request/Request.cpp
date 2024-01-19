@@ -7,28 +7,41 @@ Request::Request()
 	this->chunked = false;
 	this->port = 80;
 	this->cgi = false;
+	set_header_key_and_value("redirect_path", "/serve/redirect/");
 }
 
 Request::~Request()
 {
 }
 
-void	Request::decode_chunked()
+void	Request::decode_chunked(std::string &msg)
 {
+	std::string	chunk = msg;
+	size_t		chunk_size = 0;
+	size_t		pos = 0;
 
+	while (message_body.find ("\r\n", pos) != std::string::npos)
+	{
+		chunk_size = chunk.find("\r\n", pos);
+		if (chunk_size == 0)
+		{
+			set_chunked (false);
+			throw OK;
+		}
+		this->message_body += msg.substr(chunk.find("\r\n", pos + 2), chunk_size);
+	}
 }
 
 int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 {
 	try
 	{
-		// this->request_msg = "DELETE http://www.example.com/products?category=books&sort=price&order=desc&limit=20&page=2&filter=new HTTP/1.1\r\nHost:             www.example.com         \r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 32\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nCookie: sessionId=abc123; preferences=darkmode\r\nReferer: http://www.example.com/form\r\nConnection: keep-alive\r\n\r\nusername=user&password=pass123\r\n";
-		this->request_msg = request_msg;
 		if (get_chunked() == true)
 		{
-			decode_chunked();
-			return this->status_code = OK;
+			decode_chunked(request_msg);
+			throw OK;
 		}
+		this->request_msg = request_msg;
 		this->cycle = &cycle;
 		// std::cout<< "parse_request\n";
 		parse_request ();
@@ -64,7 +77,7 @@ void	Request::parse_request()
 			throw BAD_REQUEST;
 	}
 
-	this->request_line = msg.substr (pos, delimeter - pos);
+	this->request_line = msg.substr (this->pos, delimeter - this->pos);
 
 	while (delimeter != std::string::npos)
 	{
@@ -73,10 +86,10 @@ void	Request::parse_request()
 
 		if (this->pos == delimeter)
 		{
-			this->message_body = msg.substr (pos + 2,  msg.find ("\r\n", this->pos + 2) + 2);
+			this->message_body = msg.substr (this->pos + 2,  msg.find ("\r\n", this->pos + 2) + 2);
 			break ;
 		}
-		this->headers.push_back (msg.substr (pos, delimeter - pos + 2));
+		this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
 	}
 }
 
@@ -507,6 +520,7 @@ void	Request::parse_query_string(std::string &query)
 	size_t delimeter = query.find ('&');
 	size_t pos = 0;
 
+	this->header["query_string"] = query;
 	if (delimeter == std::string::npos)
 	{
 		parse_query_key_and_value (query);
@@ -559,28 +573,6 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 	set_header_key_and_value (key, value);
 }
 
-void	Request::set_header_key_and_value(std::string &key, std::string &value)
-{
-
-	if (this->header.find(key) != this->header.end())
-	{
-		this->header[key].pop_back();
-		this->header[key].pop_back();
-
-		if (key == "host" || key == "content-length")
-			throw BAD_REQUEST;
-
-		if (key == "cookie")
-		{
-			this->header[key].append ("; " + value + "\r\n");
-			return;
-		}
-
-		this->header[key].append(", " + value + "\r\n");
-		return;
-	}
-	this->header.insert (std::pair<std::string, std::string>(key, value));
-}
 
 void	Request::check_header_is_valid()
 {
@@ -743,6 +735,11 @@ void Request::matching_server()
 		if (first_dir.find("/cgi.cpp") == std::string::npos)
 			throw NOT_FOUND;
 
+		if (method == "DELETE")
+		{
+			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
+			return ;
+		}
 		path = cycle->getMainRoot() + "/serve/cgi/cgi.cpp";
 		this->set_cgi (true);
 		return;
@@ -819,7 +816,9 @@ void Request::check_members()
 }
 
 //-----------------------------getter && setter------------------------------
-
+Cycle&			Request::get_cycle_instance() {return *(this->cycle);}
+std::string&	Request::get_header_field(const char *key) {return this->header[key];}
+std::string&	Request::get_query_value(const char *key) {return this->query_elements[key];}
 int				Request::get_status_code() {return this->status_code;}
 std::string&	Request::get_method() {return this->method;}
 bool 			Request::get_cgi() {return this->cgi;}
@@ -828,6 +827,30 @@ std::string&	Request::get_message_body() {return this->message_body;}
 std::string&	Request::get_path() {return this->path;}
 void 			Request::set_status_code(int status_code) {this->status_code = status_code;}
 void			Request::set_cgi (bool flag) {this->cgi = flag;}
+void			Request::set_chunked (bool flag) {this->chunked = flag;}
+void			Request::set_header_key_and_value(const char *key, const char *value){this->header[key] = value;}
+void			Request::set_header_key_and_value(std::string &key, std::string &value)
+{
+
+	if (this->header.find(key) != this->header.end())
+	{
+		this->header[key].pop_back();
+		this->header[key].pop_back();
+
+		if (key == "host" || key == "content-length")
+			throw BAD_REQUEST;
+
+		if (key == "cookie")
+		{
+			this->header[key].append ("; " + value + "\r\n");
+			return;
+		}
+
+		this->header[key].append(", " + value + "\r\n");
+		return;
+	}
+	this->header.insert (std::pair<std::string, std::string>(key, value));
+}
 
 //----------------------------------------utils---------------------------------------
 
