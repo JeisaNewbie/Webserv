@@ -96,8 +96,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 
 					if (request_msg == "CGI")
 						event_client.get_cgi_instance().get_response_from_cgi(); //cgi process 회수 && response parse
-					else
-					{
+					else {
 						event_client.do_parse(request_msg, cycle);
 						// event_client.get_request_instance().check_members();
 						// if (event_client.get_chunked() == true)

@@ -40,7 +40,7 @@
             showFileList(); // 서버에서 파일 목록 업데이트
           }
         };
-        xhr.open("POST", "cgi.cpp", true);
+        xhr.open("POST", "script.cpp", true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhr.send("postText=" + encodeURIComponent(postText));
       }
@@ -52,7 +52,7 @@
             showFileList(); // 서버에서 파일 목록 업데이트
           }
         };
-        xhr.open("POST", "cgi.cpp", true);
+        xhr.open("POST", "script.cpp", true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhr.send("deletePost=true");
       }
@@ -65,7 +65,7 @@
             alert(xhr.responseText);
           }
         };
-        xhr.open("GET", "cgi.cpp?filename=" + filename, true);
+        xhr.open("GET", "script.cpp?filename=" + filename, true);
         xhr.send();
       }
 
@@ -76,7 +76,7 @@
             document.getElementById("fileList").innerHTML = xhr.responseText;
           }
         };
-        xhr.open("GET", "cgi.cpp", true);
+        xhr.open("GET", "script.cpp", true);
         xhr.send();
       }
 

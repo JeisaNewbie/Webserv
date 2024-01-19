@@ -740,10 +740,10 @@ void Request::matching_server()
 
 	if (first_dir.find(".cpp") != std::string::npos)
 	{
-		if (first_dir.find("/cgi.cpp") == std::string::npos)
+		if (first_dir.find("/script.cpp") == std::string::npos)
 			throw NOT_FOUND;
 
-		path = cycle->getMainRoot() + "/serve/cgi/cgi.cpp";
+		path = cycle->getMainRoot() + "/serve/cgi/script.cpp";
 		this->set_cgi (true);
 		return;
 	}

@@ -49,7 +49,7 @@
             xhr.send();
         }
 
-        function sendServerData(url, method, callback) {
+        function sendServerData(url, method) {
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
@@ -63,13 +63,13 @@
         function promptForPost() {
             var postData = prompt("Enter the data to post:");
             if (postData)
-                sendServerData("cgi.cpp?postdata=" + postData, "POST", function(response) {});
+                sendServerData("script.cpp?postdata=" + postData, "POST");
         }
 
         function promptForDelete() {
-            var fileName = prompt("Enter the file name to delete: example.txt");
-            if (fileName)
-                sendServerData("cgi.cpp?filename=" + fileName, "DELETE", function(response) {});
+            var deleteData = prompt("Enter the file name to delete: example.txt");
+            if (deleteData)
+                sendServerData("script.cpp?deletedata=" + deleteData, "DELETE");
         }
     </script>
 </body>
