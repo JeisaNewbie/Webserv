@@ -851,7 +851,6 @@ void			Request::set_header_key_and_value(std::string &key, std::string &value)
 	}
 	this->header.insert (std::pair<std::string, std::string>(key, value));
 }
-
 //----------------------------------------utils---------------------------------------
 
 std::string	Request::lower(const char *key, size_t end)
