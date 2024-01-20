@@ -131,6 +131,5 @@ void locationAllowedMethod(Cycle& cycle, std::string tokens[]) {
 		else
 			throw Exception(CONF_INVALID_DIRCTV_VALUE);
 	}
-	std::cout << res << "\n\n";
 	location.setAllowedMethod(res);
 }
