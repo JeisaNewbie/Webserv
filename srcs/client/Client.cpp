@@ -118,6 +118,14 @@ void	Client::assemble_response()
 	response.set_header_line (get_status_code());
 	// response.set_header_field ("key", "value");
 	// status_code에 따라 body 수정 필요
+	if (get_status_code() > BAD_REQUEST)
+	{
+		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html");
+		std::stringstream	ss;
+
+		ss << error.rdbuf();
+		response.set_body(ss.str());
+	}
 	response.assemble_message ();
 }
 
