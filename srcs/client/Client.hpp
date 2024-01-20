@@ -35,6 +35,7 @@ class Client {
 		Response	response;
 		Cgi			cgi;
 		uintptr_t	client_soket;
+		uintptr_t	**cgi_fd_arr;
 	public:
 		Phase phase;
 		Client();
@@ -49,6 +50,7 @@ class Client {
 		void		do_method_without_cgi(Request &request);
 		void		parse_cgi_response(Cgi &cgi);
 		void		assemble_response();
+		void		init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket);
 
 		Request		&get_request_instance ();
 		Response	&get_response_instance ();
@@ -62,6 +64,5 @@ class Client {
 		void		set_status_code(int status_code);
 		void		set_cgi (bool flag);
 		void		set_client_soket(uintptr_t client_soket);
-
-
+		void		set_cgi_fd_arr(uintptr_t client_soket);
 };

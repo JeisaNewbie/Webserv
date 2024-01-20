@@ -6,6 +6,13 @@ Client::~Client() {}
 
 // Client&	Client::operator=(const Client& ref) {}
 
+void	Client::init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket)
+{
+	this->cgi_fd_arr = cgi_fd_arr;
+	set_client_soket(client_soket);
+	set_cgi_fd_arr(client_soket);
+}
+
 void	Client::do_parse(std::string &request_msg, Cycle &cycle)
 {
 	get_request_instance().process_request_parsing(request_msg, cycle);
@@ -46,7 +53,7 @@ void	Client::do_method_with_cgi(Request &request)
 	int			path_property = check_path_property (path);
 
 	std::cout<<"Path: "<<path<<std::endl;
-	if (path_property == -1 || request.get_method() == "GET")
+	if (path_property == -1)
 	{
 		set_cgi(false);
 		throw NOT_FOUND;
@@ -130,15 +137,16 @@ void	Client::assemble_response()
 }
 
 //------------------------getter && setter---------------------------
-Phase	Client::get_current_phase() {return this->phase;}
-Request& Client::get_request_instance () {return this->request;}
-Response& Client::get_response_instance () {return this->response;}
-Cgi&	Client::get_cgi_instance() {return this->cgi;}
-int		Client::get_status_code() {return get_request_instance().get_status_code();}
-bool	Client::get_cgi() {return this->get_request_instance().get_cgi();}
-bool	Client::get_chunked() {return this->get_request_instance().get_chunked();}
-void	Client::set_phase (Phase state) {this->phase = state;}
-void	Client::set_status_code(int status_code) {get_request_instance().set_status_code(status_code);}
-void	Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
+Phase		Client::get_current_phase() {return this->phase;}
+Request& 	Client::get_request_instance () {return this->request;}
+Response&	Client::get_response_instance () {return this->response;}
+Cgi&		Client::get_cgi_instance() {return this->cgi;}
+int			Client::get_status_code() {return get_request_instance().get_status_code();}
+bool		Client::get_cgi() {return this->get_request_instance().get_cgi();}
+bool		Client::get_chunked() {return this->get_request_instance().get_chunked();}
+void		Client::set_phase (Phase state) {this->phase = state;}
+void		Client::set_status_code(int status_code) {get_request_instance().set_status_code(status_code);}
+void		Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
 uintptr_t	Client::get_client_soket() {return this->client_soket;}
 void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}
+void		Client::set_cgi_fd_arr(uintptr_t client_soket) {*(this->cgi_fd_arr[get_cgi_instance().get_fd()]) = client_soket;}

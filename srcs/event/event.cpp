@@ -46,13 +46,14 @@ void printState(struct kevent* cur_event) {
 		std::cout << "EAGAIN\n";
 	std::cout << "\n";
 }
-
+//cgi를 처리할 client->ident를 담을 리스트
 static void startConnect(Cycle& cycle, Worker& worker) {
 	uintptr_t				listen_socket = worker.getListenSocket();
 	clients_t&				clients = worker.getClients();
 	kevent_t&				change_list = worker.getChangeList();
 	kevent_t				event_list(EVENT_LIST_INIT_SIZE);
 	std::map<int, Client>	server;
+	uintptr_t				cgi_fd_arr[10000];
 	std::cout << "---------------------webserver start---------------------\n";
 
 	addEvent(worker, listen_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -75,6 +76,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		}
 		change_list.clear();
 
+		//for()//cgi_fork_list;
 		for (uint32_t i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
 			printState(cur_event);
@@ -86,37 +88,60 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				disconnectClient(worker, cur_event->ident);
 			}
 			if (cur_event->filter == EVFILT_READ) {
+				uintptr_t tmp_ident = cur_event->ident;
 				if (cur_event->ident == listen_socket) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
 						acceptNewClient(worker);
 					else // 연결 되지 않는 클라이언트는 어떻게 되는거지?
 						eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
+					continue;
 				}
 				else if (clients.find(cur_event->ident) != clients.end()) {
 					if (recieveFromClient(worker, cur_event->ident) == FALSE)
 						continue;
 
-					std::string&	request_msg = clients[cur_event->ident];
-					Client&			event_client = server[cur_event->ident];
+					std::string&	request_msg = clients[tmp_ident];
+					Client&			event_client = server[tmp_ident];
 
-					event_client.set_client_soket(cur_event->ident);
-					if (request_msg == "CGI")
-						event_client.parse_cgi_response(event_client.get_cgi_instance());
-					else {
-						event_client.do_parse(request_msg, cycle);
-						// event_client.get_request_instance().check_members();
-						if (event_client.get_status_code() < BAD_REQUEST)
+					// event_client.init_client(&cgi_fd_arr, tmp_ident); // event 객체 추가
+					// if (request_msg == "CGI")
+					// 	event_client.parse_cgi_response(event_client.get_cgi_instance());
+					// else {
+					// 	event_client.do_parse(request_msg, cycle);
+					// 	// event_client.get_request_instance().check_members();
+					// 	if (event_client.get_status_code() < BAD_REQUEST)
+					// 	{
+					// 		event_client.do_method();
+					// 		if (event_client.get_cgi() == true)
+					// 			continue;
+					// 	}
+					// }
+					event_client.do_parse(request_msg, cycle);
+					// event_client.get_request_instance().check_members();
+					if (event_client.get_status_code() < BAD_REQUEST)
+					{
+						event_client.do_method(); //do_method_with_cgi 분리후 cgi_fork_list에 tmp_client 추가, 이후 해당 loop에서 do_method_with_cgi 실행
+						if (event_client.get_cgi() == true)
 						{
-							event_client.do_method();
-							if (event_client.get_cgi() == true)
-								continue;
+							// event_client.get_cgi_instance().get_fd(); kqueue에 추가 (은우)
+							cgi_fd_arr[event_client.get_cgi_instance().get_fd()] = tmp_ident;
+							continue;
 						}
 					}
-					event_client.assemble_response();
-					request_msg = "";
-					addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-					std::cout << "---------------end of assebling message--------------\n";
+					// event_client.assemble_response();
+					// request_msg = "";
+					// addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+					// std::cout << "---------------end of assebling message--------------\n";
 				}
+				else {
+					tmp_ident = cgi_fd_arr[cur_event->ident];
+					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
+				} //fd_event
+				server[tmp_ident].assemble_response();
+				clients[tmp_ident] = "";
+				addEvent(worker, tmp_ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+				std::cout << "---------------end of assebling message--------------\n";
+
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(worker, cur_event->ident, server[cur_event->ident]) == FALSE)

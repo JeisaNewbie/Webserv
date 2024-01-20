@@ -36,4 +36,5 @@ class Cgi {
 		static void		execute_cgi(Request &request, Cgi &cgi);
 		void			set_body (std::string &body);
 		void			set_name (std::string &name);
+		int				get_fd();
 };
