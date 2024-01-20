@@ -95,12 +95,10 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 					Client&			event_client = server[cur_event->ident];
 
 					if (request_msg == "CGI")
-						event_client.parse_cgi_response(event_client.get_cgi_instance()); //cgi process 회수 && response parse
+						event_client.parse_cgi_response(event_client.get_cgi_instance());
 					else {
 						event_client.do_parse(request_msg, cycle);
 						// event_client.get_request_instance().check_members();
-						// if (event_client.get_chunked() == true)
-						// 	continue ;
 						if (event_client.get_status_code() < BAD_REQUEST)
 						{
 							event_client.do_method();

@@ -14,33 +14,10 @@ Request::~Request()
 {
 }
 
-void	Request::decode_chunked(std::string &msg)
-{
-	std::string	chunk = msg;
-	size_t		chunk_size = 0;
-	size_t		pos = 0;
-
-	while (message_body.find ("\r\n", pos) != std::string::npos)
-	{
-		chunk_size = chunk.find("\r\n", pos);
-		if (chunk_size == 0)
-		{
-			set_chunked (false);
-			throw OK;
-		}
-		this->message_body += msg.substr(chunk.find("\r\n", pos + 2), chunk_size);
-	}
-}
-
 int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 {
 	try
 	{
-		if (get_chunked() == true)
-		{
-			decode_chunked(request_msg);
-			throw OK;
-		}
 		this->request_msg = request_msg;
 		this->cycle = &cycle;
 		// std::cout<< "parse_request\n";
@@ -669,7 +646,31 @@ void	Request::check_transfer_encoding()
 		this->header["connection"] = "close";
 		throw BAD_REQUEST;
 	}
-	this->chunked = true;
+	decode_chunked (this->message_body);
+}
+
+void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chunkded error"
+{
+	std::string	chunk = msg;
+	size_t		chunk_size = 0;
+	size_t		delimeter = 0;
+	size_t		pos = 0;
+	this->message_body = "";
+	while (1)
+	{
+		delimeter = chunk.find("\r\n", pos);
+		if (delimeter == std::string::npos)
+			break;
+		chunk_size = std::strtol (chunk.substr(pos, delimeter - pos).c_str(), NULL, 16);
+		this->content_length += chunk_size;
+		if (chunk_size == 0)
+		{
+			set_chunked (true);
+			throw OK;
+		}
+		this->message_body += chunk.substr(delimeter + 2, chunk_size);
+		pos = (delimeter + 2) + (chunk_size + 2);
+	}
 }
 
 void	Request::check_content_length()

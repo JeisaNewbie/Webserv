@@ -32,7 +32,7 @@ void		Cgi::set_env(Request &request, uintptr_t client_soket)
 	int i = request.get_path().find(".cpp");
 	std::string tmp = request.get_path().substr(0, i);
 	set_name (tmp);
-	
+
 	// set_name (request.get_path());
 	env["REQUEST_METHOD"] = request.get_method();
 	env["CLIENT_SOKET"] = to_string (client_soket);
