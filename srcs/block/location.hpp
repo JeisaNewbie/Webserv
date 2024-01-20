@@ -3,6 +3,10 @@
 
 # include <iostream>
 
+# define METHOD_GET		0x00000001
+# define METHOD_POST	0x00000010
+# define METHOD_DELETE	0x00000100
+
 enum loc_type {
 	LOC_DEFAULT,
 	LOC_ERROR,
@@ -27,6 +31,7 @@ class Location {
 		int			location_type;
 		std::string	location_path;
 		std::string	sub_root;
+		int			allowed_method;
 };
 
 #endif

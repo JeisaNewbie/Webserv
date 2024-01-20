@@ -65,7 +65,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		// timeout.tv_sec = 10;
 		// timeout.tv_nsec = 0;
 
-		new_events = kevent(worker.getEventQueue(),& change_list[0], change_list.size(), \
+		new_events = kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
 							&event_list[0], event_list.size(), NULL);
 							// &event_list[0], event_list.size(), &timeout);
 		if (new_events > event_list.size()) {
