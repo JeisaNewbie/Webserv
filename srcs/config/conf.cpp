@@ -10,6 +10,7 @@ static int	tokenizer(char* str, std::string* tokens);
 static int	checkConfLocation(std::string str[]);
 static void	checkGetlineError(std::ifstream& file);
 static void	checkLocationType(std::string location_path, int& location_type);
+static int	setTakeArgCnt(int cnt);
 
 Conf::Conf(void) {
 	main_cmd[0] = Cmd("worker_connections",		\
@@ -35,6 +36,10 @@ Conf::Conf(void) {
 	loc_cmd[0] = Cmd("root",					\
 						CMD_TAKE1,				\
 						locationRoot);
+
+	loc_cmd[1] = Cmd("allowed_method",						\
+						CMD_TAKE1 | CMD_TAKE2 | CMD_TAKE3,	\
+						locationAllowedMethod);
 }
 
 Conf::~Conf(void) {}
@@ -119,7 +124,7 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 		
 		token_cnt = tokenizer(buf, tokens);
 		tokens[0] = &tokens[0][1]; //tab으로 시작하니까
-		callCmd(cycle, conf, CONF_MAIN, tokens, token_cnt);
+		callCmd(cycle, conf, CONF_MAIN, tokens, setTakeArgCnt(token_cnt));
 	}
 	checkGetlineError(file);
 
@@ -156,7 +161,7 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 			parseLocation(cycle, conf, file, tokens[1]);
 			continue;
 		}
-		callCmd(cycle, conf, CONF_SRV, tokens, token_cnt);
+		callCmd(cycle, conf, CONF_SRV, tokens, setTakeArgCnt(token_cnt));
 	}
 	checkGetlineError(file);
 
@@ -188,12 +193,15 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 
 		token_cnt = tokenizer(buf, tokens);
 		tokens[0] = &tokens[0][2]; //tab 2개로 시작하니까
-		callCmd(cycle, conf, CONF_LOC, tokens, token_cnt);
+		callCmd(cycle, conf, CONF_LOC, tokens, setTakeArgCnt(token_cnt));
 	}
 	checkGetlineError(file);
 
 	if (location_list.back().getSubRoot() == "")
 		throw Exception(CONF_LACK_DIRCTV);
+	if (location_list.back().getAllowedMethod() == 0)
+		location_list.back().setAllowedMethod(				\
+			METHOD_GET | METHOD_POST | METHOD_DELETE);
 }
 
 static void callCmd(Cycle& cycle, Conf& conf, int location, \
@@ -205,8 +213,10 @@ static void callCmd(Cycle& cycle, Conf& conf, int location, \
 
 	for (idx = 0; idx < cmd_max; idx++) {
 		if (cmd[idx].getName() == tokens[0]) {
-			if (cmd[idx].getArgCnt() != token_cnt - 1)
+			if ((cmd[idx].getArgCnt() & token_cnt) == 0) {
+				std::cout << cmd[idx].getArgCnt()<< " " << token_cnt << "\n";
 				throw Exception(CONF_INVALID_DIRCTV_ARG_CNT);
+			}
 			handler = cmd[idx].getHandler();
 			try {
 				handler(cycle, tokens);
@@ -260,4 +270,17 @@ static void checkLocationType(std::string location_path, int& location_type) {
 		location_type = LOC_CGI;
 	else
 		throw Exception(CONF_INVALID_LOC_PATH);
+}
+
+static int setTakeArgCnt(int cnt) {
+	cnt--;
+	if (cnt == 0)
+		return CMD_NOARGS;
+	if (cnt == 1)
+		return CMD_TAKE1;
+	if (cnt == 2)
+		return CMD_TAKE2;
+	if (cnt == 3)
+		return CMD_TAKE3;
+	return 0;
 }

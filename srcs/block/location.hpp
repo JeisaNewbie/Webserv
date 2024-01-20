@@ -22,10 +22,12 @@ class Location {
 		Location& operator =(const Location& src);
 
 		void setSubRoot(std::string _location_path);
+		void setAllowedMethod(int _allowed_method);
 
 		int					getLocationType(void) const;
 		const std::string&	getLocationPath(void) const;
 		const std::string&	getSubRoot(void) const;
+		int					getAllowedMethod(void) const;
 
 	private:
 		int			location_type;
