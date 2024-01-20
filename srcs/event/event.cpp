@@ -19,6 +19,10 @@ void prepConnect(Cycle& cycle) {
 	server_addr.sin_port = htons(PORT);
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
+	// 제출 전 지우기
+	int 	optval = 1;
+	setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
 	if (bind(listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
 		throw Exception(EVENT_FAIL_BIND);
 	if (listen(listen_socket, LISTEN_QUEUE_SIZE) == -1)
@@ -55,24 +59,25 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 
 	uint32_t		new_events;
 	struct kevent*	cur_event;
-	struct timespec	timeout;
+	// struct timespec	timeout;
+
 	while (1) {
-		timeout.tv_sec = 10;
-		timeout.tv_nsec = 0;
-		//시간 나중에 수정하기
+		// timeout.tv_sec = 10;
+		// timeout.tv_nsec = 0;
 
 		new_events = kevent(worker.getEventQueue(),& change_list[0], change_list.size(), \
-							&event_list[0], event_list.size(),& timeout);
+							&event_list[0], event_list.size(), NULL);
+							// &event_list[0], event_list.size(), &timeout);
 		if (new_events > event_list.size()) {
 			event_list.resize(new_events);
-			kevent(worker.getEventQueue(),& change_list[0], change_list.size(), \
+			kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
 					&event_list[0], event_list.size(), NULL);
 		}
 		change_list.clear();
 
 		for (uint32_t i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
-			// printState(cur_event);
+			printState(cur_event);
 
 			if (cur_event->flags & EV_ERROR) {
 				if (cur_event->flags & EV_DELETE || errno == EAGAIN)
@@ -94,6 +99,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 					std::string&	request_msg = clients[cur_event->ident];
 					Client&			event_client = server[cur_event->ident];
 
+					event_client.set_client_soket(cur_event->ident);
 					if (request_msg == "CGI")
 						event_client.parse_cgi_response(event_client.get_cgi_instance()); //cgi process 회수 && response parse
 					else {
