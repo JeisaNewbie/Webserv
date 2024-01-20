@@ -3,22 +3,18 @@
 
 # include "../core/cycle.hpp"
 
-// enum cmd_args {
-// 	CMD_NOARGS,
-// 	CMD_TAKE1,
-// 	CMD_TAKE2
-// };
+# define CMD_NOARGS	0x00000001
+# define CMD_TAKE1	0x00000010
+# define CMD_TAKE2	0x00000100
+# define CMD_TAKE3	0x00001000
 
-# define CMD_NOARGS		0x00000001
-# define CMD_TAKE1		0x00000010
-# define CMD_TAKE2		0x00000100
-# define CMD_TAKE3		0x00001000
+# define VALID		0
+# define KILO_BYTE	1024
+# define MEGA_BYTE	(KILO_BYTE * KILO_BYTE)
+# define GIGA_BYTE	(KILO_BYTE * KILO_BYTE * KILO_BYTE)
 
-# define VALID 0
-# define KILO_BYTE 1024
-# define MEGA_BYTE (KILO_BYTE * KILO_BYTE)
-# define GIGA_BYTE (KILO_BYTE * KILO_BYTE * KILO_BYTE)
-# define MAX_FD 10000
+# define MAX_FD		10000
+# define MAX_BODY	(2LL * GIGA_BYTE)
 
 typedef void (*handler_t)(Cycle&, std::string[]);
 

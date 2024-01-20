@@ -26,7 +26,7 @@ void mainWorkerConnections(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getWorkerConnections() != VALID)
 		throw Exception(CONF_DUP_DIRCTV);
 
-	int n = stoi(tokens[1]);
+	int	n = stoi(tokens[1]);
 	if (n <= 0 || MAX_FD < n)
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
 
@@ -38,8 +38,8 @@ void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getClientMaxBodySize() != VALID)
 		throw Exception(CONF_DUP_DIRCTV);
 		
-	int		n = stoi(tokens[1]);
-	char	c = tokens[1].back();
+	long long	n = stoll(tokens[1]);
+	char		c = tokens[1].back();
 
 	if (c == 'K')
 		n *= KILO_BYTE;
@@ -48,7 +48,7 @@ void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 	else if (c == 'G')
 		n *= GIGA_BYTE;
 
-	if (n <= 0) //제한 몇으로?
+	if (n <= 0 || MAX_BODY < n)
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
 
 	cycle.setClientMaxBodySize(n);
@@ -58,7 +58,7 @@ void mainUriLimitLength(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getUriLimitLength() != VALID)
 		throw Exception(CONF_DUP_DIRCTV);
 
-	int n = stoi(tokens[1]);
+	int	n = stoi(tokens[1]);
 	if (n <= 0) //제한 몇으로?
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
 
@@ -131,5 +131,6 @@ void locationAllowedMethod(Cycle& cycle, std::string tokens[]) {
 		else
 			throw Exception(CONF_INVALID_DIRCTV_VALUE);
 	}
+	
 	location.setAllowedMethod(res);
 }

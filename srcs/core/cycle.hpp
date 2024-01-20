@@ -18,8 +18,8 @@ class Cycle {
 		Cycle& operator =(const Cycle& src);
 
 		void						setWorkerConnections(u_int32_t n);
-		void						setClientMaxBodySize(u_int32_t n);
-		void						setUriLimitLength(u_int32_t n);
+		void						setClientMaxBodySize(size_t n);
+		void						setUriLimitLength(size_t n);
 		void						setMainRoot(std::string _path);
 
 		const char**				getEnvp(void) const;
@@ -35,7 +35,7 @@ class Cycle {
 
 		const char**		envp;
 
-		int					worker_connections;
+		uint32_t			worker_connections;
 		size_t				client_max_body_size;
 		size_t				uri_limit_length;
 		std::string			main_root;
