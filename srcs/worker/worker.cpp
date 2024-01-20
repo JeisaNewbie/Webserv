@@ -1,6 +1,6 @@
 #include "../core/core.hpp"
 
-Worker::Worker(void) : cur_connection(0) {
+Worker::Worker(void) : cur_connection(0), error_log("log/worker.log") {
 	event_queue = kqueue();
 	if (event_queue == -1)
 		throw Exception(WORK_FAIL_CREATE_KQ);
@@ -8,7 +8,6 @@ Worker::Worker(void) : cur_connection(0) {
 	if (listen_socket == -1)
 		throw Exception(WORK_FAIL_CREATE_SOCKET);
 
-	error_log.open("log/worker.log");
 	if (error_log.is_open() == FALSE)
 		throw Exception(WORK_FAIL_OPEN);
 }
