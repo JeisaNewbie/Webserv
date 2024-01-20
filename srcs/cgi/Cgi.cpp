@@ -142,3 +142,4 @@ std::string	&Cgi::get_response_from_cgi()
 
 void	Cgi::set_body (std::string &body) {this->cgi_body = body;}
 void	Cgi::set_name (std::string &name) {this->cgi_name = name;}
+int		Cgi::get_fd() {return this->fd_file_out;}
