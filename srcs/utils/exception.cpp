@@ -25,6 +25,10 @@ Exception::Exception(int _costom_error) {
 		message = "Directives is duplicated";
 		break;
 
+	case CONF_DUP_SRV_BLOCK:
+		message = "Server blocks is duplicated";
+		break;
+
 	case CONF_INVALID_BLOCK_FORM:
 		message = "Form of configure block is invalid";
 		break;

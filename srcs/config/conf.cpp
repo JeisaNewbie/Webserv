@@ -9,6 +9,7 @@ static void	callCmd(Cycle& cycle, Conf& conf, int location,					\
 static int	tokenizer(char* str, std::string* tokens);
 static int	checkConfLocation(std::string str[]);
 static void	checkGetlineError(std::ifstream& file);
+static void checkServerDuplication(std::list<Server>& server_list);
 static void	checkLocationType(std::string location_path, int& location_type);
 static int	setTakeArgCnt(int cnt);
 
@@ -164,6 +165,7 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 		callCmd(cycle, conf, CONF_SRV, tokens, setTakeArgCnt(token_cnt));
 	}
 	checkGetlineError(file);
+	checkServerDuplication(server_list);
 
 	if (server_list.back().getPort() == 0	\
 		|| server_list.back().getDomain() == "")
@@ -259,6 +261,18 @@ static void checkGetlineError(std::ifstream& file) {
 	if (file.eof() != TRUE \
 		&& (file.fail() == TRUE || file.bad() == TRUE))
 		throw Exception(CONF_FAIL_READ);
+}
+
+static void checkServerDuplication(std::list<Server>& server_list) {
+	uint32_t					port = server_list.back().getPort();
+	std::string					domain = server_list.back().getDomain();
+	std::list<Server>::iterator	it = server_list.begin();
+
+	for (; it != std::prev(server_list.end()); it++) {
+		if (port == (*it).getPort()	\
+			&& domain == (*it).getDomain())
+			throw Exception(CONF_DUP_SRV_BLOCK);
+	}
 }
 
 static void checkLocationType(std::string location_path, int& location_type) {
