@@ -13,6 +13,7 @@ enum cmd_args {
 # define KILO_BYTE 1024
 # define MEGA_BYTE (KILO_BYTE * KILO_BYTE)
 # define GIGA_BYTE (KILO_BYTE * KILO_BYTE * KILO_BYTE)
+# define MAX_FD 10000
 
 typedef void (*handler_t)(Cycle&, std::string[]);
 

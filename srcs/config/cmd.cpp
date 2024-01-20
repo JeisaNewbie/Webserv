@@ -26,7 +26,7 @@ void mainWorkerConnections(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getWorkerConnections() != VALID)
 		throw Exception(CONF_DUP_DIRCTV);
 	int n = stoi(tokens[1]);
-	if (0 >= n || n > 10000)
+	if (0 >= n || n > MAX_FD)
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
 	cycle.setWorkerConnections(n);
 }

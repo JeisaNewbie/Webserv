@@ -46,14 +46,16 @@ void printState(struct kevent* cur_event) {
 		std::cout << "EAGAIN\n";
 	std::cout << "\n";
 }
-//cgi를 처리할 client->ident를 담을 리스트
+
 static void startConnect(Cycle& cycle, Worker& worker) {
 	uintptr_t				listen_socket = worker.getListenSocket();
 	clients_t&				clients = worker.getClients();
 	kevent_t&				change_list = worker.getChangeList();
 	kevent_t				event_list(EVENT_LIST_INIT_SIZE);
 	std::map<int, Client>	server;
-	uintptr_t				cgi_fd_arr[10000];
+	uintptr_t				cgi_fd_arr[MAX_FD];
+	std::list<Client>		cgi_fork_list;
+
 	std::cout << "---------------------webserver start---------------------\n";
 
 	addEvent(worker, listen_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -76,7 +78,11 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		}
 		change_list.clear();
 
-		//for()//cgi_fork_list;
+		for (int i = 0; i < cgi_fork_list.size(); i++) {
+			//fork 이후 동작. do_method_with_cgi 실행
+		}
+		cgi_fork_list.clear();
+
 		for (uint32_t i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
 			printState(cur_event);
@@ -120,11 +126,15 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 					// event_client.get_request_instance().check_members();
 					if (event_client.get_status_code() < BAD_REQUEST)
 					{
-						event_client.do_method(); //do_method_with_cgi 분리후 cgi_fork_list에 tmp_client 추가, 이후 해당 loop에서 do_method_with_cgi 실행
+						event_client.do_method(); //do_method_with_cgi 분리
 						if (event_client.get_cgi() == true)
 						{
-							// event_client.get_cgi_instance().get_fd(); kqueue에 추가 (은우)
-							cgi_fd_arr[event_client.get_cgi_instance().get_fd()] = tmp_ident;
+							uintptr_t	fd = event_client.get_cgi_instance().get_fd();
+
+							addEvent(worker, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+							cgi_fd_arr[fd] = tmp_ident;
+							cgi_fork_list.push_back(event_client);
+
 							continue;
 						}
 					}
@@ -133,10 +143,12 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 					// addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
 					// std::cout << "---------------end of assebling message--------------\n";
 				}
-				else {
+				else { //fd_event
 					tmp_ident = cgi_fd_arr[cur_event->ident];
+					if (tmp_ident == 0)
+						// error
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
-				} //fd_event
+				}
 				server[tmp_ident].assemble_response();
 				clients[tmp_ident] = "";
 				addEvent(worker, tmp_ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
