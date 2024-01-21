@@ -54,17 +54,6 @@ void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 	cycle.setClientMaxBodySize(n);
 }
 
-void mainUriLimitLength(Cycle& cycle, std::string tokens[]) {
-	if (cycle.getUriLimitLength() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
-
-	int	n = stoi(tokens[1]);
-	if (n <= 0) //제한 몇으로?
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
-
-	cycle.setUriLimitLength(n);
-}
-
 void mainRoot(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getMainRoot().length() != VALID)
 		throw Exception(CONF_DUP_DIRCTV);
@@ -80,7 +69,7 @@ void serverListen(Cycle& cycle, std::string tokens[]) {
 		throw Exception(CONF_DUP_DIRCTV);
 
 	int n = stoi(tokens[1]);
-	if (n < 1024 || 65535 < n)
+	if ((n != 80 && n < 1024) || 65535 < n)
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
 
 	server.setPort(n);

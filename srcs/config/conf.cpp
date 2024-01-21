@@ -11,6 +11,7 @@ static int	checkConfLocation(std::string str[]);
 static void	checkGetlineError(std::ifstream& file);
 static void checkServerDuplication(std::list<Server>& server_list);
 static void	checkLocationType(std::string location_path, int& location_type);
+static void checkMaxDomainSize(Cycle& cycle);
 static int	setTakeArgCnt(int cnt);
 
 Conf::Conf(void) {
@@ -20,10 +21,7 @@ Conf::Conf(void) {
 	main_cmd[1] = Cmd("client_max_body_size",	\
 						CMD_TAKE1,				\
 						mainClientMaxBodySize);
-	main_cmd[2] = Cmd("uri_limit_length",		\
-						CMD_TAKE1,				\
-						mainUriLimitLength);
-	main_cmd[3] = Cmd("root",					\
+	main_cmd[2] = Cmd("root",					\
 						CMD_TAKE1,				\
 						mainRoot);
 
@@ -107,6 +105,7 @@ void parseConf(Cycle& cycle, Conf& conf) {
 			parseServer(cycle, conf, file);
 	}
 	checkGetlineError(file);
+	checkMaxDomainSize(cycle);
 }
 
 static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
@@ -129,9 +128,8 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 	}
 	checkGetlineError(file);
 
-	if (cycle.getWorkerConnections() == 0	\
+	if (cycle.getWorkerConnections() == 0		\
 		|| cycle.getClientMaxBodySize() == 0	\
-		|| cycle.getUriLimitLength() == 0		\
 		|| cycle.getMainRoot() == "")
 		throw Exception(CONF_LACK_DIRCTV);
 }
@@ -267,10 +265,11 @@ static void checkServerDuplication(std::list<Server>& server_list) {
 	uint32_t					port = server_list.back().getPort();
 	std::string					domain = server_list.back().getDomain();
 	std::list<Server>::iterator	it = server_list.begin();
+	std::list<Server>::iterator	ite = std::prev(server_list.end());
 
-	for (; it != std::prev(server_list.end()); it++) {
-		if (port == (*it).getPort()	\
-			&& domain == (*it).getDomain())
+	for (; it != ite; it++) {
+		if (port == it->getPort()	\
+			&& domain == it->getDomain())
 			throw Exception(CONF_DUP_SRV_BLOCK);
 	}
 }
@@ -284,6 +283,19 @@ static void checkLocationType(std::string location_path, int& location_type) {
 		location_type = LOC_CGI;
 	else
 		throw Exception(CONF_INVALID_LOC_PATH);
+}
+
+static void checkMaxDomainSize(Cycle& cycle) {
+	size_t						tmp, max_len = 0;
+	std::list<Server>&			server_list = cycle.getServerList();
+	std::list<Server>::iterator	it = server_list.begin();
+	std::list<Server>::iterator	ite = server_list.end();
+
+	for (; it != ite; it++) {
+		tmp = it->getDomain().length();
+		max_len = tmp > max_len ? tmp : max_len;
+	}
+	cycle.setUriLimitLength(max_len + 50);
 }
 
 static int setTakeArgCnt(int cnt) {
