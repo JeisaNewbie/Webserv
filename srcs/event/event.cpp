@@ -128,10 +128,6 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 							continue;
 						}
 					}
-					// event_client.assemble_response();
-					// request_msg = "";
-					// addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-					// std::cout << "---------------end of assebling message--------------\n";
 				}
 				else {
 					tmp_ident = cgi_fd_arr[cur_event->ident];
