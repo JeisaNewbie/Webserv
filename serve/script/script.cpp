@@ -46,7 +46,7 @@ static void handleGetMethod(const std::string directory_path, const std::string 
 	std::cout << "</head>\n";
 	std::cout << "<body>\n";
 	std::cout << "	<h1>";
-	
+
 	while (std::getline(file, line))
 		std::cout << line;
 
@@ -62,7 +62,7 @@ static void handlePostMethod(const std::string directory_path, const std::string
 
 	// content 길이 제한 둘까??
 	if (post_data.length() > 0) {
-		
+
 		std::string		new_file_name = createUniqueFileName();
 		std::ofstream	new_file(std::string(directory_path) + "/" + new_file_name);
 		// std::ofstream	new_file;
@@ -78,7 +78,7 @@ static void handlePostMethod(const std::string directory_path, const std::string
 
 static std::string getEnvString(const char* str) {
 	const char*	tmp = getenv(str);
-	
+
 	if (tmp == NULL)
 		// error
 
