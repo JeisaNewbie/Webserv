@@ -90,7 +90,6 @@ void	Client::parse_cgi_response(Cgi &cgi)
 		get_response_instance().set_header_field(body.substr (pos, delimeter - pos + 2));
 		pos = delimeter + 2;
 	}
-
 	set_status_code(std::atoi(get_response_instance().get_header_field("Status_code").c_str()));
 }
 

@@ -126,7 +126,7 @@ std::string	&Cgi::get_response_from_cgi()
 	std::cout<<"BEFORE_GET_CHILD_PROCESS\n";
 	waitpid (this->pid, &status, WNOHANG);
 	std::cout<<"AFTER_GET_CHILD_PROCESS\n";
-	if (WIFEXITED(status) == 1)
+	if (WEXITSTATUS(status) == 1)
 	{
 		fclose (this->f_in);
 		fclose (this->f_out);

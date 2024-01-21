@@ -39,8 +39,8 @@ class Cmd {
 
 void	mainWorkerConnections(Cycle& cycle, std::string tokens[]);
 void	mainClientMaxBodySize(Cycle& cycle, std::string tokens[]);
-void	mainUriLimitLength(Cycle& cycle, std::string tokens[]);
 void	mainRoot(Cycle& cycle, std::string tokens[]);
+void	mainDefaultErrorRoot(Cycle& cycle, std::string tokens[]);
 
 void	serverListen(Cycle& cycle, std::string tokens[]);
 void	serverName(Cycle& cycle, std::string tokens[]);
