@@ -55,6 +55,8 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 	std::map<int, Client>	server;
 	uintptr_t				cgi_fd_arr[MAX_FD];
 	std::list<Client>		cgi_fork_list;
+	std::list<Client>::iterator	it;
+	std::list<Client>::iterator	ite;
 
 	std::cout << "---------------------webserver start---------------------\n";
 
@@ -68,8 +70,10 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		// timeout.tv_sec = 10;
 		// timeout.tv_nsec = 0;
 
+		std::cout<<"NEW_EVENT_START\n";
 		new_events = kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
 							&event_list[0], event_list.size(), NULL);
+		std::cout<<"NEW_EVENT_NUM: "<<new_events<<std::endl;
 							// &event_list[0], event_list.size(), &timeout);
 		if (new_events > event_list.size()) {
 			event_list.resize(new_events);
@@ -78,8 +82,12 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		}
 		change_list.clear();
 
-		for (int i = 0; i < cgi_fork_list.size(); i++) {
-			//fork 이후 동작. do_method_with_cgi 실행
+		std::cout<<"FIRST_CHECK_CGI_FORK_LIST_SIZE: "<<cgi_fork_list.size()<<std::endl;
+		it = cgi_fork_list.begin();
+		ite = cgi_fork_list.end();
+
+		for (; it != ite; it++) {
+			Cgi::execute_cgi(it->get_request_instance(), it->get_cgi_instance());
 		}
 		cgi_fork_list.clear();
 
@@ -94,7 +102,9 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				disconnectClient(worker, cur_event->ident);
 			}
 			if (cur_event->filter == EVFILT_READ) {
+
 				uintptr_t tmp_ident = cur_event->ident;
+
 				if (cur_event->ident == listen_socket) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
 						acceptNewClient(worker);
@@ -109,44 +119,35 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 					std::string&	request_msg = clients[tmp_ident];
 					Client&			event_client = server[tmp_ident];
 
-					// event_client.init_client(&cgi_fd_arr, tmp_ident); // event 객체 추가
-					// if (request_msg == "CGI")
-					// 	event_client.parse_cgi_response(event_client.get_cgi_instance());
-					// else {
-					// 	event_client.do_parse(request_msg, cycle);
-					// 	// event_client.get_request_instance().check_members();
-					// 	if (event_client.get_status_code() < BAD_REQUEST)
-					// 	{
-					// 		event_client.do_method();
-					// 		if (event_client.get_cgi() == true)
-					// 			continue;
-					// 	}
-					// }
+					std::cout<<"START_DO_PARSE\n";
 					event_client.do_parse(request_msg, cycle);
 					// event_client.get_request_instance().check_members();
 					if (event_client.get_status_code() < BAD_REQUEST)
 					{
-						event_client.do_method(); //do_method_with_cgi 분리
-						if (event_client.get_cgi() == true)
+						try
 						{
-							uintptr_t	fd = event_client.get_cgi_instance().get_fd();
+							if (event_client.get_cgi() == true)
+							{
+								event_client.set_property_for_cgi(event_client.get_request_instance());//함수명 바꾸기, ex) set_property_for_cgi
+								uintptr_t	fd = event_client.get_cgi_instance().get_fd();
 
-							addEvent(worker, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-							cgi_fd_arr[fd] = tmp_ident;
-							cgi_fork_list.push_back(event_client);
+								addEvent(worker, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+								cgi_fd_arr[fd] = tmp_ident;
+								cgi_fork_list.push_back(event_client);
+								std::cout<<"CGI_FORK_LIST_SIZE: "<<cgi_fork_list.size()<<std::endl;
 
-							continue;
+								continue;
+							}
+							event_client.do_method_without_cgi(event_client.get_request_instance());
+						}
+						catch(int e)
+						{
+							event_client.set_status_code(e);
 						}
 					}
-					// event_client.assemble_response();
-					// request_msg = "";
-					// addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
-					// std::cout << "---------------end of assebling message--------------\n";
 				}
-				else { //fd_event
+				else {
 					tmp_ident = cgi_fd_arr[cur_event->ident];
-					if (tmp_ident == 0)
-						// error
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
 				server[tmp_ident].assemble_response();
@@ -162,6 +163,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 			}
 		}
+		std::cout<<"NEW_EVENT_END\n";
 	}
 }
 

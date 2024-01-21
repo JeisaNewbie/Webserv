@@ -18,36 +18,9 @@ void	Client::do_parse(std::string &request_msg, Cycle &cycle)
 	get_request_instance().process_request_parsing(request_msg, cycle);
 }
 
-void	Client::do_method()
+void	Client::set_property_for_cgi(Request &request)
 {
-	try
-	{
-		bool	cgi = get_cgi();
-		// std::cout << "CGI_FLAG: " << cgi << std::endl;
-		// std::cout << "path: " << path << std::endl;
-		// std::cout << "path_property: " << path_property << std::endl;
-		// if (cgi == true && path_property == _FILE)
-		// 	do_method_with_cgi();
-		// else if (cgi == false && (path_property == _FILE | path_property == _DIR))
-		// 	do_method_without_cgi(path, path_property);
-		// else
-		// 	throw NOT_FOUND;
-		if (cgi == true)
-			do_method_with_cgi (get_request_instance());
-		else
-			do_method_without_cgi (get_request_instance());
-	}
-	catch(int e)
-	{
-		set_status_code(e);
-		std::cout <<"do_method_status_code: "<< get_status_code() << std::endl;
-	}
-
-}
-
-void	Client::do_method_with_cgi(Request &request)
-{
-	std::cout<<"METHOD_WITH_CGI_START\n";
+	std::cout<<"SET_PROPERTY_FOR_CGI\n";
 
 	std::string &path = request.get_path();
 	int			path_property = check_path_property (path);
@@ -60,7 +33,8 @@ void	Client::do_method_with_cgi(Request &request)
 	}
 
 	this->get_cgi_instance().set_env(request, get_client_soket());
-	Cgi::execute_cgi(request, get_cgi_instance());
+	std::cout<<"END_SET_PROPERTY_FOR_CGI\n";
+	// Cgi::execute_cgi(request, get_cgi_instance());
 }
 
 void	Client::do_method_without_cgi(Request &request)

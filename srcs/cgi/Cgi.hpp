@@ -18,10 +18,12 @@ class Cgi {
 		std::string	cgi_name;
 		std::string	cgi_body;
 		char	buf[CGI_BUFFER_SIZE];
+		char	**env_cgi;
 		FILE	*f_in;
 		FILE	*f_out;
 		int		fd_file_in;
 		int		fd_file_out;
+		pid_t	pid;
 
 	public:
 		Cgi();
@@ -36,5 +38,6 @@ class Cgi {
 		static void		execute_cgi(Request &request, Cgi &cgi);
 		void			set_body (std::string &body);
 		void			set_name (std::string &name);
+		void			set_fd();
 		int				get_fd();
 };
