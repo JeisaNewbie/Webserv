@@ -53,10 +53,8 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 	kevent_t&				change_list = worker.getChangeList();
 	kevent_t				event_list(EVENT_LIST_INIT_SIZE);
 	std::map<int, Client>	server;
-	uintptr_t				cgi_fd_arr[MAX_FD];
-	std::list<Client>		cgi_fork_list;
-	std::list<Client>::iterator	it;
-	std::list<Client>::iterator	ite;
+	uintptr_t				cgi_fd_arr[MAX_FD] = {0,};
+	std::vector<Client*>	cgi_fork_list;
 
 	std::cout << "---------------------webserver start---------------------\n";
 
@@ -64,17 +62,18 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 
 	uint32_t		new_events;
 	struct kevent*	cur_event;
-	// struct timespec	timeout;
+	struct timespec	timeout;
 
 	while (1) {
-		// timeout.tv_sec = 10;
-		// timeout.tv_nsec = 0;
+		timeout.tv_sec = 5;
+		timeout.tv_nsec = 0;
 
-		std::cout<<"NEW_EVENT_START\n";
+		// for (int i = 0; i < change_list.size(); i++)
+		// 	std::cout << change_list[i].ident << " " << change_list[i].filter << " " << change_list[i].flags << "\n";
+
 		new_events = kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
-							&event_list[0], event_list.size(), NULL);
-		std::cout<<"NEW_EVENT_NUM: "<<new_events<<std::endl;
-							// &event_list[0], event_list.size(), &timeout);
+							&event_list[0], event_list.size(), &timeout);
+
 		if (new_events > event_list.size()) {
 			event_list.resize(new_events);
 			kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
@@ -82,12 +81,15 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		}
 		change_list.clear();
 
-		std::cout<<"FIRST_CHECK_CGI_FORK_LIST_SIZE: "<<cgi_fork_list.size()<<std::endl;
-		it = cgi_fork_list.begin();
-		ite = cgi_fork_list.end();
-
-		for (; it != ite; it++) {
-			Cgi::execute_cgi(it->get_request_instance(), it->get_cgi_instance());
+		// execute_cgi에서 던진 exception이 안 잡혔음
+		for (int i = 0; i < cgi_fork_list.size(); i++) {
+			try {
+				Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
+									cgi_fork_list[i]->get_cgi_instance());
+			}
+			catch(int e) {
+				cgi_fork_list[i]->set_status_code(e);
+			}
 		}
 		cgi_fork_list.clear();
 
@@ -119,7 +121,6 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 					std::string&	request_msg = clients[tmp_ident];
 					Client&			event_client = server[tmp_ident];
 
-					std::cout<<"START_DO_PARSE\n";
 					event_client.do_parse(request_msg, cycle);
 					// event_client.get_request_instance().check_members();
 					if (event_client.get_status_code() < BAD_REQUEST)
@@ -133,8 +134,8 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 
 								addEvent(worker, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 								cgi_fd_arr[fd] = tmp_ident;
-								cgi_fork_list.push_back(event_client);
-								std::cout<<"CGI_FORK_LIST_SIZE: "<<cgi_fork_list.size()<<std::endl;
+								event_client.set_client_soket(tmp_ident); // 임시
+								cgi_fork_list.push_back(&event_client);
 
 								continue;
 							}
@@ -148,7 +149,12 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				}
 				else {
 					tmp_ident = cgi_fd_arr[cur_event->ident];
-					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
+					try {
+						server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
+					}
+					catch (std::exception& e) {
+						std::cerr << "----------------- Exception caught: " << e.what() << std::endl;
+					}
 				}
 				server[tmp_ident].assemble_response();
 				clients[tmp_ident] = "";
@@ -163,7 +169,6 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 			}
 		}
-		std::cout<<"NEW_EVENT_END\n";
 	}
 }
 

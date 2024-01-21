@@ -7,6 +7,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <exception>
 
 static void			handleGetMethod(const std::string directory_path, const std::string get_data);
 static void			handlePostMethod(const std::string directory_path, const std::string post_data);
@@ -14,14 +15,20 @@ static std::string	getEnvString(const char* str);
 static std::string	createUniqueFileName();
 
 int main() {
-	std::string			request_method = getEnvString("REQUEST_METHOD");
-	const std::string	data = getEnvString("QUERY_STRING");
-	const std::string	directory_path = getEnvString("REDIRECT_PATH");
+	try {
+		std::string			request_method = getEnvString("REQUEST_METHOD");
+		const std::string	data = getEnvString("QUERY_STRING");
+		const std::string	directory_path = getEnvString("REDIRECT_PATH");
 
-	if (request_method == "GET")
-		handleGetMethod(directory_path, data);
-	else if (request_method == "POST")
-		handlePostMethod(directory_path, data);
+		if (request_method == "GET")
+			handleGetMethod(directory_path, data);
+		else if (request_method == "POST")
+			handlePostMethod(directory_path, data);
+	}
+	catch(const std::exception& e) {
+		std::cerr << "Exception caught: " << e.what() << std::endl;
+		return -1;
+	}
 
 	return 0;
 }
@@ -80,7 +87,7 @@ static std::string getEnvString(const char* str) {
 	const char*	tmp = getenv(str);
 
 	if (tmp == NULL)
-		// error
+		throw std::runtime_error("get env");
 
 	return std::string(tmp);
 }
