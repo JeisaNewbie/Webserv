@@ -784,7 +784,7 @@ void Request::matching_server()
 		}
 	}
 
-	matched_location = matched_server->getLocationList().begin();
+	matched_location = matched_server->getLocationList().begin();//path 다를경우 error경로의 error.html 표시
 	std::cout <<"matching_server_DELETE: " << path << std::endl;
 
 	if (method == "DELETE" && matched_location->getLocationPath() == "/")
