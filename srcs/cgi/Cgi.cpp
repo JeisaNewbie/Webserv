@@ -87,6 +87,7 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 {
 
 	cgi.set_fd();
+	std::cout <<"before_fork\n";
 	cgi.pid = fork();
 
 	if (cgi.pid == -1)

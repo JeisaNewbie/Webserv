@@ -27,7 +27,7 @@ private:
 	std::string										uri;
 	std::string										origin_path;
 	std::string										path;
-	int												port;
+	uint32_t										port;
 	std::string										query;
 	std::string										protocol_version;
 	std::string										method;

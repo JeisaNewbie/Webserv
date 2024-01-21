@@ -544,9 +544,10 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 	if (pos == std::string::npos || crlf == std::string::npos)
 		throw BAD_REQUEST;
 
+	std::cout<<"HEADER_FIELD: "<<header_element<<std::endl;
 	std::string	key = lower (header_element.substr (0, pos).c_str(), pos);
 	std::string	value = header_element.substr (pos + 1, end);
-
+	std::cout<<"HEADER_KEY_AND_VALUE: "<<key<<", "<<value<<std::endl;
 	remove_spf(value, end);
 	remove_spb (value, value.find ("\r\n"));
 	set_header_key_and_value (key, value);
@@ -607,6 +608,7 @@ void	Request::check_host()
 			if (port_num > 65535)
 				throw BAD_REQUEST;
 			port_num = port_num * 10 + (host[i] - '0');
+			std::cout<<"PORT_NUM: "<<port_num<<std::endl;
 			port_len++;
 			continue;
 		}
@@ -615,7 +617,7 @@ void	Request::check_host()
 			throw BAD_REQUEST;
 	}
 
-	port = port_num;
+	// port = port_num;
 
 }
 
@@ -728,7 +730,7 @@ void Request::matching_server()
 	std::list<Server> &servers = cycle->getServerList();
 	std::list<Server>::iterator it = servers.begin();
 	std::list<Server>::iterator ite = servers.end();
-	std::string &host = header["host"];
+	std::string host = header["host"].substr(0, header["host"].find("\r\n"));
 	std::string	first_dir = path.substr (0, path.find ('/', 1));
 
 	matched_server = cycle->getServerList().begin();
@@ -751,12 +753,18 @@ void Request::matching_server()
 
 	for (;it != ite; it++)
 	{
+		std::cout<<host<<std::endl;
+		std::cout<<it->getDomain()<<std::endl;
 		if (host != it->getDomain())
 			continue;
 
+		std::cout<<"DOMAIN IS MATCHED\n";
+		std::cout<<port<<std::endl;
+		std::cout<<it->getPort()<<std::endl;
 		if (port != it->getPort())
 			continue;
 
+		std::cout<<"PORT IS MATCHED\n";
 		std::list<Location> &locations = it->getLocationList();
 		std::list<Location>::iterator itl = locations.begin();
 		std::list<Location>::iterator itle = locations.end();
@@ -811,7 +819,7 @@ void Request::check_members()
 
 	std::cout<< "---------------Request_headers_after_parsing-----------------------------------------------\n";
 
-	for (std::map<std::string, std::string>::iterator it = this->header.begin(); it != this->header_end; it++)
+	for (std::map<std::string, std::string>::iterator it = this->header.begin(); it != this->header.end(); it++)
 		std::cout << it->first << " | " << it->second << std::endl;
 
 	std::cout << "--------------------------------------------------------------\n";
