@@ -20,8 +20,8 @@ Cycle& Cycle::operator =(const Cycle& src) {
 }
 
 void						Cycle::setWorkerConnections(u_int32_t n) { worker_connections = n; }
-void						Cycle::setClientMaxBodySize(u_int32_t n) { client_max_body_size = n; }
-void						Cycle::setUriLimitLength(u_int32_t n) { uri_limit_length = n; }
+void						Cycle::setClientMaxBodySize(size_t n) { client_max_body_size = n; }
+void						Cycle::setUriLimitLength(size_t n) { uri_limit_length = n; }
 void						Cycle::setMainRoot(std::string _path) { main_root = _path; }
 
 const char**				Cycle::getEnvp(void) const { return envp; }

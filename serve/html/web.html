@@ -32,6 +32,7 @@
     <h1>Welcome to our Webserv</h1>
     <div id="postContainer"></div>
     <div id="buttonContainer">
+        <button id="getButton" onclick="promptForGet()">Get Post</button>
         <button id="postButton" onclick="promptForPost()">Add Post</button>
         <button id="deleteButton" onclick="promptForDelete()">Delete Post</button>
     </div>
@@ -39,13 +40,14 @@
     <script>
         function sendServerData(url, method) {
             var xhr = new XMLHttpRequest();
-            // xhr.onreadystatechange = function () {
-            //     if (xhr.readyState === 4) {
-            //         callback(xhr.responseText);
-            //     }
-            // };
             xhr.open(method, url, true);
             xhr.send();
+        }
+        
+        function promptForGet() {
+            var getData = prompt("Enter the file name to read: example.txt");
+            if (getData)
+                sendServerData("script.cpp?getdata=" + postData, "GET");
         }
 
         function promptForPost() {
