@@ -72,6 +72,7 @@ void mainRoot(Cycle& cycle, std::string tokens[]) {
 	cycle.setMainRoot(tokens[1]);
 }
 
+// registered port 범위만 허용
 void serverListen(Cycle& cycle, std::string tokens[]) {
 	Server& server = cycle.getServerList().back();
 
@@ -79,7 +80,7 @@ void serverListen(Cycle& cycle, std::string tokens[]) {
 		throw Exception(CONF_DUP_DIRCTV);
 
 	int n = stoi(tokens[1]);
-	if (n < 0 || 65535 < n) // 포트 범위?
+	if (n < 1024 || 65535 < n)
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
 
 	server.setPort(n);
