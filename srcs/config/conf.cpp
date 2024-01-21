@@ -24,6 +24,9 @@ Conf::Conf(void) {
 	main_cmd[2] = Cmd("root",					\
 						CMD_TAKE1,				\
 						mainRoot);
+	main_cmd[3] = Cmd("default_error_root",		\
+						CMD_TAKE1,				\
+						mainDefaultErrorRoot);
 
 	srv_cmd[0] = Cmd("listen",					\
 						CMD_TAKE1,				\

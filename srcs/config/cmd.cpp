@@ -58,7 +58,20 @@ void mainRoot(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getMainRoot().length() != VALID)
 		throw Exception(CONF_DUP_DIRCTV);
 
+	if (tokens[1].back() != '/')
+		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+
 	cycle.setMainRoot(tokens[1]);
+}
+
+void mainDefaultErrorRoot(Cycle& cycle, std::string tokens[]) {
+	if (cycle.getDefaultErrorRoot().length() != VALID)
+		throw Exception(CONF_DUP_DIRCTV);
+
+	if (tokens[1][0] == '/' || tokens[1].back() == '/')
+		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+
+	cycle.setDefaultErrorRoot(tokens[1]);
 }
 
 // registered port 범위만 허용
@@ -93,12 +106,13 @@ void locationRoot(Cycle& cycle, std::string tokens[]) {
 
 	if (location.getSubRoot().length() != VALID)
 		throw Exception(CONF_DUP_DIRCTV);
+
 	if (location_type == LOC_DEFAULT \
-		&& tokens[1].back() == '/')
+		&& (tokens[1][0] == '/' || tokens[1].back() == '/'))
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
-	if ((location_type == LOC_ERROR \
-		|| location_type == LOC_CGI) \
-		&& tokens[1].back() != '/')
+
+	if ((location_type == LOC_ERROR || location_type == LOC_CGI) \
+		&& (tokens[1][0] == '/' || tokens[1].back() != '/'))
 		throw Exception(CONF_INVALID_DIRCTV_VALUE);
 
 	location.setSubRoot(tokens[1]);
