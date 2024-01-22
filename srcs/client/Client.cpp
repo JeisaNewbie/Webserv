@@ -25,7 +25,7 @@ void	Client::set_property_for_cgi(Request &request)
 	std::string &path = request.get_path();
 	int			path_property = check_path_property (path);
 
-	std::cout<<"Path: "<<path<<std::endl;
+	// std::cout<<"Path: "<<path<<std::endl;
 	if (path_property == -1)
 	{
 		set_cgi(false);
@@ -40,6 +40,7 @@ void	Client::set_property_for_cgi(Request &request)
 void	Client::do_method_without_cgi(Request &request)
 {
 	// std::cout<<"METHOD_WITHOUT_CGI_START\n";
+	// std::cout<<request.get_path()<<std::endl;
 
 	std::string &path = request.get_path();
 	int			path_property = check_path_property (path);
@@ -77,19 +78,27 @@ void	Client::parse_cgi_response(Cgi &cgi)
 	size_t 		delimeter = 0;
 	size_t		pos = 0;
 
+	delimeter = body.find ("\r\n", pos);
+	// std::cout<<"BODY_FIND_NO_ERR"<<std::endl;
 	while (delimeter != std::string::npos)
 	{
 		delimeter = body.find ("\r\n", pos);
+		if (delimeter == std::string::npos)
+			break;
+		// std::cout<<"FIRST"<<std::endl;
 
 		if (pos == delimeter)
 		{
+			// std::cout<<"THIRD"<<std::endl;
 			get_response_instance().set_body(body.substr (pos + 2,  body.find ("\r\n", pos + 2) + 2));
 			break ;
 		}
 
-		get_response_instance().set_header_field(body.substr (pos, delimeter - pos + 2));
+		get_response_instance().set_header_field(body.substr (pos, delimeter - pos));
+		// std::cout<<"SECOND"<<std::endl;
 		pos = delimeter + 2;
 	}
+	// std::cout<<"AFTER_BODY_FIND"<<std::endl;
 	set_status_code(std::atoi(get_response_instance().get_header_field("Status_code").c_str()));
 }
 
@@ -100,11 +109,12 @@ void	Client::assemble_response()
 	// status_code에 따라 body 수정 필요
 	if (get_status_code() > BAD_REQUEST)
 	{
-		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html");
+		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "serve/error/" + to_string(get_status_code()) + ".html");
 		std::stringstream	ss;
 
 		ss << error.rdbuf();
 		response.set_body(ss.str());
+		ss.str("");
 	}
 	response.assemble_message ();
 }

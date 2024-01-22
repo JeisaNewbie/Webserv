@@ -34,14 +34,11 @@ Cgi& Cgi::operator=(const Cgi& ref)
 
 void		Cgi::set_env(Request &request, uintptr_t client_soket)
 {
-	set_body (request.get_message_body());
-
 	int i = request.get_path().find(".cpp");
-	std::string tmp = request.get_path().substr(0, i);
+	std::string tmp = request.get_path().substr(0, i) + ".cgi";
 	set_name (tmp);
 
 	env["REQUEST_METHOD"] = request.get_method();
-	env["CLIENT_SOKET"] = to_string (client_soket);
 	env["QUERY_STRING"] = request.get_query_value("postdata");
 	env["CONTENT_LENGTH"] = request.get_header_field("content_length");
 	env["REDIRECT_PATH"] = request.get_cycle_instance().getMainRoot() + request.get_header_field("redirect_path");
@@ -87,7 +84,9 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 {
 
 	cgi.set_fd();
-	std::cout <<"before_fork\n";
+	std::cout <<"BEFORE_FORK\n";
+	// std::cout <<"CGI_PATH: "<< cgi.cgi_name<<std::endl;
+	// std::cout <<"REDIRECT_PATH: "<<cgi.env["REDIRECT_PATH"]<<std::endl;
 	cgi.pid = fork();
 
 	if (cgi.pid == -1)
@@ -101,13 +100,11 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 		dup2 (cgi.fd_file_in, STDIN_FILENO);
 		dup2 (cgi.fd_file_out, STDOUT_FILENO);
 		execve (cgi.cgi_name.c_str(), NULL, cgi.env_cgi);
-		write (STDOUT_FILENO, "Status: 500\r\n\r\n", 15); //client_soket에 write
+		write (STDOUT_FILENO, "Status: 500\r\n\r\n", 15);
 		exit (1);
 	}
 
-	std::cout<<"after_fork\n";
-
-	throw OK;
+	std::cout<<"AFTER_FORK\n";
 }
 
 std::string	&Cgi::get_response_from_cgi()
@@ -115,17 +112,19 @@ std::string	&Cgi::get_response_from_cgi()
 	int	len = 1;
 	int	status = 0;
 
+	waitpid (this->pid, &status, 0);
 	lseek (this->fd_file_out, 0, SEEK_SET);
 
 	while (len)
 	{
 		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
 		cgi_body += buf;
+		std::cout<<len<<std::endl;
+		std::cout<<cgi_body<<std::endl;
 	}
 
-	std::cout<<"BEFORE_GET_CHILD_PROCESS\n";
-	waitpid (this->pid, &status, WNOHANG);
-	std::cout<<"AFTER_GET_CHILD_PROCESS\n";
+	// std::cout<<"BEFORE_GET_CHILD_PROCESS\n";
+	// std::cout<<"AFTER_GET_CHILD_PROCESS\n";
 	if (WEXITSTATUS(status) == 1)
 	{
 		fclose (this->f_in);
