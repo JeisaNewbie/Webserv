@@ -11,7 +11,7 @@
 # define LISTEN_QUEUE_SIZE 15
 # define EVENT_LIST_INIT_SIZE 15
 
-void prepConnect(Cycle& cycle);
+void startConnect(Cycle& cycle);
 
 #endif
 

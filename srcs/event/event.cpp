@@ -1,35 +1,13 @@
 #include "../core/core.hpp"
 
-static void startConnect(Cycle& cycle, Worker& worker);
+static void prepConnect(Cycle& cycle, std::map<int, Client>& server);
 static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 						uint16_t flags,	uint32_t fflags,				\
 						intptr_t data, void* udata);
-static void acceptNewClient(Worker& worker);
+static void acceptNewClient(Worker& worker, uintptr_t listen_socket);
 static bool recieveFromClient(Worker& worker, int client_socket);
 static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
-
-void prepConnect(Cycle& cycle) {
-	Worker		worker;
-	sockaddr_in	server_addr;
-	int			listen_socket = worker.getListenSocket();
-
-	std::memset(&server_addr, 0, sizeof(server_addr));
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(PORT);
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-	// 제출 전 지우기
-	int 	optval = 1;
-	setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
-
-	if (bind(listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
-		throw Exception(EVENT_FAIL_BIND);
-	if (listen(listen_socket, LISTEN_QUEUE_SIZE) == -1)
-		throw Exception(EVENT_FAIL_LISTEN);
-	fcntl(listen_socket, F_SETFL, O_NONBLOCK);
-	startConnect(cycle, worker);
-}
 
 // 삭제하기
 void printState(struct kevent* cur_event) {
@@ -47,18 +25,21 @@ void printState(struct kevent* cur_event) {
 	std::cout << "\n";
 }
 
-static void startConnect(Cycle& cycle, Worker& worker) {
-	uintptr_t				listen_socket = worker.getListenSocket();
-	clients_t&				clients = worker.getClients();
-	kevent_t&				change_list = worker.getChangeList();
-	kevent_t				event_list(EVENT_LIST_INIT_SIZE);
-	std::map<int, Client>	server;
-	uintptr_t				cgi_fd_arr[MAX_FD] = {0,};
-	std::vector<Client*>	cgi_fork_list;
+void startConnect(Cycle& cycle) {
+    Worker                  worker;
+    std::vector<uintptr_t>& listen_socket_list = cycle.getListenSocketList();
+    clients_t&              clients = worker.getClients();
+    kevent_t&               change_list = worker.getChangeList();
+    kevent_t                event_list(EVENT_LIST_INIT_SIZE);
+    std::map<int, Client>   server;
+    uintptr_t               cgi_fd_arr[MAX_FD] = {0,};
+    std::vector<Client*>    cgi_fork_list;
 
-	std::cout << "---------------------webserver start---------------------\n";
+    prepConnect(cycle, server);
+    std::cout << "---------------------webserver start---------------------\n";
 
-	addEvent(worker, listen_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+    for (int i = 0; i < listen_socket_list.size(); i++)
+        addEvent(worker, listen_socket_list[i], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 
 	uint32_t		new_events;
 	struct kevent*	cur_event;
@@ -102,14 +83,16 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 
 				uintptr_t tmp_ident = cur_event->ident;
 
-				if (cur_event->ident == listen_socket) {
+				std::vector<uintptr_t>::iterator	it = std::find(listen_socket_list.begin(), listen_socket_list.end(), cur_event->ident);
+				if (it != listen_socket_list.end()) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
-						acceptNewClient(worker);
+						acceptNewClient(worker, listen_socket_list[i]);
 					else // 연결 되지 않는 클라이언트는 어떻게 되는거지?
 						eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
 					continue;
-				}
-				else if (clients.find(cur_event->ident) != clients.end()) {
+                }
+
+				if (clients.find(cur_event->ident) != clients.end()) {
 					if (recieveFromClient(worker, cur_event->ident) == FALSE)
 						continue;
 
@@ -161,6 +144,44 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 	}
 }
 
+static void prepConnect(Cycle& cycle, std::map<int, Client>& server) {
+    sockaddr_in                 server_addr;
+    std::list<Server>&          server_list = cycle.getServerList();
+    std::list<Server>::iterator it = server_list.begin();
+    std::list<Server>::iterator ite = server_list.end();
+    std::vector<uintptr_t>&     listen_socket_list = cycle.getListenSocketList();
+    uintptr_t                   new_listen_socket;
+
+    for (; it != ite; it++) {
+        std::list<Server>::iterator tmp = server_list.begin();
+        for (; tmp != it; tmp++)
+            if (tmp->getPort() == it->getPort())
+                continue;
+
+        new_listen_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (new_listen_socket == -1)
+            throw Exception(WORK_FAIL_CREATE_SOCKET);
+        listen_socket_list.push_back(new_listen_socket);
+
+        std::memset(&server_addr, 0, sizeof(server_addr));
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(it->getPort());
+        server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+        // server[new_listen_socket].set_port(it->getPort()); //포트 번호 저장
+
+        // 제출 전 지우기
+        int     optval = 1;
+        setsockopt(new_listen_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+        if (bind(new_listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
+            throw Exception(EVENT_FAIL_BIND);
+        if (listen(new_listen_socket, LISTEN_QUEUE_SIZE) == -1)
+            throw Exception(EVENT_FAIL_LISTEN); // 열린 소켓들 다 닫아줘야하나?
+        fcntl(new_listen_socket, F_SETFL, O_NONBLOCK);
+    }
+}
+
 static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 						uint16_t flags,	uint32_t fflags,				\
 						intptr_t data, void* udata) {
@@ -171,9 +192,8 @@ static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 	change_list.push_back(temp);
 }
 
-static void acceptNewClient(Worker& worker) {
+static void acceptNewClient(Worker& worker, uintptr_t listen_socket) {
 	clients_t&	clients = worker.getClients();
-	uintptr_t	listen_socket = worker.getListenSocket();
 	uintptr_t	client_socket;
 
 	if ((client_socket = accept(listen_socket, NULL, NULL)) == -1) {

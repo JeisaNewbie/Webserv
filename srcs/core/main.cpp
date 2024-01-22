@@ -8,7 +8,7 @@ int main(int argc, char** argv, char** envp) {
 	try{
 		setConf(conf, argc, argv[1]);
 		parseConf(cycle, conf);
-		prepConnect(cycle);
+		startConnect(cycle);
 	} catch(Exception& e){
 		return mainException(e);
 	}
