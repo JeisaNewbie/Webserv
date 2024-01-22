@@ -10,7 +10,8 @@ void	Get::make_body(Response &response, std::string &path)
 		std::cout <<"file_open_failed\n";
 	buf << file.rdbuf();
 	response.set_body (buf.str());
-	// file.close();
+	buf.str("");
+	file.close();
 	// std::cout <<response.get_body();
 }
 

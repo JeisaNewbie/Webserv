@@ -43,11 +43,11 @@
             xhr.open(method, url, true);
             xhr.send();
         }
-        
+
         function promptForGet() {
             var getData = prompt("Enter the file name to read: example.txt");
             if (getData)
-                sendServerData("script.cpp?getdata=" + postData, "GET");
+                sendServerData("script.cpp?getdata=" + getData, "GET");
         }
 
         function promptForPost() {

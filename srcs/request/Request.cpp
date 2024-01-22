@@ -7,7 +7,7 @@ Request::Request()
 	this->chunked = false;
 	this->port = 80;
 	this->cgi = false;
-	set_header_key_and_value("redirect_path", "/serve/redirect/");
+	set_header_key_and_value("redirect_path", "serve/redirect/");
 }
 
 Request::~Request()
@@ -33,6 +33,7 @@ int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 		// std::cout << "matching_server\n";
 		matching_server(); // port와 listen이 일치하는지 확인 &&  host와 server_name 일치 확인 -> location과 uri(path)와 일치하는지 확인 (만약 path가 absolute form으로 올경우 그중 path를 파싱해서 path 와 location 비교)
 		// std::cout<<"finish_mathcing_server\n";
+		this->request_msg = "";
 	}
 	catch(int e)
 	{
@@ -746,7 +747,7 @@ void Request::matching_server()
 			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
 			return ;
 		}
-		path = cycle->getMainRoot() + "/serve/script/script.cpp";
+		path = cycle->getMainRoot() + "serve/script/script.cpp";
 		this->set_cgi (true);
 		return;
 	}
@@ -784,7 +785,7 @@ void Request::matching_server()
 		}
 	}
 
-	matched_location = matched_server->getLocationList().begin();
+	matched_location = matched_server->getLocationList().begin();//path 다를경우 error경로의 error.html 표시
 	std::cout <<"matching_server_DELETE: " << path << std::endl;
 
 	if (method == "DELETE" && matched_location->getLocationPath() == "/")

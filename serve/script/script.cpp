@@ -79,7 +79,7 @@ static void handlePostMethod(const std::string directory_path, const std::string
 		new_file.close();
 
 		//response 작성
-		std::cout << "Status_code: 201\r\n";
+		std::cout << "Status_code: 201\r\n\0";
 	}
 }
 

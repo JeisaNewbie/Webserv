@@ -83,13 +83,8 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 
 		// execute_cgi에서 던진 exception이 안 잡혔음
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
-			try {
-				Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
+			Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
 									cgi_fork_list[i]->get_cgi_instance());
-			}
-			catch(int e) {
-				cgi_fork_list[i]->set_status_code(e);
-			}
 		}
 		cgi_fork_list.clear();
 
@@ -134,7 +129,6 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 
 								addEvent(worker, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 								cgi_fd_arr[fd] = tmp_ident;
-								event_client.set_client_soket(tmp_ident); // 임시
 								cgi_fork_list.push_back(&event_client);
 
 								continue;
@@ -149,12 +143,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				}
 				else {
 					tmp_ident = cgi_fd_arr[cur_event->ident];
-					try {
-						server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
-					}
-					catch (std::exception& e) {
-						std::cerr << "----------------- Exception caught: " << e.what() << std::endl;
-					}
+					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
 				server[tmp_ident].assemble_response();
 				clients[tmp_ident] = "";
