@@ -24,7 +24,7 @@ const handler_t&	Cmd::getHandler(void) const { return handler; }
 
 void mainWorkerConnections(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getWorkerConnections() != VALID)
-		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
 	int	n = stoi(tokens[1]);
 	if (n <= 0 || MAX_FD < n)
@@ -36,7 +36,7 @@ void mainWorkerConnections(Cycle& cycle, std::string tokens[]) {
 // K, M, G 단위 사용 가능
 void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getClientMaxBodySize() != VALID)
-		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 		
 	long long	n = stoll(tokens[1]);
 	char		c = tokens[1].back();
@@ -56,7 +56,7 @@ void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 
 void mainRoot(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getMainRoot().length() != VALID)
-		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
 	if (tokens[1].back() != '/')
 		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
@@ -66,7 +66,7 @@ void mainRoot(Cycle& cycle, std::string tokens[]) {
 
 void mainDefaultErrorRoot(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getDefaultErrorRoot().length() != VALID)
-		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
 	if (tokens[1][0] == '/' || tokens[1].back() == '/')
 		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
@@ -79,7 +79,7 @@ void serverListen(Cycle& cycle, std::string tokens[]) {
 	Server& server = cycle.getServerList().back();
 
 	if (server.getPort() != VALID)
-		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
 	int n = stoi(tokens[1]);
 	if ((n != 80 && n < 1024) || 65535 < n)
@@ -92,7 +92,7 @@ void serverName(Cycle& cycle, std::string tokens[]) {
 	Server& server = cycle.getServerList().back();
 
 	if (server.getDomain().length() != VALID)
-		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
 	if (tokens[1].find('/') != std::string::npos)
 		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
@@ -105,7 +105,7 @@ void locationRoot(Cycle& cycle, std::string tokens[]) {
 	int			location_type = location.getLocationType();
 
 	if (location.getSubRoot().length() != VALID)
-		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
 	if (location_type == LOC_DEFAULT \
 		&& (tokens[1][0] == '/' || tokens[1].back() == '/'))
@@ -122,7 +122,7 @@ void locationAllowedMethod(Cycle& cycle, std::string tokens[]) {
 	Location&	location = cycle.getServerList().back().getLocationList().back();
 
 	if (location.getAllowedMethod() != VALID)
-		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
 	int	res = 0;
 	for (int i = 1; tokens[i].length(); i++) {
@@ -137,4 +137,29 @@ void locationAllowedMethod(Cycle& cycle, std::string tokens[]) {
 	}
 	
 	location.setAllowedMethod(res);
+}
+
+void locationAutoIndex(Cycle& cycle, std::string tokens[]) {
+	Location&	location = cycle.getServerList().back().getLocationList().back();
+
+	if (location.getAutoIndex() != -1)
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
+
+	if (tokens[1] == "on")
+		location.setAutoIndex(TRUE);
+	else if (tokens[1] == "off")
+		location.setAutoIndex(FALSE);
+	else
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
+}
+
+void locationIndex(Cycle& cycle, std::string tokens[]) {
+	Location&					location = cycle.getServerList().back().getLocationList().back();
+	std::vector<std::string>&	index = location.getIndex();
+
+	if (location.getIndex().size() != VALID)
+		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
+
+	for (int i = 1; tokens[i].length(); i++)
+		index.push_back(tokens[i]);
 }

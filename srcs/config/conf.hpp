@@ -10,7 +10,7 @@
 # define DEFAULT_FILE "default.conf"
 # define CMD_MAIN_MAX 4
 # define CMD_SRV_MAX 2
-# define CMD_LOC_MAX 2
+# define CMD_LOC_MAX 4
 
 enum conf_block_type {
 	CONF_MAIN,

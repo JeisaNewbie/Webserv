@@ -42,6 +42,12 @@ Conf::Conf(void) {
 	loc_cmd[1] = Cmd("allowed_method",						\
 						CMD_TAKE1 | CMD_TAKE2 | CMD_TAKE3,	\
 						locationAllowedMethod);
+	loc_cmd[2] = Cmd("autoindex",							\
+						CMD_TAKE1,							\
+						locationAutoIndex);
+	loc_cmd[3] = Cmd("index",								\
+						CMD_TAKE_LEAST1,					\
+						locationIndex);
 }
 
 Conf::~Conf(void) {}
@@ -321,5 +327,14 @@ static int setTakeArgCnt(int cnt) {
 		return CMD_TAKE2;
 	if (cnt == 3)
 		return CMD_TAKE3;
+	if (cnt == 4)
+		return CMD_TAKE4;
+	if (cnt == 5)
+		return CMD_TAKE5;
+	if (cnt == 6)
+		return CMD_TAKE6;
+	if (cnt == 7)
+		return CMD_TAKE7;
+	throw Exception(CONF_INVALID_DIRCTV_ARG_CNT);
 	return 0;
 }
