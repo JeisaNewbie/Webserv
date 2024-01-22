@@ -71,8 +71,10 @@ static void handlePostMethod(const std::string directory_path, const std::string
 	if (post_data.length() > 0) {
 
 		std::string		new_file_name = createUniqueFileName();
-		std::ofstream	new_file(std::string(directory_path) + "/" + new_file_name);
+		std::ofstream	new_file(std::string(directory_path) + new_file_name);
 		// std::ofstream	new_file;
+
+		std::cout << std::string(directory_path) + new_file_name << "\n";
 
 		// new_file.open((std::string(directory_path) + "/" + new_file_name).c_str());
 		new_file << post_data;

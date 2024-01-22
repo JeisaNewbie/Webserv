@@ -17,33 +17,34 @@ class Cycle {
 
 		Cycle& operator =(const Cycle& src);
 
-		void						setWorkerConnections(u_int32_t n);
-		void						setClientMaxBodySize(size_t n);
-		void						setUriLimitLength(size_t n);
-		void						setMainRoot(std::string _path);
-		void						setDefaultErrorRoot(std::string _path);
+		void					setWorkerConnections(u_int32_t n);
+		void					setClientMaxBodySize(size_t n);
+		void					setUriLimitLength(size_t n);
+		void					setMainRoot(std::string _path);
+		void					setDefaultErrorRoot(std::string _path);
 
-		const char**				getEnvp(void) const;
-		int							getWorkerConnections(void) const;
-		int							getClientMaxBodySize(void) const;
-		int							getUriLimitLength(void) const;
-		const std::string&			getMainRoot(void) const;
-		const std::string&			getDefaultErrorRoot(void) const;
-		std::list<Server>&			getServerList(void);
-		const std::list<Server>&	getServerListConst(void) const;
+		const char**			getEnvp(void) const;
+		int						getWorkerConnections(void) const;
+		int						getClientMaxBodySize(void) const;
+		int						getUriLimitLength(void) const;
+		const std::string&		getMainRoot(void) const;
+		const std::string&		getDefaultErrorRoot(void) const;
+		std::list<Server>&		getServerList(void);
+		std::vector<uintptr_t>&	getListenSocketList(void);
 
 	private:
 		Cycle(void);
 
-		const char**		envp;
+		const char**			envp;
 
-		uint32_t			worker_connections;
-		size_t				client_max_body_size;
-		size_t				uri_limit_length;
-		std::string			main_root;
-		std::string			default_error_root;
+		uint32_t				worker_connections;
+		size_t					client_max_body_size;
+		size_t					uri_limit_length;
+		std::string				main_root;
+		std::string				default_error_root;
 
-		std::list<Server>	server_list;
+		std::list<Server>		server_list;
+		std::vector<uintptr_t>  listen_socket_list;
 };
 
 #endif
