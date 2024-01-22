@@ -9,6 +9,7 @@
 // #include "../core/core.hpp"
 #include "../core/cycle.hpp"
 #include "../utils/Status.hpp"
+#include "../utils/Utils.hpp"
 // #include "../method/Method.hpp"
 
 #define	FAIL			1
@@ -51,6 +52,9 @@ private:
 	void											parse_header_key_and_value(std::string &header_element);
 	void											check_header_is_valid();
 	void											matching_server();
+	bool											matching_absolute_path();
+	void											matching_route(std::list<Location>::iterator it, std::list<Location>::iterator ite);
+	size_t											matching_sub_route(std::string route, std::string dest, size_t *depth);
 	void											check_body_limits();
 	void											check_host();
 	void											check_transfer_encoding_and_content_length();
@@ -67,7 +71,7 @@ private:
 public:
 	Request();
 	~Request();
-	int												process_request_parsing(std::string &request_msg, Cycle &cycle);
+	void											process_request_parsing(std::string &request_msg, Cycle &cycle);
 	void											parse_request();
 	void											parse_request_line();
 	void											parse_header_fields();
@@ -87,7 +91,7 @@ public:
 	void											set_chunked (bool flag);
 	void											set_header_key_and_value(std::string &key, std::string &value);
 	void											set_header_key_and_value(const char *key, const char *value);
-
+	void											set_port(uint32_t port);
 	void check_members();
 };
 

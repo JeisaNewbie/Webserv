@@ -64,4 +64,5 @@ class Client {
 		void		set_cgi (bool flag);
 		void		set_client_soket(uintptr_t client_soket);
 		void		set_cgi_fd_arr(uintptr_t client_soket);
+		void		set_port(uint32_t port);
 };

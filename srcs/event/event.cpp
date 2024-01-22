@@ -81,7 +81,6 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 		}
 		change_list.clear();
 
-		// execute_cgi에서 던진 exception이 안 잡혔음
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
 			Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
 									cgi_fork_list[i]->get_cgi_instance());
@@ -93,7 +92,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 			printState(cur_event);
 
 			if (cur_event->flags & EV_ERROR) {
-				if (cur_event->flags & EV_DELETE || errno == EAGAIN)
+				if (cur_event->flags & EV_DELETE || (errno == EAGAIN))
 					continue;
 				eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
 				disconnectClient(worker, cur_event->ident);
@@ -118,7 +117,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 
 					event_client.do_parse(request_msg, cycle);
 					// event_client.get_request_instance().check_members();
-					if (event_client.get_status_code() < BAD_REQUEST)
+					if (event_client.get_status_code() < MOVED_PERMANENTLY)
 					{
 						try
 						{
@@ -143,6 +142,7 @@ static void startConnect(Cycle& cycle, Worker& worker) {
 				}
 				else {
 					tmp_ident = cgi_fd_arr[cur_event->ident];
+					std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
 				server[tmp_ident].assemble_response();

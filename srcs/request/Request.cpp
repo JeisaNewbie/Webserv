@@ -14,7 +14,7 @@ Request::~Request()
 {
 }
 
-int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
+void	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 {
 	try
 	{
@@ -33,15 +33,13 @@ int	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 		// std::cout << "matching_server\n";
 		matching_server(); // port와 listen이 일치하는지 확인 &&  host와 server_name 일치 확인 -> location과 uri(path)와 일치하는지 확인 (만약 path가 absolute form으로 올경우 그중 path를 파싱해서 path 와 location 비교)
 		// std::cout<<"finish_mathcing_server\n";
-		this->request_msg = "";
 	}
 	catch(int e)
 	{
 		this->status_code = e;
+		this->request_msg = "";
 		std::cout << e << std::endl;
-		return FAIL;
 	}
-	return this->status_code = OK;
 }
 
 void	Request::parse_request()
@@ -732,12 +730,15 @@ void Request::matching_server()
 	std::list<Server>::iterator it = servers.begin();
 	std::list<Server>::iterator ite = servers.end();
 	std::string host = header["host"].substr(0, header["host"].find("\r\n"));
-	std::string	first_dir = path.substr (0, path.find ('/', 1));
+	size_t	end = path.find ('/', 1);
+	if (end == std::string::npos)
+		end = path.size();
+	std::string	first_dir = path.substr (0, end);
 
 	matched_server = cycle->getServerList().begin();
 	origin_path = path;
 
-	if (first_dir.find(".cpp") != std::string::npos)
+	if (first_dir.find(".cpp") != std::string::npos) //set_cgi_path
 	{
 		if (first_dir.find("/script.cpp") == std::string::npos)
 			throw NOT_FOUND;
@@ -783,6 +784,8 @@ void Request::matching_server()
 			path = cycle->getMainRoot() + matched_location->getSubRoot();
 			return ;
 		}
+		path = cycle->getMainRoot() + cycle->getDefaultErrorRoot();
+		return ;
 	}
 
 	matched_location = matched_server->getLocationList().begin();//path 다를경우 error경로의 error.html 표시
@@ -794,6 +797,113 @@ void Request::matching_server()
 	path = cycle->getMainRoot() + matched_location->getSubRoot();
 
 	std::cout <<"end_of_matching_server=====================\n";
+}
+
+bool Request::matching_absolute_path()
+{
+	std::string	tmp_path = cycle->getMainRoot() + path;
+	int			path_property = check_path_property(tmp_path);
+
+	origin_path = path;
+
+	if (path_property = _FILE)
+	{
+		path = tmp_path;
+		throw OK;
+	}
+
+	if (path_property == -1 && *path.rbegin() != '/')
+	{
+		path = path.substr (0, path.rfind ('/'));
+		return true;
+	}
+
+	return false;
+}
+
+void Request::matching_server()
+{
+	std::list<Server>			&servers = cycle->getServerList();
+	std::list<Server>::iterator it = servers.begin();
+	std::list<Server>::iterator ite = servers.end();
+	std::string 				host = header["host"].substr(0, header["host"].find("\r\n"));
+	bool						file_flag = matching_absolute_path();
+
+	matched_server = cycle->getServerList().begin();
+
+	// if (origin_path.find(".cpp") != std::string::npos) //set_cgi_path
+	// {
+	// 	if (origin_path.find("/script.cpp") == std::string::npos)
+	// 		throw NOT_FOUND;
+
+	// 	if (method == "DELETE")
+	// 	{
+	// 		path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
+	// 		return ;
+	// 	}
+	// 	path = cycle->getMainRoot() + "serve/script/script.cpp";
+	// 	this->set_cgi (true);
+	// 	return;
+	// }
+
+	for (; it != ite; it++)
+	{
+		if (host != it->getDomain())
+			continue;
+
+		if (port != it->getPort())
+			continue;
+
+		matched_server = it;
+		matching_route(it->getLocationList().begin(), it->getLocationList().end());
+
+		if (file_flag == true)
+			//set_redirect();// mainroot + location->subroot + filename
+		//set_autoindex(); ->if no -> find_index(); -> if no -> 404.html;
+		return;
+	}
+	// set_redirect(); mainroot + matchedserver->location->subroot + filename
+}
+
+void Request::matching_route(std::list<Location>::iterator it, std::list<Location>::iterator ite)
+{
+	std::map<size_t, std::list<Location>::iterator>	depth_map;
+	size_t											depth = 0;
+	int												i = 0;
+
+	for (; it != ite; it++)
+	{
+		try {
+			matching_sub_route(it->getLocationPath(), path, &depth);
+		}
+		catch (size_t e){
+			matched_location = it;
+			return ;
+		}
+		depth_map[depth] = it;
+		depth = 0;
+	}
+	matched_location = depth_map.rbegin()->second;
+}
+
+size_t Request::matching_sub_route(std::string route, std::string dest, size_t *depth)
+{
+	if (route == "" && dest == "")
+		throw std::string::npos;
+
+	std::string	sub_r = route.substr (1, route.find ('/', 1));
+	std::string	sub_d = dest.substr (1, dest.find ('/', 1));
+
+	if (sub_r == sub_d)
+	{
+		*depth++;
+		matching_sub_route (sub_r, sub_d, depth);
+	}
+
+	if (sub_r != "" && sub_d != "")
+		return 0;
+
+	return *depth;
 }
 
 void Request::check_members()
@@ -842,6 +952,7 @@ void 			Request::set_status_code(int status_code) {this->status_code = status_co
 void			Request::set_cgi (bool flag) {this->cgi = flag;}
 void			Request::set_chunked (bool flag) {this->chunked = flag;}
 void			Request::set_header_key_and_value(const char *key, const char *value){this->header[key] = value;}
+void			Request::set_port(uint32_t port) {this->port = port;}
 void			Request::set_header_key_and_value(std::string &key, std::string &value)
 {
 

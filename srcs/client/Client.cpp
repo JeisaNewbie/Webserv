@@ -133,3 +133,4 @@ void		Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
 uintptr_t	Client::get_client_soket() {return this->client_soket;}
 void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}
 void		Client::set_cgi_fd_arr(uintptr_t client_soket) {*(this->cgi_fd_arr[get_cgi_instance().get_fd()]) = client_soket;}
+void		Client::set_port(uint32_t port) {get_request_instance().set_port(port);}
