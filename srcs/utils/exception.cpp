@@ -3,7 +3,27 @@
 Exception::Exception(int _costom_error) {
 	system_error = errno;
 	costom_error = _costom_error;
+	setMessage(costom_error);
+}
 
+Exception::Exception(int _costom_error, std::string _problem) {
+	system_error = errno;
+	costom_error = _costom_error;
+	problem = _problem;
+	setMessage(costom_error);
+}
+
+Exception::Exception(const Exception& src) { *this = src; }
+
+Exception::~Exception(void) {}
+
+Exception& Exception::operator =(const Exception& src) {
+	if (this != &src)
+		message = src.message;
+	return *this;
+}
+
+void	Exception::setMessage(int costom_error) {
 	switch (costom_error) {
 	case PROG_INVALID_ARG_CNT:
 		message = "Program has 1 or 2 arguments";
@@ -27,6 +47,10 @@ Exception::Exception(int _costom_error) {
 
 	case CONF_DUP_SRV_BLOCK:
 		message = "Server blocks is duplicated";
+		break;
+
+	case CONF_DUP_LOC_BLOCK:
+		message = "Location blocks is duplicated";
 		break;
 
 	case CONF_INVALID_BLOCK_FORM:
@@ -111,26 +135,19 @@ Exception::Exception(int _costom_error) {
 	}
 }
 
-Exception::Exception(const Exception& src) { *this = src; }
+int					Exception::getSystemError(void) const { return system_error; }
+int 				Exception::getCostomError(void) const { return costom_error; }
+const std::string&	Exception::getProblemStr(void) const { return problem; }
 
-Exception::~Exception(void) {}
-
-Exception& Exception::operator =(const Exception& src) {
-	if (this != &src)
-		message = src.message;
-	return *this;
-}
-
-int Exception::getSystemError(void) const { return system_error; }
-int Exception::getCostomError(void) const { return costom_error; }
-
-const char*	Exception::what(void) const { return message.c_str(); }
+const char*			Exception::what(void) const { return message.c_str(); }
 
 int mainException(Exception& e) {
 	std::cerr << "error code [" << e.getCostomError() << "] : " \
 				<< e.what() << std::endl;
 	if (e.getSystemError() != 0)
 		std::cerr << ": " << strerror(e.getSystemError()) << std::endl;
+	if (e.getProblemStr().length())
+		std::cerr << "=> " << e.getProblemStr() << "\n";
 	return e.getCostomError();
 }
 

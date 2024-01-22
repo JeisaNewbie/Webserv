@@ -24,11 +24,11 @@ const handler_t&	Cmd::getHandler(void) const { return handler; }
 
 void mainWorkerConnections(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getWorkerConnections() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
+		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
 
 	int	n = stoi(tokens[1]);
 	if (n <= 0 || MAX_FD < n)
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	cycle.setWorkerConnections(n);
 }
@@ -36,7 +36,7 @@ void mainWorkerConnections(Cycle& cycle, std::string tokens[]) {
 // K, M, G 단위 사용 가능
 void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getClientMaxBodySize() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
+		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
 		
 	long long	n = stoll(tokens[1]);
 	char		c = tokens[1].back();
@@ -49,27 +49,27 @@ void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 		n *= GIGA_BYTE;
 
 	if (n <= 0 || MAX_BODY < n)
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	cycle.setClientMaxBodySize(n);
 }
 
 void mainRoot(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getMainRoot().length() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
+		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
 
 	if (tokens[1].back() != '/')
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	cycle.setMainRoot(tokens[1]);
 }
 
 void mainDefaultErrorRoot(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getDefaultErrorRoot().length() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
+		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
 
 	if (tokens[1][0] == '/' || tokens[1].back() == '/')
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	cycle.setDefaultErrorRoot(tokens[1]);
 }
@@ -79,11 +79,11 @@ void serverListen(Cycle& cycle, std::string tokens[]) {
 	Server& server = cycle.getServerList().back();
 
 	if (server.getPort() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
+		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
 
 	int n = stoi(tokens[1]);
 	if ((n != 80 && n < 1024) || 65535 < n)
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	server.setPort(n);
 }
@@ -92,10 +92,10 @@ void serverName(Cycle& cycle, std::string tokens[]) {
 	Server& server = cycle.getServerList().back();
 
 	if (server.getDomain().length() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
+		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
 
 	if (tokens[1].find('/') != std::string::npos)
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	server.setDomain(tokens[1]);
 }
@@ -105,15 +105,15 @@ void locationRoot(Cycle& cycle, std::string tokens[]) {
 	int			location_type = location.getLocationType();
 
 	if (location.getSubRoot().length() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
+		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
 
 	if (location_type == LOC_DEFAULT \
 		&& (tokens[1][0] == '/' || tokens[1].back() == '/'))
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	if ((location_type == LOC_ERROR || location_type == LOC_CGI) \
 		&& (tokens[1][0] == '/' || tokens[1].back() != '/'))
-		throw Exception(CONF_INVALID_DIRCTV_VALUE);
+		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	location.setSubRoot(tokens[1]);
 }
@@ -122,7 +122,7 @@ void locationAllowedMethod(Cycle& cycle, std::string tokens[]) {
 	Location&	location = cycle.getServerList().back().getLocationList().back();
 
 	if (location.getAllowedMethod() != VALID)
-		throw Exception(CONF_DUP_DIRCTV);
+		throw Exception(CONF_DUP_DIRCTV, tokens[1]);
 
 	int	res = 0;
 	for (int i = 1; tokens[i].length(); i++) {
@@ -133,7 +133,7 @@ void locationAllowedMethod(Cycle& cycle, std::string tokens[]) {
 		else if (tokens[i] == "DELETE")
 			res |= METHOD_DELETE;
 		else
-			throw Exception(CONF_INVALID_DIRCTV_VALUE);
+			throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 	}
 	
 	location.setAllowedMethod(res);

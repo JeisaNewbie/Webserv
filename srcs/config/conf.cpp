@@ -10,35 +10,35 @@ static int	tokenizer(char* str, std::string* tokens);
 static int	checkConfLocation(std::string str[]);
 static void	checkGetlineError(std::ifstream& file);
 static void checkServerDuplication(std::list<Server>& server_list);
+static void checkLocationDuplication(std::list<Location>& location_list);
 static void	checkLocationType(std::string location_path, int& location_type);
 static void checkMaxDomainSize(Cycle& cycle);
 static int	setTakeArgCnt(int cnt);
 
 Conf::Conf(void) {
-	main_cmd[0] = Cmd("worker_connections",		\
-						CMD_TAKE1,				\
+	main_cmd[0] = Cmd("worker_connections",					\
+						CMD_TAKE1,							\
 						mainWorkerConnections);
-	main_cmd[1] = Cmd("client_max_body_size",	\
-						CMD_TAKE1,				\
+	main_cmd[1] = Cmd("client_max_body_size",				\
+						CMD_TAKE1,							\
 						mainClientMaxBodySize);
-	main_cmd[2] = Cmd("root",					\
-						CMD_TAKE1,				\
+	main_cmd[2] = Cmd("root",								\
+						CMD_TAKE1,							\
 						mainRoot);
-	main_cmd[3] = Cmd("default_error_root",		\
-						CMD_TAKE1,				\
+	main_cmd[3] = Cmd("default_error_root",					\
+						CMD_TAKE1,							\
 						mainDefaultErrorRoot);
 
-	srv_cmd[0] = Cmd("listen",					\
-						CMD_TAKE1,				\
+	srv_cmd[0] = Cmd("listen",								\
+						CMD_TAKE1,							\
 						serverListen);
-	srv_cmd[1] = Cmd("server_name", 			\
-						CMD_TAKE1,				\
+	srv_cmd[1] = Cmd("server_name", 						\
+						CMD_TAKE1,							\
 						serverName);
 
-	loc_cmd[0] = Cmd("root",					\
-						CMD_TAKE1,				\
+	loc_cmd[0] = Cmd("root",								\
+						CMD_TAKE1,							\
 						locationRoot);
-
 	loc_cmd[1] = Cmd("allowed_method",						\
 						CMD_TAKE1 | CMD_TAKE2 | CMD_TAKE3,	\
 						locationAllowedMethod);
@@ -50,7 +50,7 @@ void Conf::setFile(std::string _name) {
 	file_name = _name;
 	file.open(file_name);
 	if (file.is_open() == FALSE)
-		throw Exception(CONF_FAIL_OPEN);
+		throw Exception(CONF_FAIL_OPEN, file_name);
 }
 
 std::ifstream&			Conf::getFile(void) { return file; }
@@ -100,7 +100,7 @@ void parseConf(Cycle& cycle, Conf& conf) {
 
 		token_cnt = tokenizer(buf, tokens);
 		if (token_cnt != 2 || tokens[1] != "{")
-			throw Exception(CONF_INVALID_BLOCK_FORM);
+			throw Exception(CONF_INVALID_BLOCK_FORM, tokens[1]);
 
 		if (checkConfLocation(tokens) == CONF_MAIN)
 			parseMain(cycle, conf, file);
@@ -134,7 +134,7 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 	if (cycle.getWorkerConnections() == 0		\
 		|| cycle.getClientMaxBodySize() == 0	\
 		|| cycle.getMainRoot() == "")
-		throw Exception(CONF_LACK_DIRCTV);
+		throw Exception(CONF_LACK_DIRCTV, "Main block");
 }
 
 static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
@@ -159,7 +159,7 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 
 		if (tokens[0] == "location") {
 			if (token_cnt != 3 || tokens[2] != "{")
-				throw Exception(CONF_INVALID_BLOCK_FORM);
+				throw Exception(CONF_INVALID_BLOCK_FORM, tokens[2]);
 			parseLocation(cycle, conf, file, tokens[1]);
 			continue;
 		}
@@ -170,7 +170,7 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 
 	if (server_list.back().getPort() == 0	\
 		|| server_list.back().getDomain() == "")
-		throw Exception(CONF_LACK_DIRCTV);
+		throw Exception(CONF_LACK_DIRCTV, "Server block");
 }
 
 static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
@@ -182,9 +182,10 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 	std::list<Location>&	location_list = cycle.getServerList().back().getLocationList();
 
 	checkLocationType(location_path, location_type);
+	checkLocationDuplication(location_list);
 	location_list.push_back(Location(location_type, location_path)); //복사해서 추가함
 	if (location_type == LOC_CGI && location_path != ".cpp")
-		throw Exception(CONF_INVALID_CGI);
+		throw Exception(CONF_INVALID_CGI, location_path);
 
 	while (file.getline(buf, sizeof(buf))) {
 		str_buf = static_cast<std::string>(buf);
@@ -201,7 +202,7 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 	checkGetlineError(file);
 
 	if (location_list.back().getSubRoot() == "")
-		throw Exception(CONF_LACK_DIRCTV);
+		throw Exception(CONF_LACK_DIRCTV, "Location block");
 	if (location_list.back().getAllowedMethod() == 0)
 		location_list.back().setAllowedMethod(				\
 			METHOD_GET | METHOD_POST | METHOD_DELETE);
@@ -216,10 +217,8 @@ static void callCmd(Cycle& cycle, Conf& conf, int location, \
 
 	for (idx = 0; idx < cmd_max; idx++) {
 		if (cmd[idx].getName() == tokens[0]) {
-			if ((cmd[idx].getArgCnt() & token_cnt) == 0) {
-				std::cout << cmd[idx].getArgCnt()<< " " << token_cnt << "\n";
-				throw Exception(CONF_INVALID_DIRCTV_ARG_CNT);
-			}
+			if ((cmd[idx].getArgCnt() & token_cnt) == 0)
+				throw Exception(CONF_INVALID_DIRCTV_ARG_CNT, tokens[0]);
 			handler = cmd[idx].getHandler();
 			try {
 				handler(cycle, tokens);
@@ -232,7 +231,7 @@ static void callCmd(Cycle& cycle, Conf& conf, int location, \
 		}
 	}
 	if (idx == cmd_max)
-		throw Exception(CONF_INVALID_DIRCTV);
+		throw Exception(CONF_INVALID_DIRCTV, tokens[0]);
 }
 
 static int tokenizer(char* str, std::string* tokens) {
@@ -254,7 +253,7 @@ static int checkConfLocation(std::string str[]) {
 		return CONF_MAIN;
 	if (str[0] == "server")
 		return CONF_SRV;
-	throw Exception(CONF_INVALID_BLOCK_LOC);
+	throw Exception(CONF_INVALID_BLOCK_LOC, str[0]);
 	return 0;
 }
 
@@ -273,7 +272,18 @@ static void checkServerDuplication(std::list<Server>& server_list) {
 	for (; it != ite; it++) {
 		if (port == it->getPort()	\
 			&& domain == it->getDomain())
-			throw Exception(CONF_DUP_SRV_BLOCK);
+			throw Exception(CONF_DUP_SRV_BLOCK, domain + ":" + to_string(port));
+	}
+}
+
+static void checkLocationDuplication(std::list<Location>& location_list) {
+	int								location_type = location_list.back().getLocationType();
+	std::list<Location>::iterator	it = location_list.begin();
+	std::list<Location>::iterator	ite = std::prev(location_list.end());
+
+	for (; it != ite; it++) {
+		if (location_type == it->getLocationType())
+			throw Exception(CONF_DUP_LOC_BLOCK, it->getLocationPath());
 	}
 }
 
@@ -285,7 +295,7 @@ static void checkLocationType(std::string location_path, int& location_type) {
 	else if (location_path[0] == '.')
 		location_type = LOC_CGI;
 	else
-		throw Exception(CONF_INVALID_LOC_PATH);
+		throw Exception(CONF_INVALID_LOC_PATH, location_path);
 }
 
 static void checkMaxDomainSize(Cycle& cycle) {
