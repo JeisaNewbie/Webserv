@@ -1,11 +1,12 @@
 #include "../core/core.hpp"
 
-static void prepConnect(Cycle& cycle, std::map<int, Client>& server);
-static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
-						uint16_t flags,	uint32_t fflags,				\
+static void prepConnect(Cycle& cycle, uintptr_t* socket_port_arr);
+static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,			\
+						uint16_t flags,	uint32_t fflags,						\
 						intptr_t data, void* udata);
-static void acceptNewClient(Worker& worker, uintptr_t listen_socket);
-static bool recieveFromClient(Worker& worker, int client_socket);
+static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
+								uint32_t port, std::map<int, Client>& server);
+static bool recieveFromClient(Worker& worker, uintptr_t client_socket);
 static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
 
@@ -32,10 +33,11 @@ void startConnect(Cycle& cycle) {
     kevent_t&               change_list = worker.getChangeList();
     kevent_t                event_list(EVENT_LIST_INIT_SIZE);
     std::map<int, Client>   server;
+    uintptr_t               socket_port_arr[MAX_FD] = {0,};
     uintptr_t               cgi_fd_arr[MAX_FD] = {0,};
     std::vector<Client*>    cgi_fork_list;
 
-    prepConnect(cycle, server);
+    prepConnect(cycle, socket_port_arr);
     std::cout << "---------------------webserver start---------------------\n";
 
     for (int i = 0; i < listen_socket_list.size(); i++)
@@ -62,7 +64,6 @@ void startConnect(Cycle& cycle) {
 		}
 		change_list.clear();
 
-		// execute_cgi에서 던진 exception이 안 잡혔음
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
 			Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
 									cgi_fork_list[i]->get_cgi_instance());
@@ -81,13 +82,14 @@ void startConnect(Cycle& cycle) {
 			}
 			if (cur_event->filter == EVFILT_READ) {
 
-				uintptr_t tmp_ident = cur_event->ident;
+				uintptr_t 							tmp_ident = cur_event->ident;
+				std::vector<uintptr_t>::iterator	it = std::find(listen_socket_list.begin(), listen_socket_list.end(), tmp_ident);
 
-				std::vector<uintptr_t>::iterator	it = std::find(listen_socket_list.begin(), listen_socket_list.end(), cur_event->ident);
+				
 				if (it != listen_socket_list.end()) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
-						acceptNewClient(worker, listen_socket_list[i]);
-					else // 연결 되지 않는 클라이언트는 어떻게 되는거지?
+						acceptNewClient(worker, *it, socket_port_arr[*it], server);
+					else // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
 						eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
 					continue;
                 }
@@ -144,7 +146,7 @@ void startConnect(Cycle& cycle) {
 	}
 }
 
-static void prepConnect(Cycle& cycle, std::map<int, Client>& server) {
+static void prepConnect(Cycle& cycle, uintptr_t* socket_port_arr) {
     sockaddr_in                 server_addr;
     std::list<Server>&          server_list = cycle.getServerList();
     std::list<Server>::iterator it = server_list.begin();
@@ -168,7 +170,7 @@ static void prepConnect(Cycle& cycle, std::map<int, Client>& server) {
         server_addr.sin_port = htons(it->getPort());
         server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-        // server[new_listen_socket].set_port(it->getPort()); //포트 번호 저장
+		socket_port_arr[new_listen_socket] = it->getPort();
 
         // 제출 전 지우기
         int     optval = 1;
@@ -192,15 +194,21 @@ static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 	change_list.push_back(temp);
 }
 
-static void acceptNewClient(Worker& worker, uintptr_t listen_socket) {
+static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
+								uint32_t port, std::map<int, Client>& server) {
 	clients_t&	clients = worker.getClients();
 	uintptr_t	client_socket;
 
+	std::cout << listen_socket << "\n\n";
 	if ((client_socket = accept(listen_socket, NULL, NULL)) == -1) {
 		eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
 		return ;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
+	
+	std::cout << port << "\n\n";
+	
+	// server[client_socket].set_port(port); 포트 번호 설정
 
 	addEvent(worker, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	addEvent(worker, client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
@@ -208,7 +216,7 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket) {
 	clients[client_socket] = "";
 }
 
-static bool recieveFromClient(Worker& worker, int client_socket) {
+static bool recieveFromClient(Worker& worker, uintptr_t client_socket) {
 	clients_t&	clients = worker.getClients();
 	char		buf[BUF_SIZE] = {0,};
 	int			recieve_size;
