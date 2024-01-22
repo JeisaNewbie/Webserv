@@ -66,7 +66,7 @@ void startConnect(Cycle& cycle) {
 
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
 			Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
-									cgi_fork_list[i]->get_cgi_instance());
+								cgi_fork_list[i]->get_cgi_instance());
 		}
 		cgi_fork_list.clear();
 
@@ -83,7 +83,9 @@ void startConnect(Cycle& cycle) {
 			if (cur_event->filter == EVFILT_READ) {
 
 				uintptr_t 							tmp_ident = cur_event->ident;
-				std::vector<uintptr_t>::iterator	it = std::find(listen_socket_list.begin(), listen_socket_list.end(), tmp_ident);
+				std::vector<uintptr_t>::iterator	it = std::find(listen_socket_list.begin(),	\
+																	listen_socket_list.end(),	\
+																	tmp_ident);
 
 				
 				if (it != listen_socket_list.end()) {
@@ -205,8 +207,6 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 		return ;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
-	
-	std::cout << port << "\n\n";
 	
 	// server[client_socket].set_port(port); 포트 번호 설정
 
