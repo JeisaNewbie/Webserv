@@ -20,7 +20,6 @@ class Worker {
 		~Worker(void);
 
 		int				getEventQueue(void) const;
-		int				getListenSocket(void) const;
 		int				getCurConnection(void) const;
 		clients_t&		getClients(void);
 		kevent_t&		getChangeList(void);
@@ -35,7 +34,6 @@ class Worker {
 		Worker& operator =(const Worker& src);
 
 		int				event_queue;
-		int				listen_socket;
 		uint32_t		cur_connection;
 		clients_t		clients;
 		kevent_t		change_list;
