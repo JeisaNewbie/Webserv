@@ -97,6 +97,10 @@ Exception::Exception(int _costom_error) {
 		message = "Send function failed";
 		break;
 
+	case EVENT_CONNECT_FULL:
+		message = "Connection limit is reached";
+		break;
+
 	case EVENT_SET_ERROR_FLAG:
 		message = "Event flag is set to error";
 		break;

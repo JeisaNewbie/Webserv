@@ -90,7 +90,7 @@ void startConnect(Cycle& cycle) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
 						acceptNewClient(worker, *it, socket_port_arr[*it], server);
 					else // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
-						eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
+						eventException(worker.getErrorLog(), EVENT_CONNECT_FULL, 0);
 					continue;
                 }
 
