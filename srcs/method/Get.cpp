@@ -15,9 +15,34 @@ void	Get::make_body(Response &response, std::string &path)
 	// std::cout <<response.get_body();
 }
 
-void Get::create_response(Response &response)
+void	 Get::create_response(Response &response)
 {
 	response.set_header_field("Content-Type", "text/html; charset=UTF-8");
 	response.set_header_field("Content-Length", to_string(response.get_body().size()));
 
+}
+
+void	Get::set_autoindex(Request &request, Response &response)
+{
+	DIR					*dir = opendir (request.get_path().c_str());
+	struct dirent		*diread;
+	std::vector<char *>	files;
+	std::string			file_name;
+
+	while ((diread = readdir (dir)) != nullptr)
+		files.push_back (diread->d_name);
+	closedir (dir);
+
+	std::string	index = "<html>\n<head>\n<title>Index of " + request.get_path() + "</title>\n</head>\n<body>\n";
+	index += "<h1>Index of " + request.get_path() + "</h1>\n";
+	index += "<ul>\n";
+
+	for (std::vector<char *>::iterator it = files.begin(); it != files.end(); it++)
+	{
+		file_name = *it;
+		index += "<li><a href=\"" + file_name + "\">" + file_name + "</a></li>\n";;
+	}
+
+	index += "</ul>\n</body>\n</html>\n";
+	response.set_body (index);
 }

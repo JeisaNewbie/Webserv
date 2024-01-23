@@ -49,6 +49,7 @@ private:
 	bool											cgi;
 	bool											redirect;
 	bool											autoindex;
+	bool											index;
 	std::list<Server>::iterator						matched_server;
 	std::list<Location>::iterator					matched_location;
 	void											parse_query_string(std::string &query);
@@ -66,7 +67,9 @@ private:
 	void											check_content_length();
 	void											check_te();
 	void											check_is_cgi();
+	std::string										check_index(std::list<Location>::iterator it);
 	void											check_content_encoding();
+	void											check_allowed_method();
 	void											check_uri_form();
 	void											decode_chunked(std::string &msg);
 	//////-------------utils--------------------------------------------------
@@ -86,6 +89,7 @@ public:
 	bool											get_cgi();
 	bool											get_redirect();
 	bool											get_autoindex();
+	bool											get_index();
 	int												get_status_code();
 	std::string&									get_method();
 	bool											get_chunked();

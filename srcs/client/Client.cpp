@@ -43,7 +43,7 @@ void	Client::do_method_without_cgi(Request &request)
 	// std::cout<<request.get_path()<<std::endl;
 
 	//set_autoindex(); ->if no -> find_index(); -> if no -> 404.html;
-	std::string path = request.get_path() + request.get_file_name();
+	std::string path = request.get_path();
 	int			path_property = check_path_property (path);
 
 	if (path_property == -1)
@@ -63,7 +63,9 @@ void	Client::do_method_without_cgi(Request &request)
 		{
 			if (request.get_autoindex() == false)
 				throw NOT_FOUND;
-
+			Get::set_autoindex(request, response);
+			Get::create_response(response);
+			throw OK;
 		}
 	}
 
