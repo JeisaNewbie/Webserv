@@ -58,7 +58,7 @@ void mainRoot(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getMainRoot().length() != VALID)
 		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
-	if (tokens[1].back() != '/')
+	if (tokens[1].back() == '/')
 		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	cycle.setMainRoot(tokens[1]);
@@ -102,17 +102,11 @@ void serverName(Cycle& cycle, std::string tokens[]) {
 
 void locationRoot(Cycle& cycle, std::string tokens[]) {
 	Location&	location = cycle.getServerList().back().getLocationList().back();
-	int			location_type = location.getLocationType();
 
 	if (location.getSubRoot().length() != VALID)
 		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
-	if (location_type == LOC_DEFAULT \
-		&& (tokens[1][0] == '/' || tokens[1].back() == '/'))
-		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
-
-	if ((location_type == LOC_ERROR || location_type == LOC_CGI) \
-		&& (tokens[1][0] == '/' || tokens[1].back() != '/'))
+	if (tokens[1][0] != '/' || tokens[1].back() == '/')
 		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
 	location.setSubRoot(tokens[1]);
