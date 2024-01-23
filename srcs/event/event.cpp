@@ -66,7 +66,7 @@ void startConnect(Cycle& cycle) {
 
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
 			Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
-									cgi_fork_list[i]->get_cgi_instance());
+								cgi_fork_list[i]->get_cgi_instance());
 		}
 		cgi_fork_list.clear();
 
@@ -83,14 +83,16 @@ void startConnect(Cycle& cycle) {
 			if (cur_event->filter == EVFILT_READ) {
 
 				uintptr_t 							tmp_ident = cur_event->ident;
-				std::vector<uintptr_t>::iterator	it = std::find(listen_socket_list.begin(), listen_socket_list.end(), tmp_ident);
+				std::vector<uintptr_t>::iterator	it = std::find(listen_socket_list.begin(),	\
+																	listen_socket_list.end(),	\
+																	tmp_ident);
 
 				
 				if (it != listen_socket_list.end()) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
 						acceptNewClient(worker, *it, socket_port_arr[*it], server);
 					else // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
-						eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
+						eventException(worker.getErrorLog(), EVENT_CONNECT_FULL, 0);
 					continue;
                 }
 
@@ -206,8 +208,6 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 		return ;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
-	
-	std::cout << port << "\n\n";
 	
 	// server[client_socket].set_port(port); 포트 번호 설정
 

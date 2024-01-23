@@ -11,6 +11,7 @@ enum costom_error_type {
 	CONF_FAIL_READ,
 	CONF_DUP_DIRCTV,
 	CONF_DUP_SRV_BLOCK,
+	CONF_DUP_LOC_BLOCK,
 	CONF_INVALID_BLOCK_FORM,
 	CONF_INVALID_BLOCK_LOC,
 	CONF_INVALID_LOC_PATH,
@@ -30,20 +31,26 @@ enum costom_error_type {
 	EVENT_FAIL_ACCEPT,
 	EVENT_FAIL_RECV,
 	EVENT_FAIL_SEND,
+	EVENT_CONNECT_FULL,
 	EVENT_SET_ERROR_FLAG,
 };
 
 class Exception {
 	public:
 		Exception(int _costom_error);
+		Exception(int _costom_error, std::string _problem);
 		Exception(const Exception& src);
 		~Exception(void);
 
 		Exception& operator =(const Exception& src);
 		
-		int			getSystemError(void) const;
-		int			getCostomError(void) const;
-		const char* what(void) const;
+		void				setMessage(int costom_error);
+
+		int					getSystemError(void) const;
+		int					getCostomError(void) const;
+		const std::string&	getProblemStr(void) const;
+
+		const char*			what(void) const;
 
 	private:
 		Exception(void);
@@ -51,6 +58,7 @@ class Exception {
 		int			system_error;
 		int			costom_error;
 		std::string	message;
+		std::string	problem;
 };
 
 int		mainException(Exception& e);
