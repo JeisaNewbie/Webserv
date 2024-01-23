@@ -42,7 +42,8 @@ void	Client::do_method_without_cgi(Request &request)
 	// std::cout<<"METHOD_WITHOUT_CGI_START\n";
 	// std::cout<<request.get_path()<<std::endl;
 
-	std::string &path = request.get_path();
+	//set_autoindex(); ->if no -> find_index(); -> if no -> 404.html;
+	std::string path = request.get_path() + request.get_file_name();
 	int			path_property = check_path_property (path);
 
 	if (path_property == -1)
@@ -59,7 +60,11 @@ void	Client::do_method_without_cgi(Request &request)
 			throw OK;
 		}
 		else
-			throw NOT_FOUND;
+		{
+			if (request.get_autoindex() == false)
+				throw NOT_FOUND;
+
+		}
 	}
 
 	if (method == "POST")
@@ -116,6 +121,8 @@ void	Client::assemble_response()
 		response.set_body(ss.str());
 		ss.str("");
 	}
+	if (get_request_instance().get_redirect() == true)
+		get_response_instance().set_header_field("Location", get_request_instance().get_redirect_path());
 	response.assemble_message ();
 }
 

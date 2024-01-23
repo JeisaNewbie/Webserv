@@ -7,6 +7,8 @@ Request::Request()
 	this->chunked = false;
 	this->port = 80;
 	this->cgi = false;
+	this->redirect = false;
+	this->autoindex = false;
 	set_header_key_and_value("redirect_path", "serve/redirect/");
 }
 
@@ -552,7 +554,6 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 	set_header_key_and_value (key, value);
 }
 
-
 void	Request::check_header_is_valid()
 {
 	// std::cout<< "check_host\n";
@@ -724,89 +725,89 @@ void	Request::check_uri_form()
 		throw NOT_FOUND;
 }
 
-void Request::matching_server()
-{
-	std::list<Server> &servers = cycle->getServerList();
-	std::list<Server>::iterator it = servers.begin();
-	std::list<Server>::iterator ite = servers.end();
-	std::string host = header["host"].substr(0, header["host"].find("\r\n"));
-	size_t	end = path.find ('/', 1);
-	if (end == std::string::npos)
-		end = path.size();
-	std::string	first_dir = path.substr (0, end);
+// void Request::matching_server()
+// {
+// 	std::list<Server> &servers = cycle->getServerList();
+// 	std::list<Server>::iterator it = servers.begin();
+// 	std::list<Server>::iterator ite = servers.end();
+// 	std::string host = header["host"].substr(0, header["host"].find("\r\n"));
+// 	size_t	end = path.find ('/', 1);
+// 	if (end == std::string::npos)
+// 		end = path.size();
+// 	std::string	first_dir = path.substr (0, end);
 
-	matched_server = cycle->getServerList().begin();
-	origin_path = path;
+// 	matched_server = cycle->getServerList().begin();
+// 	origin_path = path;
 
-	if (first_dir.find(".cpp") != std::string::npos) //set_cgi_path
-	{
-		if (first_dir.find("/script.cpp") == std::string::npos)
-			throw NOT_FOUND;
+// 	if (first_dir.find(".cpp") != std::string::npos) //set_cgi_path
+// 	{
+// 		if (first_dir.find("/script.cpp") == std::string::npos)
+// 			throw NOT_FOUND;
 
-		if (method == "DELETE")
-		{
-			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
-			return ;
-		}
-		path = cycle->getMainRoot() + "serve/script/script.cpp";
-		this->set_cgi (true);
-		return;
-	}
+// 		if (method == "DELETE")
+// 		{
+// 			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
+// 			return ;
+// 		}
+// 		path = cycle->getMainRoot() + "serve/script/script.cpp";
+// 		this->set_cgi (true);
+// 		return;
+// 	}
 
-	for (;it != ite; it++)
-	{
-		std::cout<<host<<std::endl;
-		std::cout<<it->getDomain()<<std::endl;
-		if (host != it->getDomain())
-			continue;
+// 	for (;it != ite; it++)
+// 	{
+// 		std::cout<<host<<std::endl;
+// 		std::cout<<it->getDomain()<<std::endl;
+// 		if (host != it->getDomain())
+// 			continue;
 
-		std::cout<<"DOMAIN IS MATCHED\n";
-		std::cout<<port<<std::endl;
-		std::cout<<it->getPort()<<std::endl;
-		if (port != it->getPort())
-			continue;
+// 		std::cout<<"DOMAIN IS MATCHED\n";
+// 		std::cout<<port<<std::endl;
+// 		std::cout<<it->getPort()<<std::endl;
+// 		if (port != it->getPort())
+// 			continue;
 
-		std::cout<<"PORT IS MATCHED\n";
-		std::list<Location> &locations = it->getLocationList();
-		std::list<Location>::iterator itl = locations.begin();
-		std::list<Location>::iterator itle = locations.end();
+// 		std::cout<<"PORT IS MATCHED\n";
+// 		std::list<Location> &locations = it->getLocationList();
+// 		std::list<Location>::iterator itl = locations.begin();
+// 		std::list<Location>::iterator itle = locations.end();
 
-		for (; itl != itle; itl++)
-		{
-			if (itl->getLocationPath() == "/" && method != "DELETE")
-				matched_location = itl;
+// 		for (; itl != itle; itl++)
+// 		{
+// 			if (itl->getLocationPath() == "/" && method != "DELETE")
+// 				matched_location = itl;
 
-			if (first_dir != itl->getLocationPath())
-				continue;
+// 			if (first_dir != itl->getLocationPath())
+// 				continue;
 
-			matched_server = it;
-			matched_location = itl;
-			path = cycle->getMainRoot() + matched_location->getSubRoot();
-			return ;
-		}
-		path = cycle->getMainRoot() + cycle->getDefaultErrorRoot();
-		return ;
-	}
+// 			matched_server = it;
+// 			matched_location = itl;
+// 			path = cycle->getMainRoot() + matched_location->getSubRoot();
+// 			return ;
+// 		}
+// 		path = cycle->getMainRoot() + cycle->getDefaultErrorRoot();
+// 		return ;
+// 	}
 
-	matched_location = matched_server->getLocationList().begin();//path 다를경우 error경로의 error.html 표시
-	std::cout <<"matching_server_DELETE: " << path << std::endl;
+// 	matched_location = matched_server->getLocationList().begin();//path 다를경우 error경로의 error.html 표시
+// 	std::cout <<"matching_server_DELETE: " << path << std::endl;
 
-	if (method == "DELETE" && matched_location->getLocationPath() == "/")
-		throw FORBIDDEN;
+// 	if (method == "DELETE" && matched_location->getLocationPath() == "/")
+// 		throw FORBIDDEN;
 
-	path = cycle->getMainRoot() + matched_location->getSubRoot();
+// 	path = cycle->getMainRoot() + matched_location->getSubRoot();
 
-	std::cout <<"end_of_matching_server=====================\n";
-}
+// 	std::cout <<"end_of_matching_server=====================\n";
+// }
 
-bool Request::matching_absolute_path()
+bool	Request::matching_absolute_path()
 {
 	std::string	tmp_path = cycle->getMainRoot() + path;
 	int			path_property = check_path_property(tmp_path);
 
 	origin_path = path;
 
-	if (path_property = _FILE)
+	if (path_property == _FILE || path_property == _DIR)
 	{
 		path = tmp_path;
 		throw OK;
@@ -814,6 +815,7 @@ bool Request::matching_absolute_path()
 
 	if (path_property == -1 && *path.rbegin() != '/')
 	{
+		file_name = path.substr (path.rfind ('/'));
 		path = path.substr (0, path.rfind ('/'));
 		return true;
 	}
@@ -821,7 +823,25 @@ bool Request::matching_absolute_path()
 	return false;
 }
 
-void Request::matching_server()
+void	Request::check_is_cgi()
+{
+	if (origin_path.find(".cpp") != std::string::npos)
+	{
+		if (origin_path.find("/script.cpp") == std::string::npos)
+			throw NOT_FOUND;
+
+		if (method == "DELETE")
+		{
+			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
+			throw OK;
+		}
+		path = cycle->getMainRoot() + "serve/script/script.cpp";
+		this->set_cgi (true);
+		throw OK;
+	}
+}
+
+void	Request::matching_server()
 {
 	std::list<Server>			&servers = cycle->getServerList();
 	std::list<Server>::iterator it = servers.begin();
@@ -830,23 +850,9 @@ void Request::matching_server()
 	bool						file_flag = matching_absolute_path();
 
 	matched_server = cycle->getServerList().begin();
+	check_is_cgi();
 
-	// if (origin_path.find(".cpp") != std::string::npos) //set_cgi_path
-	// {
-	// 	if (origin_path.find("/script.cpp") == std::string::npos)
-	// 		throw NOT_FOUND;
-
-	// 	if (method == "DELETE")
-	// 	{
-	// 		path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
-	// 		return ;
-	// 	}
-	// 	path = cycle->getMainRoot() + "serve/script/script.cpp";
-	// 	this->set_cgi (true);
-	// 	return;
-	// }
-
-	for (; it != ite; it++)
+	for (; it != ite; it++) //----------------------------redirect-----------------------
 	{
 		if (host != it->getDomain())
 			continue;
@@ -855,18 +861,27 @@ void Request::matching_server()
 			continue;
 
 		matched_server = it;
-		matching_route(it->getLocationList().begin(), it->getLocationList().end());
-
-		if (file_flag == true)
-			//set_redirect();// mainroot + location->subroot + filename
-		//set_autoindex(); ->if no -> find_index(); -> if no -> 404.html;
-		return;
 	}
-	// set_redirect(); mainroot + matchedserver->location->subroot + filename
+
+	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());
+	if (file_flag == true)
+		set_redirect(cycle->getMainRoot(), matched_location->getSubRoot(), file_name);
+	else
+	{
+		set_redirect(cycle->getMainRoot(), matched_location->getSubRoot(), "");
+	}
 }
 
-void Request::matching_route(std::list<Location>::iterator it, std::list<Location>::iterator ite)
+void	Request::set_redirect(std::string main_root, std::string sub_root, std::string file)
 {
+	this->redirect = true;
+	this->redirect_path = main_root + sub_root + file;
+	throw FOUND;
+}
+
+void	Request::matching_route(std::list<Location>::iterator it, std::list<Location>::iterator ite)
+{
+	std::list<Location>::iterator					it_begin = it;
 	std::map<size_t, std::list<Location>::iterator>	depth_map;
 	size_t											depth = 0;
 	int												i = 0;
@@ -883,10 +898,12 @@ void Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 		depth_map[depth] = it;
 		depth = 0;
 	}
-	matched_location = depth_map.rbegin()->second;
+	matched_location = it_begin;
+	if (depth_map.rbegin()->first != 0)
+		matched_location = depth_map.rbegin()->second;
 }
 
-size_t Request::matching_sub_route(std::string route, std::string dest, size_t *depth)
+size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *depth)
 {
 	if (route == "" && dest == "")
 		throw std::string::npos;
@@ -896,7 +913,7 @@ size_t Request::matching_sub_route(std::string route, std::string dest, size_t *
 
 	if (sub_r == sub_d)
 	{
-		*depth++;
+		(*depth)++;
 		matching_sub_route (sub_r, sub_d, depth);
 	}
 
@@ -906,7 +923,7 @@ size_t Request::matching_sub_route(std::string route, std::string dest, size_t *
 	return *depth;
 }
 
-void Request::check_members()
+void	Request::check_members()
 {
 
 	std::cout << "--------------------------------------------------------------\n";
@@ -944,10 +961,14 @@ std::string&	Request::get_header_field(const char *key) {return this->header[key
 std::string&	Request::get_query_value(const char *key) {return this->query_elements[key];}
 int				Request::get_status_code() {return this->status_code;}
 std::string&	Request::get_method() {return this->method;}
+bool			Request::get_redirect() {return this->redirect;}
+bool			Request::get_autoindex() {return this->autoindex;}
 bool 			Request::get_cgi() {return this->cgi;}
 bool			Request::get_chunked() {return this->chunked;}
 std::string&	Request::get_message_body() {return this->message_body;}
+std::string&	Request::get_redirect_path() {return this->redirect_path;}
 std::string&	Request::get_path() {return this->path;}
+std::string&	Request::get_file_name() {return this->file_name;}
 void 			Request::set_status_code(int status_code) {this->status_code = status_code;}
 void			Request::set_cgi (bool flag) {this->cgi = flag;}
 void			Request::set_chunked (bool flag) {this->chunked = flag;}

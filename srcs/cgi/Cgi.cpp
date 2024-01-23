@@ -93,6 +93,7 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 	{
 		request.set_cgi(false);
 		request.set_status_code(INTERNAL_SERVER_ERROR);
+		return ;
 	}
 
 	if (cgi.pid == 0)
