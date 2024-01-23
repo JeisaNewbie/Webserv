@@ -11,7 +11,6 @@ static int	checkConfLocation(std::string str[]);
 static void	checkGetlineError(std::ifstream& file);
 static void checkServerDuplication(std::list<Server>& server_list);
 static void checkLocationDuplication(std::list<Location>& location_list);
-static void	checkLocationType(std::string location_path, int& location_type);
 static void checkMaxDomainSize(Cycle& cycle);
 static int	setTakeArgCnt(int cnt);
 
@@ -183,15 +182,12 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 							const std::string& location_path) {
 	char					buf[BUF_SIZE];
 	std::string				tokens[TOKEN_SIZE];
-	int						token_cnt, location_type;
+	int						token_cnt;
 	std::string				str_buf;
 	std::list<Location>&	location_list = cycle.getServerList().back().getLocationList();
 
-	checkLocationType(location_path, location_type);
 	checkLocationDuplication(location_list);
-	location_list.push_back(Location(location_type, location_path)); //복사해서 추가함
-	if (location_type == LOC_CGI && location_path != ".cpp")
-		throw Exception(CONF_INVALID_CGI, location_path);
+	location_list.push_back(Location(location_path)); //복사해서 추가함
 
 	while (file.getline(buf, sizeof(buf))) {
 		str_buf = static_cast<std::string>(buf);
@@ -283,25 +279,14 @@ static void checkServerDuplication(std::list<Server>& server_list) {
 }
 
 static void checkLocationDuplication(std::list<Location>& location_list) {
-	int								location_type = location_list.back().getLocationType();
+	std::string						location_path = location_list.back().getLocationPath();
 	std::list<Location>::iterator	it = location_list.begin();
 	std::list<Location>::iterator	ite = std::prev(location_list.end());
 
 	for (; it != ite; it++) {
-		if (location_type == it->getLocationType())
+		if (location_path == it->getLocationPath())
 			throw Exception(CONF_DUP_LOC_BLOCK, it->getLocationPath());
 	}
-}
-
-static void checkLocationType(std::string location_path, int& location_type) {
-	if (location_path == "/")
-		location_type = LOC_DEFAULT;
-	else if (location_path == "/error")
-		location_type = LOC_ERROR;
-	else if (location_path[0] == '.')
-		location_type = LOC_CGI;
-	else
-		throw Exception(CONF_INVALID_LOC_PATH, location_path);
 }
 
 static void checkMaxDomainSize(Cycle& cycle) {
