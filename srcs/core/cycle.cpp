@@ -16,6 +16,7 @@ Cycle& Cycle::operator =(const Cycle& src) {
 		default_error_root = src.default_error_root;
 		
 		server_list = src.server_list;
+		listen_socket_list = src.listen_socket_list;
 	}
 	return (*this);
 }

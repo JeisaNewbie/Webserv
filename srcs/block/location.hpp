@@ -21,19 +21,24 @@ class Location {
 
 		Location& operator =(const Location& src);
 
-		void setSubRoot(std::string _location_path);
-		void setAllowedMethod(int _allowed_method);
+		void 						setSubRoot(std::string _location_path);
+		void 						setAllowedMethod(int _allowed_method);
+		void 						setAutoIndex(int _autoindex);
 
-		int					getLocationType(void) const;
-		const std::string&	getLocationPath(void) const;
-		const std::string&	getSubRoot(void) const;
-		int					getAllowedMethod(void) const;
+		int							getLocationType(void) const;
+		const std::string&			getLocationPath(void) const;
+		const std::string&			getSubRoot(void) const;
+		int							getAllowedMethod(void) const;
+		int							getAutoIndex(void) const;
+		std::vector<std::string>&	getIndex(void);
 
 	private:
-		int			location_type;
-		std::string	location_path;
-		std::string	sub_root;
-		int			allowed_method;
+		int							location_type;
+		std::string					location_path;
+		std::string					sub_root;
+		int							allowed_method;
+		int							autoindex;
+		std::vector<std::string>	index;
 };
 
 #endif
