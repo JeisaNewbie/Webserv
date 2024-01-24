@@ -41,7 +41,7 @@ static void handleGetMethod(const std::string directory_path, const std::string 
 		return ; //error
 
 	std::cout << "Content-Type: text/html\r\n";
-	std::cout << "Status_code: 201\r\n";
+	std::cout << "Status_code: 200\r\n";
 	std::cout << "\r\n";
 
 	std::cout << "<!DOCTYPE html>\n";
@@ -60,7 +60,7 @@ static void handleGetMethod(const std::string directory_path, const std::string 
 	std::cout << "</h1>\n";
 	std::cout << "</body>\n";
 	std::cout << "</html>\n";
-	std::cout << "0\r\n"; // 맞나?
+	// std::cout << "0\r\n"; // 맞나?
 
 }
 

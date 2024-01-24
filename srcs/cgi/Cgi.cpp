@@ -81,7 +81,7 @@ void	Cgi::set_fd()
 	fseek (this->f_in, 0, SEEK_SET);
 }
 
-void	Cgi::execute_cgi(Request &request, Cgi &cgi)
+void	Cgi::execute_cgi(Request &request, Cgi &cgi) // cgi 무한루프 발생시 강제 종료 설정(timeout등)
 {
 
 	cgi.set_fd();

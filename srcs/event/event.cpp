@@ -104,6 +104,7 @@ void startConnect(Cycle& cycle) {
 					Client&			event_client = server[tmp_ident];
 
 					event_client.do_parse(request_msg, cycle);
+					event_client.get_response_instance().set_body("");
 					// event_client.get_request_instance().check_members();
 					if (event_client.get_status_code() < MOVED_PERMANENTLY)
 					{

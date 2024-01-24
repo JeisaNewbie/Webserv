@@ -36,13 +36,19 @@
         <button id="postButton" onclick="promptForPost()">Add Post</button>
         <button id="deleteButton" onclick="promptForDelete()">Delete Post</button>
     </div>
-
+    <div id="output"></div>
     <script>
         function sendServerData(url, method) {
             var xhr = new XMLHttpRequest();
             xhr.open(method, url, true);
+            xhr.onload = function () {
+                if (this.status === 200) {
+                    //console.log(this.responseText);
+                    document.getElementById('output').innerHTML = `<h1>${this.responseText}</h1>`;
+                }
+            };
             xhr.send();
-        }
+}
 
         function promptForGet() {
             var getData = prompt("Enter the file name to read: example.txt");

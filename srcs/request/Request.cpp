@@ -541,6 +541,8 @@ void	Request::parse_header_fields()
 	for (; it != ite; it++)
 		parse_header_key_and_value (*it);
 
+	if (header.find("connection") == this->header.end())
+		set_header_key_and_value ("connection", "keep-alive\r\n");
 	this->header_end = this->header.end ();
 	return ;
 }
@@ -655,7 +657,7 @@ void	Request::check_transfer_encoding()
 
 	if (transfer_encoding_value.find ("\r\n", pos + 7) != 0)
 	{
-		this->header["connection"] = "close";
+		this->header["connection"] = "close\r\n";
 		throw BAD_REQUEST;
 	}
 	decode_chunked (this->message_body);
@@ -778,7 +780,7 @@ std::string Request::check_index(std::list<Location>::iterator it)
 	for (; it_v != ite_v; it_v++)
 	{
 		path_index = cycle->getMainRoot() + it->getSubRoot() + "/" + *it_v;
-		std::cout<<"PATH_INDEX: "<< path_index << std::endl;
+		// std::cout<<"PATH_INDEX: "<< path_index << std::endl;
 		if (check_path_property(path_index) == _FILE)
 		{
 			return  "/" + *it_v;
@@ -795,7 +797,7 @@ void	Request::matching_server()
 	std::list<Server>::iterator ite = servers.end();
 	std::string 				&host = this->host_only;
 
-	std::cout <<"PATH: " << path << std::endl;
+	// std::cout <<"PATH: " << path << std::endl;
 
 	if (path != "/")
 		matching_absolute_path();
@@ -826,12 +828,12 @@ void	Request::matching_server()
 	{
 		this->autoindex = true;
 		this->autoindex_path = cycle->getMainRoot() + matched_location->getSubRoot();
-		std::cout<<"AUTOINDEX_PATH: " << this->autoindex_path << std::endl;
+		// std::cout<<"AUTOINDEX_PATH: " << this->autoindex_path << std::endl;
 		throw OK;
 	}
 	else if (matched_location->getIndex().size() != 0)
 	{
-		std::cout<<"BEFORE_SET_REDIRECT\n";
+		// std::cout<<"BEFORE_SET_REDIRECT\n";
 		this->file_name = check_index(matched_location);
 		if (this->file_name != "")
 			set_redirect(cycle->getMainRoot(), matched_location->getSubRoot(), file_name);
@@ -844,12 +846,12 @@ bool	Request::check_allowed_method()
 	std::string &method = this->method;
 
 	if (method == "GET")
-		return matched_location->getAllowedMethod() & METHOD_GET;
+		return (matched_location->getAllowedMethod() & METHOD_GET);
 
 	if (method == "POST")
-		return matched_location->getAllowedMethod() & METHOD_POST;
+		return (matched_location->getAllowedMethod() & METHOD_POST);
 
-	return matched_location->getAllowedMethod() & METHOD_DELETE;
+	return (matched_location->getAllowedMethod() & METHOD_DELETE);
 }
 
 void	Request::set_redirect(std::string main_root, std::string sub_root, std::string file)
