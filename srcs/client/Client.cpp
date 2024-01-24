@@ -112,7 +112,7 @@ void	Client::parse_cgi_response(Cgi &cgi)
 void	Client::assemble_response()
 {
 	response.set_header_line (get_status_code());
-	// response.set_header_field ("key", "value");
+	response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2));
 	// status_code에 따라 body 수정 필요
 	if (get_status_code() > BAD_REQUEST)
 	{

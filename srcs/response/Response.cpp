@@ -145,6 +145,7 @@ void	Response::set_body(std::string body)
 {
 	this->body = body;
 	body_flag = true;
+	std::cout <<"CGI_GET_BODY: " << this->body << std::endl;
 }
 
 std::string &Response::get_response_message() {
