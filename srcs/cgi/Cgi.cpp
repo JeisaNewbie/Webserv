@@ -92,7 +92,8 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 	if (cgi.pid == -1)
 	{
 		request.set_cgi(false);
-		throw INTERNAL_SERVER_ERROR;
+		request.set_status_code(INTERNAL_SERVER_ERROR);
+		return ;
 	}
 
 	if (cgi.pid == 0)
@@ -119,8 +120,8 @@ std::string	&Cgi::get_response_from_cgi()
 	{
 		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
 		cgi_body += buf;
-		std::cout<<len<<std::endl;
-		std::cout<<cgi_body<<std::endl;
+		// std::cout<<len<<std::endl;
+		// std::cout<<cgi_body<<std::endl;
 	}
 
 	// std::cout<<"BEFORE_GET_CHILD_PROCESS\n";

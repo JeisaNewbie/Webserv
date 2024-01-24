@@ -9,6 +9,7 @@
 // #include "../core/core.hpp"
 #include "../core/cycle.hpp"
 #include "../utils/Status.hpp"
+#include "../utils/Utils.hpp"
 // #include "../method/Method.hpp"
 
 #define	FAIL			1
@@ -26,7 +27,9 @@ private:
 	std::string										request_line;
 	std::string										uri;
 	std::string										origin_path;
+	std::string										redirect_path;
 	std::string										path;
+	std::string										file_name;
 	uint32_t										port;
 	std::string										query;
 	std::string										protocol_version;
@@ -44,6 +47,9 @@ private:
 	bool											chunked;
 	int												status_code;
 	bool											cgi;
+	bool											redirect;
+	bool											autoindex;
+	bool											index;
 	std::list<Server>::iterator						matched_server;
 	std::list<Location>::iterator					matched_location;
 	void											parse_query_string(std::string &query);
@@ -51,13 +57,19 @@ private:
 	void											parse_header_key_and_value(std::string &header_element);
 	void											check_header_is_valid();
 	void											matching_server();
+	bool											matching_absolute_path();
+	void											matching_route(std::list<Location>::iterator it, std::list<Location>::iterator ite);
+	size_t											matching_sub_route(std::string route, std::string dest, size_t *depth);
 	void											check_body_limits();
 	void											check_host();
 	void											check_transfer_encoding_and_content_length();
 	void											check_transfer_encoding();
 	void											check_content_length();
 	void											check_te();
+	void											check_is_cgi();
+	std::string										check_index(std::list<Location>::iterator it);
 	void											check_content_encoding();
+	void											check_allowed_method();
 	void											check_uri_form();
 	void											decode_chunked(std::string &msg);
 	//////-------------utils--------------------------------------------------
@@ -67,7 +79,7 @@ private:
 public:
 	Request();
 	~Request();
-	int												process_request_parsing(std::string &request_msg, Cycle &cycle);
+	void											process_request_parsing(std::string &request_msg, Cycle &cycle);
 	void											parse_request();
 	void											parse_request_line();
 	void											parse_header_fields();
@@ -75,10 +87,15 @@ public:
 	//-----------------------------getter && setter------------------------------
 	Cycle&											get_cycle_instance();
 	bool											get_cgi();
+	bool											get_redirect();
+	bool											get_autoindex();
+	bool											get_index();
 	int												get_status_code();
 	std::string&									get_method();
 	bool											get_chunked();
+	std::string&									get_redirect_path();
 	std::string&									get_path();
+	std::string&									get_file_name();
 	std::string&									get_message_body();
 	std::string&									get_header_field(const char *key);
 	std::string&									get_query_value(const char *key);
@@ -87,7 +104,8 @@ public:
 	void											set_chunked (bool flag);
 	void											set_header_key_and_value(std::string &key, std::string &value);
 	void											set_header_key_and_value(const char *key, const char *value);
-
+	void											set_port(uint32_t port);
+	void											set_redirect(std::string main_root, std::string sub_root, std::string file);
 	void check_members();
 };
 

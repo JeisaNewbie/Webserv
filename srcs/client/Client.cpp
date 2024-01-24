@@ -42,11 +42,12 @@ void	Client::do_method_without_cgi(Request &request)
 	// std::cout<<"METHOD_WITHOUT_CGI_START\n";
 	// std::cout<<request.get_path()<<std::endl;
 
-	std::string &path = request.get_path();
+	//set_autoindex(); ->if no -> find_index(); -> if no -> 404.html;
+	std::string path = request.get_path();
 	int			path_property = check_path_property (path);
 
-	if (path_property == -1)
-		throw NOT_FOUND;
+	// if (path_property == -1)
+	// 	throw NOT_FOUND;
 
 	std::string	&method = request.get_method();
 
@@ -59,7 +60,13 @@ void	Client::do_method_without_cgi(Request &request)
 			throw OK;
 		}
 		else
-			throw NOT_FOUND;
+		{
+			if (request.get_autoindex() == false)
+				throw NOT_FOUND;
+			Get::set_autoindex(request, response);
+			Get::create_response(response);
+			throw OK;
+		}
 	}
 
 	if (method == "POST")
@@ -109,13 +116,17 @@ void	Client::assemble_response()
 	// status_code에 따라 body 수정 필요
 	if (get_status_code() > BAD_REQUEST)
 	{
-		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "serve/error/" + to_string(get_status_code()) + ".html");
+		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html");
 		std::stringstream	ss;
 
 		ss << error.rdbuf();
 		response.set_body(ss.str());
+		std::cout <<"RESPONSE_ERROR: "<<response.get_body()<<std::endl;
 		ss.str("");
+		error.close();
 	}
+	if (get_request_instance().get_redirect() == true)
+		get_response_instance().set_header_field("Location", get_request_instance().get_redirect_path());
 	response.assemble_message ();
 }
 
@@ -133,3 +144,4 @@ void		Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
 uintptr_t	Client::get_client_soket() {return this->client_soket;}
 void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}
 void		Client::set_cgi_fd_arr(uintptr_t client_soket) {*(this->cgi_fd_arr[get_cgi_instance().get_fd()]) = client_soket;}
+void		Client::set_port(uint32_t port) {get_request_instance().set_port(port);}

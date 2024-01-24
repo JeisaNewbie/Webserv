@@ -75,7 +75,7 @@ void startConnect(Cycle& cycle) {
 			printState(cur_event);
 
 			if (cur_event->flags & EV_ERROR) {
-				if (cur_event->flags & EV_DELETE || errno == EAGAIN)
+				if (cur_event->flags & EV_DELETE || (errno == EAGAIN))
 					continue;
 				eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
 				disconnectClient(worker, cur_event->ident);
@@ -87,7 +87,7 @@ void startConnect(Cycle& cycle) {
 																	listen_socket_list.end(),	\
 																	tmp_ident);
 
-				
+
 				if (it != listen_socket_list.end()) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
 						acceptNewClient(worker, *it, socket_port_arr[*it], server);
@@ -105,7 +105,7 @@ void startConnect(Cycle& cycle) {
 
 					event_client.do_parse(request_msg, cycle);
 					// event_client.get_request_instance().check_members();
-					if (event_client.get_status_code() < BAD_REQUEST)
+					if (event_client.get_status_code() < MOVED_PERMANENTLY)
 					{
 						try
 						{
@@ -130,6 +130,7 @@ void startConnect(Cycle& cycle) {
 				}
 				else {
 					tmp_ident = cgi_fd_arr[cur_event->ident];
+					std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
 				server[tmp_ident].assemble_response();
@@ -207,7 +208,7 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 		return ;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
-	
+
 	// server[client_socket].set_port(port); 포트 번호 설정
 
 	addEvent(worker, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
