@@ -39,7 +39,8 @@ void		Cgi::set_env(Request &request, uintptr_t client_soket)
 	set_name (tmp);
 
 	env["REQUEST_METHOD"] = request.get_method();
-	env["QUERY_STRING"] = request.get_query_value("postdata");
+	env["QUERY_STRING_POST"] = request.get_query_value("postdata");
+	env["QUERY_STRING_GET"] = request.get_query_value("getdata");
 	env["CONTENT_LENGTH"] = request.get_header_field("content_length");
 	env["REDIRECT_PATH"] = request.get_cycle_instance().getMainRoot() + request.get_header_field("redirect_path");
 
@@ -79,6 +80,7 @@ void	Cgi::set_fd()
 	fputs (this->cgi_body.c_str(), this->f_in);
 	fflush (this->f_in);
 	fseek (this->f_in, 0, SEEK_SET);
+	this->cgi_body = "";
 }
 
 void	Cgi::execute_cgi(Request &request, Cgi &cgi) // cgi 무한루프 발생시 강제 종료 설정(timeout등)
@@ -121,6 +123,8 @@ std::string	&Cgi::get_response_from_cgi()
 	while (len)
 	{
 		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
+		if (len == 0)
+			break;
 		cgi_body += buf;
 		// std::cout<<len<<std::endl;
 		// std::cout<<cgi_body<<std::endl;

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <cstdlib>
 #include <cstring>
@@ -17,13 +18,14 @@ static std::string	createUniqueFileName();
 int main() {
 	try {
 		std::string			request_method = getEnvString("REQUEST_METHOD");
-		const std::string	data = getEnvString("QUERY_STRING");
+		const std::string	data_post = getEnvString("QUERY_STRING_POST");
+		const std::string	data_get = getEnvString("QUERY_STRING_GET");
 		const std::string	directory_path = getEnvString("REDIRECT_PATH");
 
 		if (request_method == "GET")
-			handleGetMethod(directory_path, data);
+			handleGetMethod(directory_path, data_get);
 		else if (request_method == "POST")
-			handlePostMethod(directory_path, data);
+			handlePostMethod(directory_path, data_post);
 	}
 	catch(const std::exception& e) {
 		std::cerr << "Exception caught: " << e.what() << std::endl;
@@ -35,10 +37,11 @@ int main() {
 
 static void handleGetMethod(const std::string directory_path, const std::string get_data) {
 	std::ifstream	file(directory_path + get_data);
-	std::string		line;
+	std::stringstream	ss;
 
 	if (file.is_open() == false)
 		return ; //error
+	ss << file.rdbuf();
 
 	std::cout << "Content-Type: text/html\r\n";
 	std::cout << "Status_code: 200\r\n";
@@ -54,8 +57,8 @@ static void handleGetMethod(const std::string directory_path, const std::string 
 	std::cout << "<body>\n";
 	std::cout << "	<h1>";
 
-	while (std::getline(file, line))
-		std::cout << line;
+
+	std::cout << ss.str();
 
 	std::cout << "</h1>\n";
 	std::cout << "</body>\n";
