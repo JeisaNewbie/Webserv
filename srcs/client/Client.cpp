@@ -97,7 +97,7 @@ void	Client::parse_cgi_response(Cgi &cgi)
 		if (pos == delimeter)
 		{
 			// std::cout<<"THIRD"<<std::endl;
-			get_response_instance().set_body(body.substr (pos + 2,  body.find ("\r\n", pos + 2) + 2));
+			get_response_instance().set_body(body.substr (pos + 2, body.find ("\r\n", pos + 2)));
 			break ;
 		}
 

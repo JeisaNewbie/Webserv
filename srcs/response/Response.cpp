@@ -68,12 +68,15 @@ Response::~Response() {}
 void	Response::assemble_message()
 {
 	response_msg = get_header_line();
-	std::cout<< "response_msg_before_header_field: " << response_msg << std::endl;
+	// std::cout<< "response_msg_before_header_field: " << response_msg << std::endl;
 	response_msg += get_header_field();
-	std::cout<< "response_msg_before_body: " << response_msg << std::endl;
+	// std::cout<< "response_msg_before_body: " << response_msg << std::endl;
 	response_msg += "\r\n";
 	if (body_flag == true)
+	{
 		response_msg += get_body();
+		set_body ("");
+	}
 	std::cout<< "response_msg: " << response_msg << std::endl;
 }
 
@@ -145,7 +148,6 @@ void	Response::set_body(std::string body)
 {
 	this->body = body;
 	body_flag = true;
-	std::cout <<"CGI_GET_BODY: " << this->body << std::endl;
 }
 
 std::string &Response::get_response_message() {
