@@ -35,7 +35,7 @@ Cgi& Cgi::operator=(const Cgi& ref)
 void		Cgi::set_env(Request &request, uintptr_t client_soket)
 {
 	int i = request.get_path().find(".cpp");
-	std::string tmp = request.get_path().substr(0, i) + ".cgi";
+	std::string tmp = request.get_path().substr(0, i);
 	set_name (tmp);
 
 	env["REQUEST_METHOD"] = request.get_method();
@@ -50,6 +50,7 @@ void		Cgi::set_env(Request &request, uintptr_t client_soket)
 	catch(const std::exception& e)
 	{
 		request.set_cgi(false);
+		std::cout<<"CGI_ENV_FAIL\n";
 		throw INTERNAL_SERVER_ERROR;
 	}
 
@@ -85,14 +86,15 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi)
 
 	cgi.set_fd();
 	std::cout <<"BEFORE_FORK\n";
-	// std::cout <<"CGI_PATH: "<< cgi.cgi_name<<std::endl;
-	// std::cout <<"REDIRECT_PATH: "<<cgi.env["REDIRECT_PATH"]<<std::endl;
+	std::cout <<"CGI_PATH: "<< cgi.cgi_name<<std::endl;
+	std::cout <<"REDIRECT_PATH: "<<cgi.env["REDIRECT_PATH"]<<std::endl;
 	cgi.pid = fork();
 
 	if (cgi.pid == -1)
 	{
 		request.set_cgi(false);
 		request.set_status_code(INTERNAL_SERVER_ERROR);
+		std::cout <<"FORK_FAIL\n";
 		return ;
 	}
 
