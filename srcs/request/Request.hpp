@@ -31,6 +31,7 @@ private:
 	std::string										autoindex_path;
 	std::string										path;
 	std::string										file_name;
+	std::string										host_only;
 	uint32_t										port;
 	std::string										query;
 	std::string										protocol_version;
@@ -70,7 +71,7 @@ private:
 	void											check_is_cgi();
 	std::string										check_index(std::list<Location>::iterator it);
 	void											check_content_encoding();
-	void											check_allowed_method();
+	bool											check_allowed_method();
 	void											check_uri_form();
 	void											decode_chunked(std::string &msg);
 	//////-------------utils--------------------------------------------------
