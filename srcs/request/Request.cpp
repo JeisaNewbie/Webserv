@@ -603,6 +603,7 @@ void	Request::check_host()
 		if (host[i] == ':' && port_flag == false)
 		{
 			port_flag = true;
+			this->host_only = host.substr (0, host.find (':'));
 			if (i == end - 1)
 				throw BAD_REQUEST;
 			continue;
@@ -626,8 +627,8 @@ void	Request::check_host()
 			throw BAD_REQUEST;
 	}
 
-	// port = port_num;
-
+	if (port_num != 0)
+		this->port = port_num;
 }
 
 void	Request::check_transfer_encoding_and_content_length()
@@ -792,7 +793,7 @@ void	Request::matching_server()
 	std::list<Server>			&servers = cycle->getServerList();
 	std::list<Server>::iterator it = servers.begin();
 	std::list<Server>::iterator ite = servers.end();
-	std::string 				host = header["host"].substr(0, header["host"].find("\r\n"));
+	std::string 				&host = this->host_only;
 
 	std::cout <<"PATH: " << path << std::endl;
 
@@ -805,13 +806,16 @@ void	Request::matching_server()
 	// std::cout<<"BEFORE_MATCHING_SERVER\n";
 	for (; it != ite; it++)
 	{
-		if (host != it->getDomain())
-			continue;
-
+		// std::cout <<"PORT_MATCHED\n";
 		if (port != it->getPort())
 			continue;
-
+		// std::cout << "SERVER IS " << it->getDomain() << std::endl;
+		if (host != it->getDomain())
+			continue;
+		// std::cout <<"SERVER_MATCHED\n";
+		// std::cout<<"SERVER: " << it->getDomain() << std::endl;
 		matched_server = it;
+		break;
 	}
 	// std::cout<<"BEFORE_MATCHING_ROUTE\n";
 	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());

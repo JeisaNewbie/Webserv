@@ -31,6 +31,7 @@ private:
 	std::string										autoindex_path;
 	std::string										path;
 	std::string										file_name;
+	std::string										host_only;
 	uint32_t										port;
 	std::string										query;
 	std::string										protocol_version;
