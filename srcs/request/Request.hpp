@@ -70,7 +70,7 @@ private:
 	void											check_is_cgi();
 	std::string										check_index(std::list<Location>::iterator it);
 	void											check_content_encoding();
-	void											check_allowed_method();
+	bool											check_allowed_method();
 	void											check_uri_form();
 	void											decode_chunked(std::string &msg);
 	//////-------------utils--------------------------------------------------

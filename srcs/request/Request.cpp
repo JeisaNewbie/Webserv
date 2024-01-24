@@ -737,7 +737,7 @@ void	Request::check_uri_form()
 void	Request::matching_absolute_path()
 {
 	std::string	tmp_path = cycle->getMainRoot() + path;
-	std::cout<<"MATCHING_ABSOLUTE_PATH: " << tmp_path << std::endl;
+	// std::cout<<"MATCHING_ABSOLUTE_PATH: " << tmp_path << std::endl;
 	int			path_property = check_path_property(tmp_path);
 
 	origin_path = path;
@@ -762,7 +762,6 @@ void	Request::check_is_cgi()
 			throw OK;
 		}
 		path = cycle->getMainRoot() + "/serve/script/script.cgi";
-		std::cout << path << std::endl;
 		this->set_cgi (true);
 		set_header_key_and_value("redirect_path", "/serve/redirect/");
 		throw OK;
@@ -784,8 +783,7 @@ std::string Request::check_index(std::list<Location>::iterator it)
 			return  "/" + *it_v;
 		}
 	}
-	// while (1) ;
-	// exit (0);
+
 	return "";
 }
 
@@ -804,8 +802,8 @@ void	Request::matching_server()
 	matched_server = cycle->getServerList().begin();
 	check_is_cgi();
 
-	std::cout<<"BEFORE_MATCHING_SERVER\n";
-	for (; it != ite; it++) //----------------------------redirect-----------------------
+	// std::cout<<"BEFORE_MATCHING_SERVER\n";
+	for (; it != ite; it++)
 	{
 		if (host != it->getDomain())
 			continue;
@@ -815,10 +813,10 @@ void	Request::matching_server()
 
 		matched_server = it;
 	}
-	std::cout<<"BEFORE_MATCHING_ROUTE\n";
+	// std::cout<<"BEFORE_MATCHING_ROUTE\n";
 	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());
-
-	// check_allowed_method ();
+	if (check_allowed_method () == false)
+		throw METHOD_NOT_ALLOWED;
 
 	if (matched_location->getAutoIndex() == true)
 	{
@@ -837,10 +835,18 @@ void	Request::matching_server()
 	throw NOT_FOUND;
 }
 
-// void	Request::check_allowed_method()
-// {
-// 	if (matched_location->getAllowedMethod() & METHOD_GET) ;
-// }
+bool	Request::check_allowed_method()
+{
+	std::string &method = this->method;
+
+	if (method == "GET")
+		return matched_location->getAllowedMethod() & METHOD_GET;
+
+	if (method == "POST")
+		return matched_location->getAllowedMethod() & METHOD_POST;
+
+	return matched_location->getAllowedMethod() & METHOD_DELETE;
+}
 
 void	Request::set_redirect(std::string main_root, std::string sub_root, std::string file)
 {
