@@ -24,7 +24,7 @@ void	 Get::create_response(Response &response)
 
 void	Get::set_autoindex(Request &request, Response &response)
 {
-	DIR					*dir = opendir (request.get_path().c_str());
+	DIR					*dir = opendir ((request.get_cycle_instance().getMainRoot() + request.get_redirect_path()).c_str());
 	struct dirent		*diread;
 	std::vector<char *>	files;
 	std::string			file_name;
@@ -32,7 +32,6 @@ void	Get::set_autoindex(Request &request, Response &response)
 	while ((diread = readdir (dir)) != nullptr)
 		files.push_back (diread->d_name);
 	closedir (dir);
-
 	std::string	index = "<html>\n<head>\n<title>Index of " + request.get_path() + "</title>\n</head>\n<body>\n";
 	index += "<h1>Index of " + request.get_path() + "</h1>\n";
 	index += "<ul>\n";

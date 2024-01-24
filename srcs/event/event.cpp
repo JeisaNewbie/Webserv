@@ -87,7 +87,7 @@ void startConnect(Cycle& cycle) {
 																	listen_socket_list.end(),	\
 																	tmp_ident);
 
-				
+
 				if (it != listen_socket_list.end()) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
 						acceptNewClient(worker, *it, socket_port_arr[*it], server);
@@ -208,7 +208,7 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 		return ;
 	}
 	fcntl(client_socket, F_SETFL, O_NONBLOCK);
-	
+
 	// server[client_socket].set_port(port); 포트 번호 설정
 
 	addEvent(worker, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);

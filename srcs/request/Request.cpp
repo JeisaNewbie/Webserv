@@ -100,6 +100,7 @@ void	Request::parse_request_line()
 		scheme_slash,
 		scheme_slash_slash,
 		uri,
+		uri_path,
 		query,
 		query_parsing,
 		http,
@@ -191,7 +192,7 @@ void	Request::parse_request_line()
 				uri_start = it;
 				path_start = it;
 				pos = uri_start + 1 - method_start;
-				state = uri;
+				state = uri_path;
 				break;
 			}
 
@@ -301,8 +302,14 @@ void	Request::parse_request_line()
 			if (ch == '/')
 			{
 				path_start = it;
+				state = uri_path;
 				break;
 			}
+
+		case uri_path:
+
+			if (('a' <= ch && ch <= 'z') || ch == '.')
+				break;
 
 			if (ch == '?')
 			{
@@ -319,6 +326,7 @@ void	Request::parse_request_line()
 				uri_end = it;
 				state = http;
 				this->path = this->request_line.substr (path_start - method_start, uri_end - path_start);
+				std::cout <<"PARSING_PATH: " << path << std::endl;
 				this->uri = this->request_line.substr (uri_start - method_start, uri_end - uri_start);
 				check_uri_form();
 				if (this->uri.size() > cycle->getUriLimitLength())
@@ -809,6 +817,7 @@ bool	Request::matching_absolute_path()
 	int			path_property = check_path_property(tmp_path);
 
 	origin_path = path;
+	// exit(0);
 
 	if (path_property == _FILE || path_property == _DIR)
 	{
@@ -816,12 +825,14 @@ bool	Request::matching_absolute_path()
 		throw OK;
 	}
 
-	if (path_property == -1 && *path.rbegin() != '/')
-	{
-		file_name = path.substr (path.rfind ('/'));
-		path = path.substr (0, path.rfind ('/'));
-		return true;
-	}
+	// if (path_property == -1 && *path.rbegin() != '/')
+	// {
+	// 	file_name = path.substr (path.rfind ('/'));
+	// 	path = path.substr (0, path.rfind ('/'));
+	// 	std::cout<<"MATCHING_ABSOLUTE_PATH_FILE && PATH: " << file_name << ", " << path << std::endl;
+	// 	exit(0);
+	// 	return true;
+	// }
 
 	return false;
 }
@@ -852,13 +863,15 @@ std::string Request::check_index(std::list<Location>::iterator it)
 
 	for (; it_v != ite_v; it_v++)
 	{
-		path_index = cycle->getMainRoot() + it->getSubRoot() + *it_v;
+		path_index = cycle->getMainRoot() + it->getSubRoot() + "/" + *it_v;
+		std::cout<<"PATH_INDEX: "<< path_index << std::endl;
 		if (check_path_property(path_index) == _FILE)
 		{
-			return *it_v;
+			return  "/" + *it_v;
 		}
 	}
-
+	// while (1) ;
+	// exit (0);
 	return "";
 }
 
@@ -869,6 +882,8 @@ void	Request::matching_server()
 	std::list<Server>::iterator ite = servers.end();
 	std::string 				host = header["host"].substr(0, header["host"].find("\r\n"));
 	bool						file_flag = false;
+
+	std::cout <<"PATH: " << path << std::endl;
 
 	if (path != "/")
 		file_flag = matching_absolute_path();
@@ -897,9 +912,12 @@ void	Request::matching_server()
 			this->autoindex = true;
 		else if (matched_location->getIndex().size() != 0)
 			this->file_name = check_index(matched_location);
+		std::cout<<this->file_name<<std::endl;
 	}
 	std::cout<<"BEFORE_SET_REDIRECT\n";
 	set_redirect(cycle->getMainRoot(), matched_location->getSubRoot(), file_name);
+	if (file_flag == true || this->redirect == true)
+		throw FOUND;
 }
 
 // void	Request::check_allowed_method()
@@ -910,8 +928,9 @@ void	Request::matching_server()
 void	Request::set_redirect(std::string main_root, std::string sub_root, std::string file)
 {
 	this->redirect = true;
-	this->redirect_path = main_root + sub_root + file;
-	throw FOUND;
+	this->redirect_path = sub_root + file;
+	std::cout <<"REDIRECT: " << this->redirect_path << std::endl;
+	// exit (0);
 }
 
 void	Request::matching_route(std::list<Location>::iterator it, std::list<Location>::iterator ite)
@@ -920,12 +939,17 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 	std::map<size_t, std::list<Location>::iterator>	depth_map;
 	size_t											depth = 0;
 	int												i = 0;
+	std::string										sub_r;
+	std::string										sub_d = path;
 
+	if (*(sub_d.rbegin()) == '/' && sub_d.size() > 1)
+		sub_d = sub_d.substr (0, sub_d.size() - 1);
 	for (; it != ite; it++)
 	{
 		try {
 			std::cout<<"MATCHING_ROUTE_ING\n";
-			matching_sub_route(it->getLocationPath(), path, &depth);
+			sub_r = it->getLocationPath();
+			matching_sub_route(sub_r, sub_d, &depth);
 		}
 		catch (size_t e){
 			matched_location = it;
@@ -945,27 +969,20 @@ size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *
 	if (route == "" && dest == "")
 		throw std::string::npos;
 
-	std::cout<<"MATCHING_SUB_ROUTE_0\n";
-
-	std::string	sub_r = route;
-	std::string	sub_d = dest;
-
-	if (route.size() > 1 && dest.size() > 1)
+	if (route == dest)
 	{
-		sub_r = route.substr (1, route.find ('/', 1));
-		sub_d = dest.substr (1, dest.find ('/', 1));
-	}
-
-	std::cout<<"MATCHING_SUB_ROUTE_1\n";
-
-	if (sub_r == sub_d)
-	{
+		std::cout<<"route == sub_\n";
 		(*depth)++;
-		matching_sub_route (sub_r, sub_d, depth);
+		if (route.find ('/', 1) != std::string::npos && dest.find ('/', 1) != std::string::npos)
+			matching_sub_route (route.substr (route.find ('/', 1)), dest.substr (dest.find ('/', 1)), depth);
+		return *depth;
 	}
 
-	if (sub_r != "" && sub_d != "")
+	if (route != "" && dest != "")
+	{
+		std::cout<<"route != "" && dest != ""\n";
 		return 0;
+	}
 
 	return *depth;
 }
