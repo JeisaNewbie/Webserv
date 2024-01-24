@@ -11,7 +11,6 @@ Request::Request()
 	this->autoindex = false;
 	this->index = false;
 	this->file_name = "";
-	set_header_key_and_value("redirect_path", "serve/redirect/");
 }
 
 Request::~Request()
@@ -735,106 +734,19 @@ void	Request::check_uri_form()
 		throw NOT_FOUND;
 }
 
-// void Request::matching_server()
-// {
-// 	std::list<Server> &servers = cycle->getServerList();
-// 	std::list<Server>::iterator it = servers.begin();
-// 	std::list<Server>::iterator ite = servers.end();
-// 	std::string host = header["host"].substr(0, header["host"].find("\r\n"));
-// 	size_t	end = path.find ('/', 1);
-// 	if (end == std::string::npos)
-// 		end = path.size();
-// 	std::string	first_dir = path.substr (0, end);
-
-// 	matched_server = cycle->getServerList().begin();
-// 	origin_path = path;
-
-// 	if (first_dir.find(".cpp") != std::string::npos) //set_cgi_path
-// 	{
-// 		if (first_dir.find("/script.cpp") == std::string::npos)
-// 			throw NOT_FOUND;
-
-// 		if (method == "DELETE")
-// 		{
-// 			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
-// 			return ;
-// 		}
-// 		path = cycle->getMainRoot() + "serve/script/script.cpp";
-// 		this->set_cgi (true);
-// 		return;
-// 	}
-
-// 	for (;it != ite; it++)
-// 	{
-// 		std::cout<<host<<std::endl;
-// 		std::cout<<it->getDomain()<<std::endl;
-// 		if (host != it->getDomain())
-// 			continue;
-
-// 		std::cout<<"DOMAIN IS MATCHED\n";
-// 		std::cout<<port<<std::endl;
-// 		std::cout<<it->getPort()<<std::endl;
-// 		if (port != it->getPort())
-// 			continue;
-
-// 		std::cout<<"PORT IS MATCHED\n";
-// 		std::list<Location> &locations = it->getLocationList();
-// 		std::list<Location>::iterator itl = locations.begin();
-// 		std::list<Location>::iterator itle = locations.end();
-
-// 		for (; itl != itle; itl++)
-// 		{
-// 			if (itl->getLocationPath() == "/" && method != "DELETE")
-// 				matched_location = itl;
-
-// 			if (first_dir != itl->getLocationPath())
-// 				continue;
-
-// 			matched_server = it;
-// 			matched_location = itl;
-// 			path = cycle->getMainRoot() + matched_location->getSubRoot();
-// 			return ;
-// 		}
-// 		path = cycle->getMainRoot() + cycle->getDefaultErrorRoot();
-// 		return ;
-// 	}
-
-// 	matched_location = matched_server->getLocationList().begin();//path 다를경우 error경로의 error.html 표시
-// 	std::cout <<"matching_server_DELETE: " << path << std::endl;
-
-// 	if (method == "DELETE" && matched_location->getLocationPath() == "/")
-// 		throw FORBIDDEN;
-
-// 	path = cycle->getMainRoot() + matched_location->getSubRoot();
-
-// 	std::cout <<"end_of_matching_server=====================\n";
-// }
-
-bool	Request::matching_absolute_path()
+void	Request::matching_absolute_path()
 {
 	std::string	tmp_path = cycle->getMainRoot() + path;
 	std::cout<<"MATCHING_ABSOLUTE_PATH: " << tmp_path << std::endl;
 	int			path_property = check_path_property(tmp_path);
 
 	origin_path = path;
-	// exit(0);
 
 	if (path_property == _FILE || path_property == _DIR)
 	{
 		path = tmp_path;
 		throw OK;
 	}
-
-	// if (path_property == -1 && *path.rbegin() != '/')
-	// {
-	// 	file_name = path.substr (path.rfind ('/'));
-	// 	path = path.substr (0, path.rfind ('/'));
-	// 	std::cout<<"MATCHING_ABSOLUTE_PATH_FILE && PATH: " << file_name << ", " << path << std::endl;
-	// 	exit(0);
-	// 	return true;
-	// }
-
-	return false;
 }
 
 void	Request::check_is_cgi()
@@ -849,8 +761,10 @@ void	Request::check_is_cgi()
 			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
 			throw OK;
 		}
-		path = cycle->getMainRoot() + "serve/script/script.cpp";
+		path = cycle->getMainRoot() + "/serve/script/script.cgi";
+		std::cout << path << std::endl;
 		this->set_cgi (true);
+		set_header_key_and_value("redirect_path", "/serve/redirect/");
 		throw OK;
 	}
 }
@@ -881,12 +795,11 @@ void	Request::matching_server()
 	std::list<Server>::iterator it = servers.begin();
 	std::list<Server>::iterator ite = servers.end();
 	std::string 				host = header["host"].substr(0, header["host"].find("\r\n"));
-	bool						file_flag = false;
 
 	std::cout <<"PATH: " << path << std::endl;
 
 	if (path != "/")
-		file_flag = matching_absolute_path();
+		matching_absolute_path();
 
 	matched_server = cycle->getServerList().begin();
 	check_is_cgi();
@@ -904,20 +817,24 @@ void	Request::matching_server()
 	}
 	std::cout<<"BEFORE_MATCHING_ROUTE\n";
 	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());
+
 	// check_allowed_method ();
 
-	if (file_flag == false)
+	if (matched_location->getAutoIndex() == true)
 	{
-		if (matched_location->getAutoIndex() == true)
-			this->autoindex = true;
-		else if (matched_location->getIndex().size() != 0)
-			this->file_name = check_index(matched_location);
-		std::cout<<this->file_name<<std::endl;
+		this->autoindex = true;
+		this->autoindex_path = cycle->getMainRoot() + matched_location->getSubRoot();
+		std::cout<<"AUTOINDEX_PATH: " << this->autoindex_path << std::endl;
+		throw OK;
 	}
-	std::cout<<"BEFORE_SET_REDIRECT\n";
-	set_redirect(cycle->getMainRoot(), matched_location->getSubRoot(), file_name);
-	if (file_flag == true || this->redirect == true)
-		throw FOUND;
+	else if (matched_location->getIndex().size() != 0)
+	{
+		std::cout<<"BEFORE_SET_REDIRECT\n";
+		this->file_name = check_index(matched_location);
+		if (this->file_name != "")
+			set_redirect(cycle->getMainRoot(), matched_location->getSubRoot(), file_name);
+	}
+	throw NOT_FOUND;
 }
 
 // void	Request::check_allowed_method()
@@ -930,7 +847,7 @@ void	Request::set_redirect(std::string main_root, std::string sub_root, std::str
 	this->redirect = true;
 	this->redirect_path = sub_root + file;
 	std::cout <<"REDIRECT: " << this->redirect_path << std::endl;
-	// exit (0);
+	throw FOUND;
 }
 
 void	Request::matching_route(std::list<Location>::iterator it, std::list<Location>::iterator ite)
@@ -944,6 +861,7 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 
 	if (*(sub_d.rbegin()) == '/' && sub_d.size() > 1)
 		sub_d = sub_d.substr (0, sub_d.size() - 1);
+
 	for (; it != ite; it++)
 	{
 		try {
@@ -968,6 +886,9 @@ size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *
 {
 	if (route == "" && dest == "")
 		throw std::string::npos;
+
+	// if ((route == dest) && depth == 0)
+	// 	throw std::string::npos;
 
 	if (route == dest)
 	{
@@ -1032,6 +953,7 @@ bool 			Request::get_cgi() {return this->cgi;}
 bool			Request::get_chunked() {return this->chunked;}
 std::string&	Request::get_message_body() {return this->message_body;}
 std::string&	Request::get_redirect_path() {return this->redirect_path;}
+std::string&	Request::get_autoindex_path() {return this->autoindex_path;}
 std::string&	Request::get_path() {return this->path;}
 std::string&	Request::get_file_name() {return this->file_name;}
 void 			Request::set_status_code(int status_code) {this->status_code = status_code;}

@@ -28,6 +28,7 @@ private:
 	std::string										uri;
 	std::string										origin_path;
 	std::string										redirect_path;
+	std::string										autoindex_path;
 	std::string										path;
 	std::string										file_name;
 	uint32_t										port;
@@ -57,7 +58,7 @@ private:
 	void											parse_header_key_and_value(std::string &header_element);
 	void											check_header_is_valid();
 	void											matching_server();
-	bool											matching_absolute_path();
+	void											matching_absolute_path();
 	void											matching_route(std::list<Location>::iterator it, std::list<Location>::iterator ite);
 	size_t											matching_sub_route(std::string route, std::string dest, size_t *depth);
 	void											check_body_limits();
@@ -94,6 +95,7 @@ public:
 	std::string&									get_method();
 	bool											get_chunked();
 	std::string&									get_redirect_path();
+	std::string&									get_autoindex_path();
 	std::string&									get_path();
 	std::string&									get_file_name();
 	std::string&									get_message_body();
