@@ -109,8 +109,16 @@ void	Exception::setMessage(int costom_error) {
 		message = "Listen function failed";
 		break;
 
+	case EVENT_FAIL_FCNTL:
+		message = "Fcntl function failed";
+		break;
+
 	case EVENT_FAIL_ACCEPT:
 		message = "Accept fucntion failed";
+		break;
+
+	case EVENT_FAIL_KEVENT:
+		message = "Kevent function failed";
 		break;
 
 	case EVENT_FAIL_RECV:

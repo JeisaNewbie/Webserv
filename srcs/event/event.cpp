@@ -31,7 +31,7 @@ void startConnect(Cycle& cycle) {
     std::vector<uintptr_t>& listen_socket_list = cycle.getListenSocketList();
     clients_t&              clients = worker.getClients();
     kevent_t&               change_list = worker.getChangeList();
-    kevent_t                event_list(EVENT_LIST_INIT_SIZE);
+    kevent_t                event_list(cycle.getWorkerConnections() * 2);
     std::map<int, Client>   server;
     uintptr_t               socket_port_arr[MAX_FD] = {0,};
     uintptr_t               cgi_fd_arr[MAX_FD] = {0,};
@@ -57,11 +57,8 @@ void startConnect(Cycle& cycle) {
 		new_events = kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
 							&event_list[0], event_list.size(), &timeout);
 
-		if (new_events > event_list.size()) {
-			event_list.resize(new_events);
-			kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
-					&event_list[0], event_list.size(), NULL);
-		}
+		if (new_events == -1)
+			throw Exception(EVENT_FAIL_KEVENT);
 		change_list.clear();
 
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
@@ -136,7 +133,7 @@ void startConnect(Cycle& cycle) {
 				}
 				server[tmp_ident].assemble_response();
 				clients[tmp_ident] = "";
-				addEvent(worker, tmp_ident, EVFILT_WRITE, EV_ENABLE, 0, 0, NULL);
+				addEvent(worker, tmp_ident, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, NULL);
 				std::cout << "---------------end of assebling message--------------\n";
 
 			}
@@ -144,7 +141,6 @@ void startConnect(Cycle& cycle) {
 				if (sendToClient(worker, cur_event->ident, server[cur_event->ident]) == FALSE)
 					continue;
 				server.erase(cur_event->ident); // 초기화
-				addEvent(worker, cur_event->ident, EVFILT_WRITE, EV_DISABLE, 0, 0, NULL);
 			}
 		}
 	}
@@ -184,7 +180,8 @@ static void prepConnect(Cycle& cycle, uintptr_t* socket_port_arr) {
             throw Exception(EVENT_FAIL_BIND);
         if (listen(new_listen_socket, LISTEN_QUEUE_SIZE) == -1)
             throw Exception(EVENT_FAIL_LISTEN); // 열린 소켓들 다 닫아줘야하나?
-        fcntl(new_listen_socket, F_SETFL, O_NONBLOCK);
+        if (fcntl(new_listen_socket, F_SETFL, O_NONBLOCK) == -1)
+            throw Exception(EVENT_FAIL_FCNTL);
     }
 }
 
@@ -208,12 +205,14 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 		eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
 		return ;
 	}
-	fcntl(client_socket, F_SETFL, O_NONBLOCK);
+	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1) {
+		eventException(worker.getErrorLog(), EVENT_FAIL_FCNTL, 0);
+		return ;
+	}
 
 	// server[client_socket].set_port(port); 포트 번호 설정
 
-	addEvent(worker, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	addEvent(worker, client_socket, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, NULL);
+	addEvent(worker, client_socket, EVFILT_READ, EV_ADD, 0, 0, NULL);
 	worker.incCurConnection();
 	clients[client_socket] = "";
 }
@@ -254,8 +253,6 @@ static bool sendToClient(Worker& worker, int client_socket, Client& client) {
 static void disconnectClient(Worker& worker, int client_socket) {
 	clients_t&	clients = worker.getClients();
 
-	addEvent(worker, client_socket, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-	addEvent(worker, client_socket, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
 	close(client_socket);
 	clients.erase(client_socket);
 	worker.decCurConnection();

@@ -113,6 +113,14 @@ void parseConf(Cycle& cycle, Conf& conf) {
 			parseServer(cycle, conf, file);
 	}
 	checkGetlineError(file);
+
+	if (cycle.getWorkerConnections() == 0		\
+		|| cycle.getClientMaxBodySize() == 0	\
+		|| cycle.getMainRoot() == ""			\
+		|| cycle.getDefaultErrorRoot() == ""	\
+		|| cycle.getServerList().size() == 0)
+		throw Exception(CONF_LACK_DIRCTV, "Main block");
+
 	checkMaxDomainSize(cycle);
 }
 
@@ -135,11 +143,6 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 		callCmd(cycle, conf, CONF_MAIN, tokens, setTakeArgCnt(token_cnt));
 	}
 	checkGetlineError(file);
-
-	if (cycle.getWorkerConnections() == 0		\
-		|| cycle.getClientMaxBodySize() == 0	\
-		|| cycle.getMainRoot() == "")
-		throw Exception(CONF_LACK_DIRCTV, "Main block");
 }
 
 static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
@@ -173,8 +176,9 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 	checkGetlineError(file);
 	checkServerDuplication(server_list);
 
-	if (server_list.back().getPort() == 0	\
-		|| server_list.back().getDomain() == "")
+	if (server_list.back().getPort() == 0		\
+		|| server_list.back().getDomain() == ""	\
+		|| server_list.back().getLocationList().size() == 0)
 		throw Exception(CONF_LACK_DIRCTV, "Server block");
 }
 
@@ -205,9 +209,12 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 
 	if (location_list.back().getSubRoot() == "")
 		throw Exception(CONF_LACK_DIRCTV, "Location block");
+
 	if (location_list.back().getAllowedMethod() == 0)
 		location_list.back().setAllowedMethod(				\
 			METHOD_GET | METHOD_POST | METHOD_DELETE);
+	if (location_list.back().getAutoIndex() == -1)
+		location_list.back().setAutoIndex(FALSE);
 }
 
 static void callCmd(Cycle& cycle, Conf& conf, int location, \
