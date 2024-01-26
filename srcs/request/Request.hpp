@@ -48,6 +48,7 @@ private:
 	size_t											content_length;
 	bool											chunked;
 	int												status_code;
+	bool											expect;
 	bool											cgi;
 	bool											redirect;
 	bool											autoindex;
@@ -68,6 +69,7 @@ private:
 	void											check_transfer_encoding();
 	void											check_content_length();
 	void											check_te();
+	void											check_expect();
 	void											check_is_cgi();
 	std::string										check_index(std::list<Location>::iterator it);
 	void											check_content_encoding();
@@ -89,6 +91,7 @@ public:
 	//-----------------------------getter && setter------------------------------
 	Cycle&											get_cycle_instance();
 	bool											get_cgi();
+	bool											get_expect();
 	bool											get_redirect();
 	bool											get_autoindex();
 	bool											get_index();

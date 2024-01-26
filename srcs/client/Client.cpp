@@ -137,6 +137,7 @@ Response&	Client::get_response_instance () {return this->response;}
 Cgi&		Client::get_cgi_instance() {return this->cgi;}
 int			Client::get_status_code() {return get_request_instance().get_status_code();}
 bool		Client::get_cgi() {return this->get_request_instance().get_cgi();}
+bool		Client::get_expect() {return this->get_request_instance().get_expect();}
 bool		Client::get_chunked() {return this->get_request_instance().get_chunked();}
 void		Client::set_phase (Phase state) {this->phase = state;}
 void		Client::set_status_code(int status_code) {get_request_instance().set_status_code(status_code);}
