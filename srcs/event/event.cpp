@@ -6,7 +6,7 @@ static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,			\
 						intptr_t data, void* udata);
 static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 								uint32_t port, std::map<int, Client>& server);
-static bool recieveFromClient(Worker& worker, uintptr_t client_socket);
+static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t data_size);
 static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
 
@@ -15,33 +15,36 @@ void printState(struct kevent* cur_event) {
 	std::cout << "client[" << cur_event->ident << "] flags: " << cur_event->flags << ", filter: " << cur_event->filter << "\n";
 	if (cur_event->flags & EV_EOF)
 		std::cout << "EOF\n";
-	if (cur_event->flags & EV_DELETE)
-		std::cout << "DELETE\n";
+	if (cur_event->flags & EV_ERROR)
+		std::cout << "ERROR\n";
+	if (cur_event->flags & EV_ADD)
+		std::cout << "ADD\n";
 	if (cur_event->filter == EVFILT_READ)
 		std::cout << "READ\n";
 	if (cur_event->filter == EVFILT_WRITE)
 		std::cout << "WRITE\n";
 	if (errno == EAGAIN)
 		std::cout << "EAGAIN\n";
+	if (errno == ECONNRESET)
+		std::cout << "ECONNRESET\n";
 	std::cout << "\n";
 }
 
 void startConnect(Cycle& cycle) {
-    Worker                  worker;
-    std::vector<uintptr_t>& listen_socket_list = cycle.getListenSocketList();
-    clients_t&              clients = worker.getClients();
-    kevent_t&               change_list = worker.getChangeList();
-    kevent_t                event_list(cycle.getWorkerConnections() * 2);
-    std::map<int, Client>   server;
-    uintptr_t               socket_port_arr[MAX_FD] = {0,};
-    uintptr_t               cgi_fd_arr[MAX_FD] = {0,};
-    std::vector<Client*>    cgi_fork_list;
+    Worker					worker;
+    std::vector<uintptr_t>&	listen_socket_list = cycle.getListenSocketList();
+    clients_t&				clients = worker.getClients();
+    kevent_t				event_list(cycle.getWorkerConnections() * 2);
+    std::map<int, Client>	server;
+    uintptr_t				socket_port_arr[MAX_FD] = {0,};
+    uintptr_t				cgi_fd_arr[MAX_FD] = {0,};
+    std::vector<Client*>	cgi_fork_list;
 
     prepConnect(cycle, socket_port_arr);
     std::cout << "---------------------webserver start---------------------\n";
 
     for (int i = 0; i < listen_socket_list.size(); i++)
-        addEvent(worker, listen_socket_list[i], EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+        addEvent(worker, listen_socket_list[i], EVFILT_READ, EV_ADD, 0, 0, NULL);
 
 	uint32_t		new_events;
 	struct kevent*	cur_event;
@@ -54,12 +57,10 @@ void startConnect(Cycle& cycle) {
 		// for (int i = 0; i < change_list.size(); i++)
 		// 	std::cout << change_list[i].ident << " " << change_list[i].filter << " " << change_list[i].flags << "\n";
 
-		new_events = kevent(worker.getEventQueue(), &change_list[0], change_list.size(), \
-							&event_list[0], event_list.size(), &timeout);
+		new_events = kevent(worker.getEventQueue(), NULL, 0, &event_list[0], event_list.size(), &timeout);
 
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
-		change_list.clear();
 
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
 			Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
@@ -67,13 +68,11 @@ void startConnect(Cycle& cycle) {
 		}
 		cgi_fork_list.clear();
 
-		for (uint32_t i = 0; i < new_events; i++) {
+		for (int i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
 			printState(cur_event);
 
 			if (cur_event->flags & EV_ERROR) {
-				if (cur_event->flags & EV_DELETE || (errno == EAGAIN))
-					continue;
 				eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
 				disconnectClient(worker, cur_event->ident);
 			}
@@ -94,7 +93,7 @@ void startConnect(Cycle& cycle) {
                 }
 
 				if (clients.find(cur_event->ident) != clients.end()) {
-					if (recieveFromClient(worker, cur_event->ident) == FALSE)
+					if (recieveFromClient(worker, cur_event->ident, cur_event->data) == FALSE)
 						continue;
 
 					std::string&	request_msg = clients[tmp_ident];
@@ -112,7 +111,7 @@ void startConnect(Cycle& cycle) {
 								event_client.set_property_for_cgi(event_client.get_request_instance());//함수명 바꾸기, ex) set_property_for_cgi
 								uintptr_t	fd = event_client.get_cgi_instance().get_fd();
 
-								addEvent(worker, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+								addEvent(worker, fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, NULL);
 								cgi_fd_arr[fd] = tmp_ident;
 								cgi_fork_list.push_back(&event_client);
 
@@ -147,12 +146,12 @@ void startConnect(Cycle& cycle) {
 }
 
 static void prepConnect(Cycle& cycle, uintptr_t* socket_port_arr) {
-    sockaddr_in                 server_addr;
-    std::list<Server>&          server_list = cycle.getServerList();
-    std::list<Server>::iterator it = server_list.begin();
-    std::list<Server>::iterator ite = server_list.end();
-    std::vector<uintptr_t>&     listen_socket_list = cycle.getListenSocketList();
-    uintptr_t                   new_listen_socket;
+    sockaddr_in					server_addr;
+    std::list<Server>&			server_list = cycle.getServerList();
+    std::list<Server>::iterator	it = server_list.begin();
+    std::list<Server>::iterator	ite = server_list.end();
+    std::vector<uintptr_t>&		listen_socket_list = cycle.getListenSocketList();
+    uintptr_t					new_listen_socket;
 
     for (; it != ite; it++) {
         std::list<Server>::iterator tmp = server_list.begin();
@@ -188,11 +187,10 @@ static void prepConnect(Cycle& cycle, uintptr_t* socket_port_arr) {
 static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 						uint16_t flags,	uint32_t fflags,				\
 						intptr_t data, void* udata) {
-	kevent_t&		change_list = worker.getChangeList();
 	struct kevent	temp;
 
 	EV_SET(&temp, ident, filter, flags | EV_CLEAR, fflags, data, udata);
-	change_list.push_back(temp);
+	kevent(worker.getEventQueue(), &temp, 1, NULL, 0, NULL);
 }
 
 static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
@@ -200,7 +198,6 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 	clients_t&	clients = worker.getClients();
 	uintptr_t	client_socket;
 
-	std::cout << listen_socket << "\n\n";
 	if ((client_socket = accept(listen_socket, NULL, NULL)) == -1) {
 		eventException(worker.getErrorLog(), EVENT_FAIL_ACCEPT, 0);
 		return ;
@@ -217,17 +214,19 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 	clients[client_socket] = "";
 }
 
-static bool recieveFromClient(Worker& worker, uintptr_t client_socket) {
+static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t data_size) {
 	clients_t&	clients = worker.getClients();
 	char		buf[BUF_SIZE] = {0,};
-	int			recieve_size;
+	ssize_t		recieve_size;
+	intptr_t	res = 0;
 
 	while ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) > 0) {
 		buf[recieve_size] = '\0';
 		std::string	tmp(buf, recieve_size);
 		clients[client_socket] += tmp;
+		res += recieve_size;
 	}
-	// std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
+	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
 	if (recieve_size == -1 && errno != EAGAIN) {
 		std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
 		disconnectClient(worker, client_socket);
@@ -235,6 +234,8 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket) {
 		return FALSE;
 	}
 	else if (recieve_size == 0 && errno == EAGAIN)
+		return FALSE;
+	if (res != data_size)
 		return FALSE;
 	std::cout << "recieve message: \n" << clients[client_socket] << "\n";
 	return TRUE;

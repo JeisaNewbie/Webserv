@@ -36,35 +36,21 @@ int main() {
 }
 
 static void handleGetMethod(const std::string directory_path, const std::string get_data) {
-	std::ifstream	file(directory_path + get_data);
+	std::ifstream		file(directory_path + get_data);
 	std::stringstream	ss;
 
-	if (file.is_open() == false)
-		return ; //error
-	ss << file.rdbuf();
+	if (file.is_open() == false) {
+		std::cout << "Status_code: 404\r\n";
+		return ;
+	}
 
-	std::cout << "Content-Type: text/html\r\n";
+	ss << file.rdbuf();
+	
+	std::cout << "Content-Type: text/plain\r\n";
 	std::cout << "Status_code: 200\r\n";
 	std::cout << "\r\n";
-
-	std::cout << "<!DOCTYPE html>\n";
-	std::cout << "<html lang=\"en\">\n";
-	std::cout << "<head>\n";
-	std::cout << "	<meta charset=\"UTF-8\">\n";
-	std::cout << "	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n";
-	std::cout << "	<title>" << get_data << "</title>\n";
-	std::cout << "</head>\n";
-	std::cout << "<body>\n";
-	std::cout << "	<h1>";
-
-
 	std::cout << ss.str();
-
-	std::cout << "</h1>\n";
-	std::cout << "</body>\n";
-	std::cout << "</html>\n";
-	// std::cout << "0\r\n"; // 맞나?
-
+	std::cout << "\r\n";
 }
 
 static void handlePostMethod(const std::string directory_path, const std::string post_data) {
