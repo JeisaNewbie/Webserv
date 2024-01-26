@@ -6,6 +6,7 @@ Request::Request()
 	this->pos = 0;
 	this->chunked = false;
 	this->port = 80;
+	this->expect = false;
 	this->cgi = false;
 	this->redirect = false;
 	this->autoindex = false;
@@ -578,6 +579,30 @@ void	Request::check_header_is_valid()
 	// std::cout<<"check_body_limits\n";
 	// check_header_limits(); // config로 설정한 서버의 header limits size를 넘으면 return 413
 	check_body_limits();
+	check_expect();
+}
+void	Request::check_expect()
+{
+	if (header.find("expect") == header_end)
+		return;
+
+	if (protocol_version == "1.0")
+		return;
+
+	if (header["expect"] != "100-continue")
+		throw EXPECTION_FAILED;
+
+	if (header.find ("content-length") == header_end)
+	{
+		if (header.find ("transfer-encoding") == header_end)
+			throw BAD_REQUEST;
+	}
+	else if (header["content-length"] == "0\r\n")
+		throw BAD_REQUEST;
+
+	this->expect = true;
+	throw CONTINUE;
+
 }
 
 void	Request::check_body_limits()
@@ -962,6 +987,7 @@ bool			Request::get_redirect() {return this->redirect;}
 bool			Request::get_autoindex() {return this->autoindex;}
 bool			Request::get_index() {return this->index;}
 bool 			Request::get_cgi() {return this->cgi;}
+bool 			Request::get_expect() {return this->expect;}
 bool			Request::get_chunked() {return this->chunked;}
 std::string&	Request::get_message_body() {return this->message_body;}
 std::string&	Request::get_redirect_path() {return this->redirect_path;}

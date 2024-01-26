@@ -102,13 +102,13 @@ void startConnect(Cycle& cycle) {
 					event_client.do_parse(request_msg, cycle);
 					event_client.get_response_instance().set_body("");
 					// event_client.get_request_instance().check_members();
-					if (event_client.get_status_code() < MOVED_PERMANENTLY)
+					if (event_client.get_status_code() < MOVED_PERMANENTLY && event_client.get_expect() == false)
 					{
 						try
 						{
 							if (event_client.get_cgi() == true)
 							{
-								event_client.set_property_for_cgi(event_client.get_request_instance());//함수명 바꾸기, ex) set_property_for_cgi
+								event_client.set_property_for_cgi(event_client.get_request_instance());
 								uintptr_t	fd = event_client.get_cgi_instance().get_fd();
 
 								addEvent(worker, fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, NULL);
@@ -140,6 +140,7 @@ void startConnect(Cycle& cycle) {
 				if (sendToClient(worker, cur_event->ident, server[cur_event->ident]) == FALSE)
 					continue;
 				server.erase(cur_event->ident); // 초기화
+				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
 			}
 		}
 	}
