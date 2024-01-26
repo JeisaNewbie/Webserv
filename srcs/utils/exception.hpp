@@ -34,7 +34,6 @@ enum costom_error_type {
 	EVENT_FAIL_RECV,
 	EVENT_FAIL_SEND,
 	EVENT_CONNECT_FULL,
-	EVENT_SET_ERROR_FLAG,
 };
 
 class Exception {

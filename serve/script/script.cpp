@@ -61,15 +61,10 @@ static void handlePostMethod(const std::string directory_path, const std::string
 
 		std::string		new_file_name = createUniqueFileName();
 		std::ofstream	new_file(std::string(directory_path) + new_file_name);
-		// std::ofstream	new_file;
 
-		std::cout << std::string(directory_path) + new_file_name << "\n";
-
-		// new_file.open((std::string(directory_path) + "/" + new_file_name).c_str());
 		new_file << post_data;
 		new_file.close();
 
-		//response 작성
 		std::cout << "Status_code: 201\r\n\0";
 	}
 }

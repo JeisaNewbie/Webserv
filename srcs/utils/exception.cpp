@@ -133,10 +133,6 @@ void	Exception::setMessage(int costom_error) {
 		message = "Connection limit is reached";
 		break;
 
-	case EVENT_SET_ERROR_FLAG:
-		message = "Event flag is set to error";
-		break;
-
 	default:
 		message = "Error code is not defined";
 		break;

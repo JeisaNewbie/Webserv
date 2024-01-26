@@ -54,9 +54,6 @@ void startConnect(Cycle& cycle) {
 		timeout.tv_sec = 5;
 		timeout.tv_nsec = 0;
 
-		// for (int i = 0; i < change_list.size(); i++)
-		// 	std::cout << change_list[i].ident << " " << change_list[i].filter << " " << change_list[i].flags << "\n";
-
 		new_events = kevent(worker.getEventQueue(), NULL, 0, &event_list[0], event_list.size(), &timeout);
 
 		if (new_events == -1)
@@ -72,17 +69,19 @@ void startConnect(Cycle& cycle) {
 			cur_event = &event_list[i];
 			printState(cur_event);
 
-			if (cur_event->flags & EV_ERROR) {
-				eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
-				disconnectClient(worker, cur_event->ident);
-			}
-			if (cur_event->filter == EVFILT_READ) {
+			if (cur_event->flags & EV_EOF)
+				continue;
+			// recv, send 함수에서 처리되니까 삭제해도 될 듯
+			// else if (cur_event->flags & EV_ERROR) {
+			// 	eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
+			// 	disconnectClient(worker, cur_event->ident);
+			// }
+			else if (cur_event->filter == EVFILT_READ) {
 
 				uintptr_t 							tmp_ident = cur_event->ident;
 				std::vector<uintptr_t>::iterator	it = std::find(listen_socket_list.begin(),	\
 																	listen_socket_list.end(),	\
 																	tmp_ident);
-
 
 				if (it != listen_socket_list.end()) {
 					if (worker.getCurConnection() < cycle.getWorkerConnections())
@@ -139,7 +138,7 @@ void startConnect(Cycle& cycle) {
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(worker, cur_event->ident, server[cur_event->ident]) == FALSE)
 					continue;
-				server.erase(cur_event->ident); // 초기화
+				// server.erase(cur_event->ident); // 초기화
 				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
 			}
 		}
@@ -204,6 +203,7 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket,			\
 		return ;
 	}
 	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1) {
+		// 소켓 닫기
 		eventException(worker.getErrorLog(), EVENT_FAIL_FCNTL, 0);
 		return ;
 	}
@@ -228,16 +228,11 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 		res += recieve_size;
 	}
 	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
-	if (recieve_size == -1 && errno != EAGAIN) {
-		std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
+	if (recieve_size <= 0 && res != data_size) {
 		disconnectClient(worker, client_socket);
 		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
-	else if (recieve_size == 0 && errno == EAGAIN)
-		return FALSE;
-	if (res != data_size)
-		return FALSE;
 	std::cout << "recieve message: \n" << clients[client_socket] << "\n";
 	return TRUE;
 }
@@ -255,6 +250,7 @@ static bool sendToClient(Worker& worker, int client_socket, Client& client) {
 static void disconnectClient(Worker& worker, int client_socket) {
 	clients_t&	clients = worker.getClients();
 
+	std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
 	close(client_socket);
 	clients.erase(client_socket);
 	worker.decCurConnection();
