@@ -24,6 +24,7 @@ class Cgi {
 		int		fd_file_in;
 		int		fd_file_out;
 		pid_t	pid;
+		bool	fork_status;
 
 	public:
 		Cgi();
@@ -39,5 +40,7 @@ class Cgi {
 		void			set_body (std::string &body);
 		void			set_name (std::string &name);
 		void			set_fd();
+		void			set_cgi_fork_status(bool status);
+		bool			get_cgi_fork_status();
 		int				get_fd();
 };
