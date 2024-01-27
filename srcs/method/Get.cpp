@@ -40,7 +40,7 @@ void	Get::set_autoindex(Request &request, Response &response)
 	for (std::vector<char *>::iterator it = files.begin(); it != files.end(); it++)
 	{
 		file_name = *it;
-		index += "<li><a href=\"" + file_name + "\">" + file_name + "</a></li>\n";;
+		index += "<li><a href=\"" + request.get_autoindex_path().substr(request.get_cycle_instance().getMainRoot().size()) + file_name + "\">" + file_name + "</a></li>\n";;
 	}
 
 	index += "</ul>\n</body>\n</html>\n";

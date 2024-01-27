@@ -810,6 +810,7 @@ void	Request::matching_absolute_path()
 
 void	Request::check_is_cgi()
 {
+	set_header_key_and_value("redirect_path", "/serve/redirect/");
 	if (origin_path.find(".cpp") != std::string::npos)
 	{
 		if (origin_path.find("/script.cpp") == std::string::npos)
@@ -822,7 +823,6 @@ void	Request::check_is_cgi()
 		}
 		path = cycle->getMainRoot() + "/serve/script/script.cgi";
 		this->set_cgi (true);
-		set_header_key_and_value("redirect_path", "/serve/redirect/");
 		throw OK;
 	}
 }
@@ -884,6 +884,8 @@ void	Request::matching_server()
 	{
 		this->autoindex = true;
 		this->autoindex_path = cycle->getMainRoot() + matched_location->getSubRoot();
+		if (*autoindex_path.rbegin() != '/')
+			autoindex_path += '/';
 		// std::cout<<"AUTOINDEX_PATH: " << this->autoindex_path << std::endl;
 		throw OK;
 	}
@@ -942,6 +944,7 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 			return ;
 		}
 		depth_map[depth] = it;
+		std::cout << "MATCHING_ROUTE_DEPTH_MAP: " << depth << std::endl;
 		depth = 0;
 	}
 	std::cout<<"MATCHING_ROUTE_DONE\n";

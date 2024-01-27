@@ -134,6 +134,7 @@ void	Client::assemble_response()
 		std::cout <<"RESPONSE_ERROR: "<<response.get_body()<<std::endl;
 		ss.str("");
 		error.close();
+		response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
 	}
 	if (get_request_instance().get_redirect() == true)
 		get_response_instance().set_header_field("Location", get_request_instance().get_redirect_path());
