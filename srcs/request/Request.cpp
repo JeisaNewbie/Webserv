@@ -14,8 +14,38 @@ Request::Request()
 	this->file_name = "";
 }
 
-Request::~Request()
+Request::~Request() {}
+
+void	Request::reset_data()
 {
+	request_msg.clear();
+	*cycle = NULL;
+	request_line.clear();
+	uri.clear();
+	origin_path.clear();
+	redirect_path.clear();
+	autoindex_path.clear();
+	path.clear();
+	file_name.clear();
+	host_only.clear();
+	query.clear();
+	protocol_version.clear();
+	method.clear();
+	headers.clear();
+	header.clear();
+	query_elements.clear();
+	message_body.clear();
+
+	this->pos = 0;
+	this->content_length = 0;
+	this->port = 80;
+	this->chunked = false;
+	this->expect = false;
+	this->cgi = false;
+	this->redirect = false;
+	this->autoindex = false;
+	this->index = false;
+	this->file_name = "";
 }
 
 void	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
@@ -42,7 +72,7 @@ void	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 	{
 		this->status_code = e;
 		this->request_msg = "";
-		std::cout << e << std::endl;
+		std::cout << "REQUEST_PARSING_DONE_AND STATUS_CODE: " << e << std::endl;
 	}
 }
 
@@ -695,6 +725,7 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 	size_t		delimeter = 0;
 	size_t		pos = 0;
 	this->message_body = "";
+
 	while (1)
 	{
 		delimeter = chunk.find("\r\n", pos);
