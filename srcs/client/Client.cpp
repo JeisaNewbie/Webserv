@@ -7,8 +7,8 @@ Client::~Client() {}
 void	Client::reset_data()
 {
 	get_request_instance().reset_data();
-	// get_response_instance().reset_data();
-	this->cgi_fd_arr[get_cgi_instance().get_fd()] = 0;
+	get_response_instance().reset_data();
+	// this->cgi_fd_arr[get_cgi_instance().get_fd()] = 0;
 }
 
 void	Client::init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket)

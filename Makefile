@@ -6,7 +6,7 @@
 #    By: eunwolee <eunwolee@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/19 19:58:41 by eunwolee         ###   ########.fr        #
+#    Updated: 2024/01/27 15:41:44 by eunwolee         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,6 +14,10 @@ NAME = webserv
 
 CXX = c++
 # CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+
+SCRIPT_NAME = script.cgi
+SCRIPT_DIR = serve/script
+SCRIPT_SRC = script.cpp
 
 SRCS_DIR = srcs
 OBJS_DIR = objs
@@ -53,14 +57,16 @@ PURPLE = \033[38;2;228;165;255m
 NUM_TASK = 11
 SIZE = 0
 END = 1
-CHAR = ""
-GAUGE = "~~~~~      "
+CHAR = "MAKING "
+GAUGE = " webserv..."
 NUM_GAUGE = 11
 
 all:
 	@echo "$(PINK)BUILD $(NAME)$(RESET)"
 	@printf "$(YELLOW)$(CHAR)"
+	@printf " "
 	@$(MAKE) $(NAME)
+	@$(MAKE) $(SCRIPT_NAME)
 
 $(NAME): $(OBJS)
 	@$(CXX) $(CXXFLAGS) $^ -o $@
@@ -72,6 +78,9 @@ ifneq ($(END),$(NUM_GAUGE))
 	@printf "$(PROGRESS)"
 endif
 	@printf " ready!$(RESET)\n"
+
+$(SCRIPT_NAME): $(SCRIPT_DIR)/$(SCRIPT_SRC)
+	@$(CXX) $(CXXFLAGS) $^ -o $(SCRIPT_DIR)/$@
 
 $(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp | $(OBJS_DIR)
 	$(eval SIZE = $(shell expr $(NUM_GAUGE) / $(NUM_TASK)))

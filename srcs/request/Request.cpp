@@ -19,7 +19,7 @@ Request::~Request() {}
 void	Request::reset_data()
 {
 	request_msg.clear();
-	*cycle = NULL;
+	cycle = NULL;
 	request_line.clear();
 	uri.clear();
 	origin_path.clear();

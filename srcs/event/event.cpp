@@ -154,7 +154,7 @@ void startConnect(Cycle& cycle) {
 					continue;
 				// server.erase(cur_event->ident); // 초기화
 				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
-				// server[cur_event->ident].reset_data(); // 초기화
+				server[cur_event->ident].reset_data(); // 초기화
 			}
 		}
 	}
