@@ -58,6 +58,7 @@ class Client {
 		Phase		get_current_phase();
 		int			get_status_code();
 		bool		get_cgi();
+		bool		get_cgi_fork_status ();
 		bool		get_chunked();
 		bool		get_expect();
 		uintptr_t	get_client_soket();
@@ -66,5 +67,6 @@ class Client {
 		void		set_cgi (bool flag);
 		void		set_client_soket(uintptr_t client_soket);
 		void		set_cgi_fd_arr(uintptr_t client_soket);
+		void		set_cgi_fork_status (bool status);
 		void		set_port(uint32_t port);
 };
