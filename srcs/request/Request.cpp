@@ -98,7 +98,7 @@ void	Request::parse_request()
 
 		if (this->pos == delimeter)
 		{
-			this->message_body = msg.substr (this->pos + 2,  msg.find ("\r\n", this->pos + 2) + 2);
+			this->message_body = msg.substr (this->pos + 2);
 			break ;
 		}
 		this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
@@ -598,15 +598,15 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 
 void	Request::check_header_is_valid()
 {
-	// std::cout<< "check_host\n";
+	std::cout<< "check_host\n";
 	check_host();
-	// std::cout<< "check_transfer_encoding_and_content_length\n";
+	std::cout<< "check_transfer_encoding_and_content_length\n";
 	check_transfer_encoding_and_content_length();
-	// std::cout<< "check_te\n";
+	std::cout<< "check_te\n";
 	check_te();
-	// std::cout<< "check_content_encoding\n";
+	std::cout<< "check_content_encoding\n";
 	check_content_encoding();
-	// std::cout<<"check_body_limits\n";
+	std::cout<<"check_body_limits\n";
 	// check_header_limits(); // config로 설정한 서버의 header limits size를 넘으면 return 413
 	check_body_limits();
 	check_expect();
@@ -637,6 +637,7 @@ void	Request::check_expect()
 
 void	Request::check_body_limits()
 {
+	// std::cout <<"CLIENT_MAX_BODY_SIZE: " << cycle->getClientMaxBodySize()<<std::endl;
 	if (content_length > cycle->getClientMaxBodySize())
 		throw REQUEST_ENTITY_TOO_LARGE;
 }
@@ -745,19 +746,19 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 
 void	Request::check_content_length()
 {
-	// std::cout<< "check_content_length\n";
+	std::cout<< "check_content_length\n";
 	char	*endptr;
 	this->content_length = std::strtol(this->header["content-length"].c_str(), &endptr, 10);
-	// std::cout<< "check_content_length_1\n";
+	std::cout<< "check_content_length_1\n";
 	if (strlen(endptr) > 1 && strncmp (endptr, "\r\n", 2) != 0)
 		throw BAD_REQUEST;
-	// std::cout<< "check_content_length_2\n";
+	std::cout<< "check_content_length_2\n";
 	if (this->content_length > 2147483647)
 		throw REQUEST_ENTITY_TOO_LARGE;
-	// std::cout<< "check_content_length_3\n";
+	std::cout<< "check_content_length_3\n";
 	if (this->header["content-length"][0] == '0' && this->header["content-length"].substr(0, this->header["content-length"].find("\r\n")).size() > 1)
 		throw BAD_REQUEST;
-	// std::cout<< "check_content_length_4\n";
+	std::cout<< "check_content_length_4\n";
 	if (this->content_length < this->message_body.size() || this->content_length > this->message_body.size())
 		throw BAD_REQUEST;
 
