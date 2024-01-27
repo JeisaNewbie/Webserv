@@ -14,8 +14,38 @@ Request::Request()
 	this->file_name = "";
 }
 
-Request::~Request()
+Request::~Request() {}
+
+void	Request::reset_data()
 {
+	request_msg.clear();
+	*cycle = NULL;
+	request_line.clear();
+	uri.clear();
+	origin_path.clear();
+	redirect_path.clear();
+	autoindex_path.clear();
+	path.clear();
+	file_name.clear();
+	host_only.clear();
+	query.clear();
+	protocol_version.clear();
+	method.clear();
+	headers.clear();
+	header.clear();
+	query_elements.clear();
+	message_body.clear();
+
+	this->pos = 0;
+	this->content_length = 0;
+	this->port = 80;
+	this->chunked = false;
+	this->expect = false;
+	this->cgi = false;
+	this->redirect = false;
+	this->autoindex = false;
+	this->index = false;
+	this->file_name = "";
 }
 
 void	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
@@ -42,7 +72,7 @@ void	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
 	{
 		this->status_code = e;
 		this->request_msg = "";
-		std::cout << e << std::endl;
+		std::cout << "REQUEST_PARSING_DONE_AND STATUS_CODE: " << e << std::endl;
 	}
 }
 
@@ -68,7 +98,7 @@ void	Request::parse_request()
 
 		if (this->pos == delimeter)
 		{
-			this->message_body = msg.substr (this->pos + 2,  msg.find ("\r\n", this->pos + 2) + 2);
+			this->message_body = msg.substr (this->pos + 2);
 			break ;
 		}
 		this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
@@ -568,15 +598,15 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 
 void	Request::check_header_is_valid()
 {
-	// std::cout<< "check_host\n";
+	std::cout<< "check_host\n";
 	check_host();
-	// std::cout<< "check_transfer_encoding_and_content_length\n";
+	std::cout<< "check_transfer_encoding_and_content_length\n";
 	check_transfer_encoding_and_content_length();
-	// std::cout<< "check_te\n";
+	std::cout<< "check_te\n";
 	check_te();
-	// std::cout<< "check_content_encoding\n";
+	std::cout<< "check_content_encoding\n";
 	check_content_encoding();
-	// std::cout<<"check_body_limits\n";
+	std::cout<<"check_body_limits\n";
 	// check_header_limits(); // config로 설정한 서버의 header limits size를 넘으면 return 413
 	check_body_limits();
 	check_expect();
@@ -607,6 +637,7 @@ void	Request::check_expect()
 
 void	Request::check_body_limits()
 {
+	// std::cout <<"CLIENT_MAX_BODY_SIZE: " << cycle->getClientMaxBodySize()<<std::endl;
 	if (content_length > cycle->getClientMaxBodySize())
 		throw REQUEST_ENTITY_TOO_LARGE;
 }
@@ -695,6 +726,7 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 	size_t		delimeter = 0;
 	size_t		pos = 0;
 	this->message_body = "";
+
 	while (1)
 	{
 		delimeter = chunk.find("\r\n", pos);
@@ -714,19 +746,19 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 
 void	Request::check_content_length()
 {
-	// std::cout<< "check_content_length\n";
+	std::cout<< "check_content_length\n";
 	char	*endptr;
 	this->content_length = std::strtol(this->header["content-length"].c_str(), &endptr, 10);
-	// std::cout<< "check_content_length_1\n";
+	std::cout<< "check_content_length_1\n";
 	if (strlen(endptr) > 1 && strncmp (endptr, "\r\n", 2) != 0)
 		throw BAD_REQUEST;
-	// std::cout<< "check_content_length_2\n";
+	std::cout<< "check_content_length_2\n";
 	if (this->content_length > 2147483647)
 		throw REQUEST_ENTITY_TOO_LARGE;
-	// std::cout<< "check_content_length_3\n";
+	std::cout<< "check_content_length_3\n";
 	if (this->header["content-length"][0] == '0' && this->header["content-length"].substr(0, this->header["content-length"].find("\r\n")).size() > 1)
 		throw BAD_REQUEST;
-	// std::cout<< "check_content_length_4\n";
+	std::cout<< "check_content_length_4\n";
 	if (this->content_length < this->message_body.size() || this->content_length > this->message_body.size())
 		throw BAD_REQUEST;
 
@@ -779,6 +811,7 @@ void	Request::matching_absolute_path()
 
 void	Request::check_is_cgi()
 {
+	set_header_key_and_value("redirect_path", "/serve/redirect/");
 	if (origin_path.find(".cpp") != std::string::npos)
 	{
 		if (origin_path.find("/script.cpp") == std::string::npos)
@@ -791,7 +824,6 @@ void	Request::check_is_cgi()
 		}
 		path = cycle->getMainRoot() + "/serve/script/script.cgi";
 		this->set_cgi (true);
-		set_header_key_and_value("redirect_path", "/serve/redirect/");
 		throw OK;
 	}
 }
@@ -853,6 +885,8 @@ void	Request::matching_server()
 	{
 		this->autoindex = true;
 		this->autoindex_path = cycle->getMainRoot() + matched_location->getSubRoot();
+		if (*autoindex_path.rbegin() != '/')
+			autoindex_path += '/';
 		// std::cout<<"AUTOINDEX_PATH: " << this->autoindex_path << std::endl;
 		throw OK;
 	}
@@ -911,6 +945,7 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 			return ;
 		}
 		depth_map[depth] = it;
+		std::cout << "MATCHING_ROUTE_DEPTH_MAP: " << depth << std::endl;
 		depth = 0;
 	}
 	std::cout<<"MATCHING_ROUTE_DONE\n";

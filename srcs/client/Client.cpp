@@ -4,7 +4,12 @@ Client::Client(){}
 Client::Client(const Client& ref) {}
 Client::~Client() {}
 
-// Client&	Client::operator=(const Client& ref) {}
+void	Client::reset_data()
+{
+	get_request_instance().reset_data();
+	// get_response_instance().reset_data();
+	this->cgi_fd_arr[get_cgi_instance().get_fd()] = 0;
+}
 
 void	Client::init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket)
 {
@@ -32,6 +37,7 @@ void	Client::set_property_for_cgi(Request &request)
 		throw NOT_FOUND;
 	}
 
+	// this->get_cgi_instance().set_env(request, 8);
 	this->get_cgi_instance().set_env(request, get_client_soket());
 	std::cout<<"END_SET_PROPERTY_FOR_CGI\n";
 	// Cgi::execute_cgi(request, get_cgi_instance());
@@ -112,7 +118,11 @@ void	Client::parse_cgi_response(Cgi &cgi)
 void	Client::assemble_response()
 {
 	response.set_header_line (get_status_code());
+	response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
 	response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2));
+	if (response.get_header_field("Connection") == "keep-alive")
+		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");
+	response.set_header_field ("Access-Control-Allow-Origin", "*");
 	// status_code에 따라 body 수정 필요
 	if (get_status_code() > BAD_REQUEST)
 	{
@@ -124,6 +134,7 @@ void	Client::assemble_response()
 		std::cout <<"RESPONSE_ERROR: "<<response.get_body()<<std::endl;
 		ss.str("");
 		error.close();
+		response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
 	}
 	if (get_request_instance().get_redirect() == true)
 		get_response_instance().set_header_field("Location", get_request_instance().get_redirect_path());

@@ -50,6 +50,7 @@ class Client {
 		void		parse_cgi_response(Cgi &cgi);
 		void		assemble_response();
 		void		init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket);
+		void		reset_data();
 
 		Request		&get_request_instance ();
 		Response	&get_response_instance ();

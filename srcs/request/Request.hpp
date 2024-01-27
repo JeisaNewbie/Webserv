@@ -41,9 +41,6 @@ private:
 	std::map<std::string, std::string>::iterator	header_end;
 	std::map<std::string, std::string>				query_elements;
 	std::string 									message_body;
-	char											*request_start;
-	char											*request_line_end;
-	char											*method_end;
 	size_t											pos;
 	size_t											content_length;
 	bool											chunked;
@@ -87,6 +84,7 @@ public:
 	void											parse_request();
 	void											parse_request_line();
 	void											parse_header_fields();
+	void											reset_data();
 
 	//-----------------------------getter && setter------------------------------
 	Cycle&											get_cycle_instance();

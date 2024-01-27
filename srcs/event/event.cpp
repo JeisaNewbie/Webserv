@@ -11,6 +11,8 @@ static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
 
 // 삭제하기
+
+
 void printState(struct kevent* cur_event) {
 	std::cout << "client[" << cur_event->ident << "] flags: " << cur_event->flags << ", filter: " << cur_event->filter << "\n";
 	if (cur_event->flags & EV_EOF)
@@ -28,6 +30,18 @@ void printState(struct kevent* cur_event) {
 	if (errno == ECONNRESET)
 		std::cout << "ECONNRESET\n";
 	std::cout << "\n";
+}
+
+void test(int kq) {
+    struct kevent tmp[2];
+    struct timespec timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_nsec = 0;
+    int new_event = kevent(kq, NULL, 0, tmp, 2, &timeout);
+    std::cout << "\n\ntest: " << new_event << "\n";
+    printState(&tmp[0]);
+    printState(&tmp[1]);
+    std::cout << "\n\n\n";
 }
 
 void startConnect(Cycle& cycle) {
@@ -68,9 +82,9 @@ void startConnect(Cycle& cycle) {
 		for (int i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
 			printState(cur_event);
-
 			if (cur_event->flags & EV_EOF)
 				continue;
+
 			// recv, send 함수에서 처리되니까 삭제해도 될 듯
 			// else if (cur_event->flags & EV_ERROR) {
 			// 	eventException(worker.getErrorLog(), EVENT_SET_ERROR_FLAG, cur_event->ident);
@@ -89,7 +103,7 @@ void startConnect(Cycle& cycle) {
 					else // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
 						eventException(worker.getErrorLog(), EVENT_CONNECT_FULL, 0);
 					continue;
-                }
+				}
 
 				if (clients.find(cur_event->ident) != clients.end()) {
 					if (recieveFromClient(worker, cur_event->ident, cur_event->data) == FALSE)
@@ -140,6 +154,7 @@ void startConnect(Cycle& cycle) {
 					continue;
 				// server.erase(cur_event->ident); // 초기화
 				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
+				// server[cur_event->ident].reset_data(); // 초기화
 			}
 		}
 	}
@@ -222,6 +237,7 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 	intptr_t	res = 0;
 
 	while ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) > 0) {
+		std::cout << "BUFFER: " << buf << std::endl;
 		buf[recieve_size] = '\0';
 		std::string	tmp(buf, recieve_size);
 		clients[client_socket] += tmp;
@@ -233,7 +249,10 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
-	std::cout << "recieve message: \n" << clients[client_socket] << "\n";
+	else if (recieve_size == 0 && errno == EAGAIN)
+		return FALSE;
+	std::cout << "recieve message[" << client_socket << "]:\n" << clients[client_socket] <<"\n";
+	std::cout <<"---------------END_OF_RECIEVED_MESSAGE-----------------------\n";
 	return TRUE;
 }
 

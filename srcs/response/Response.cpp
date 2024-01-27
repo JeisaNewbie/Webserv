@@ -63,7 +63,15 @@ Response::Response()
 Response::Response(const Response& ref) {}
 Response::~Response() {}
 
-// Response& Response::operator=(const Response& ref) {}
+void	Response::reset_data()
+{
+	header_line.clear();
+	header.clear();
+	headers.clear();
+	body.clear();
+	response_msg.clear();
+	body_flag = false;
+}
 
 void	Response::assemble_message()
 {
@@ -77,7 +85,7 @@ void	Response::assemble_message()
 		response_msg += get_body();
 		set_body ("");
 	}
-	std::cout<< "response_msg: " << response_msg << std::endl;
+	std::cout<< "response_msg: \n" << response_msg << std::endl;
 }
 
 std::string	&Response::get_header_line () {return this->header_line;}

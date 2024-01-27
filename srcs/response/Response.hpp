@@ -9,12 +9,12 @@
 
 class Response {
 	private:
-		std::string	header_line;
+		std::string							header_line;
 		std::map<std::string, std::string>	header;
-		std::string headers;
-		std::string	body;
-		std::string	response_msg;
-		bool	body_flag;
+		std::string 						headers;
+		std::string							body;
+		std::string							response_msg;
+		bool								body_flag;
 	public:
 		Response();
 		Response(const Response& ref);
@@ -32,4 +32,5 @@ class Response {
 		void	set_header_field (const std::string &key, const std::string &value);
 		void	set_header_field (const std::string &key_value);
 		void	assemble_message();
+		void	reset_data();
 };
