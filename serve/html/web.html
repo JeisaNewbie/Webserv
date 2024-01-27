@@ -46,10 +46,14 @@
 
             xhr.onreadystatechange = function() {
                 if (xhr.readyState == XMLHttpRequest.DONE) {
-                    if (xhr.status == 200)
+                    if (xhr.status == 200) {
                         document.getElementById('postContainer').innerText = xhr.responseText;
-                    else if (xhr.status == 404)
+                        // console.log("Response received successfully");
+                    }
+                    else if (xhr.status == 404) {
                         document.getElementById('postContainer').innerText = "404 File not found";
+                        // console.log("404 File not found");
+                    }
                 }
             }
         }
