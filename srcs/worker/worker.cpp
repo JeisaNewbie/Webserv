@@ -15,7 +15,6 @@ int				Worker::getEventQueue(void) const { return event_queue; }
 int				Worker::getCurConnection(void) const { return cur_connection; }
 std::ofstream&	Worker::getErrorLog(void) { return error_log; }
 clients_t&		Worker::getClients(void) { return clients; }
-kevent_t&		Worker::getChangeList(void) { return change_list; }
 
 void			Worker::incCurConnection(void) { cur_connection++; };
 void			Worker::decCurConnection(void) { cur_connection--; };
