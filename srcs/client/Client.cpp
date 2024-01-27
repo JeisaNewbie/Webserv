@@ -6,9 +6,12 @@ Client::~Client() {}
 
 void	Client::reset_data()
 {
+	std::cout<<"RESET_DATA_REQUEST\n";
 	get_request_instance().reset_data();
-	// get_response_instance().reset_data();
-	this->cgi_fd_arr[get_cgi_instance().get_fd()] = 0;
+	std::cout<<"RESET_DATA_RESPONSE\n";
+	get_response_instance().reset_data();
+	std::cout<<"RESET_DATA_CGI\n";
+	std::cout<<"RESET_DATA_DONE\n";
 }
 
 void	Client::init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket)
@@ -113,6 +116,7 @@ void	Client::parse_cgi_response(Cgi &cgi)
 	}
 	// std::cout<<"AFTER_BODY_FIND"<<std::endl;
 	set_status_code(std::atoi(get_response_instance().get_header_field("Status_code").c_str()));
+	set_cgi(false);
 }
 
 void	Client::assemble_response()
@@ -123,7 +127,6 @@ void	Client::assemble_response()
 	if (response.get_header_field("Connection") == "keep-alive")
 		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");
 	response.set_header_field ("Access-Control-Allow-Origin", "*");
-	// status_code에 따라 body 수정 필요
 	if (get_status_code() > BAD_REQUEST)
 	{
 		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html");
@@ -148,11 +151,13 @@ Response&	Client::get_response_instance () {return this->response;}
 Cgi&		Client::get_cgi_instance() {return this->cgi;}
 int			Client::get_status_code() {return get_request_instance().get_status_code();}
 bool		Client::get_cgi() {return this->get_request_instance().get_cgi();}
+bool		Client::get_cgi_fork_status () {return get_cgi_instance().get_cgi_fork_status();}
 bool		Client::get_expect() {return this->get_request_instance().get_expect();}
 bool		Client::get_chunked() {return this->get_request_instance().get_chunked();}
 void		Client::set_phase (Phase state) {this->phase = state;}
 void		Client::set_status_code(int status_code) {get_request_instance().set_status_code(status_code);}
 void		Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
+void		Client::set_cgi_fork_status (bool status) {get_cgi_instance().set_cgi_fork_status(status);}
 uintptr_t	Client::get_client_soket() {return this->client_soket;}
 void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}
 void		Client::set_cgi_fd_arr(uintptr_t client_soket) {*(this->cgi_fd_arr[get_cgi_instance().get_fd()]) = client_soket;}

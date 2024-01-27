@@ -2,10 +2,7 @@
 
 Cgi::Cgi()
 {
-	this->f_in = tmpfile();
-	this->f_out = tmpfile();
-	this->fd_file_in = fileno (this->f_in);
-	this->fd_file_out = fileno (this->f_out);
+	this->fork_status = false;
 }
 
 Cgi::Cgi(const Cgi& ref)
@@ -77,6 +74,10 @@ char**		Cgi::get_char_arr_of_env()
 
 void	Cgi::set_fd()
 {
+	this->f_in = tmpfile();
+	this->f_out = tmpfile();
+	this->fd_file_in = fileno (this->f_in);
+	this->fd_file_out = fileno (this->f_out);
 	fputs (this->cgi_body.c_str(), this->f_in);
 	fflush (this->f_in);
 	fseek (this->f_in, 0, SEEK_SET);
@@ -153,3 +154,5 @@ std::string	&Cgi::get_response_from_cgi()
 void	Cgi::set_body (std::string &body) {this->cgi_body = body;}
 void	Cgi::set_name (std::string &name) {this->cgi_name = name;}
 int		Cgi::get_fd() {return this->fd_file_out;}
+void	Cgi::set_cgi_fork_status(bool status) {this->fork_status = status;}
+bool	Cgi::get_cgi_fork_status() {return this->fork_status;}

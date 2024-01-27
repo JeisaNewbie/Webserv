@@ -15,11 +15,11 @@ Request::Request()
 }
 
 Request::~Request() {}
-
+//15000
 void	Request::reset_data()
 {
 	request_msg.clear();
-	*cycle = NULL;
+	cycle = NULL;
 	request_line.clear();
 	uri.clear();
 	origin_path.clear();
@@ -725,6 +725,9 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 	size_t		chunk_size = 0;
 	size_t		delimeter = 0;
 	size_t		pos = 0;
+
+	if (msg.find ("0\r\n") == std::string::npos)
+		throw BAD_REQUEST;
 	this->message_body = "";
 
 	while (1)
