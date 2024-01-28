@@ -86,8 +86,6 @@ void	Cgi::set_fd()
 
 void	Cgi::execute_cgi(Request &request, Cgi &cgi) // cgi 무한루프 발생시 강제 종료 설정(timeout등)
 {
-
-	cgi.set_fd();
 	std::cout <<"BEFORE_FORK\n";
 	std::cout <<"CGI_PATH: "<< cgi.cgi_name<<std::endl;
 	std::cout <<"REDIRECT_PATH: "<<cgi.env["REDIRECT_PATH"]<<std::endl;

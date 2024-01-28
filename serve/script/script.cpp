@@ -17,11 +17,14 @@ static std::string	createUniqueFileName();
 
 int main() {
 	try {
+		std::string			line;
 		std::string			request_method = getEnvString("REQUEST_METHOD");
-		const std::string	data_post = getEnvString("QUERY_STRING_POST");
+		std::string	data_post = getEnvString("QUERY_STRING_POST");
 		const std::string	data_get = getEnvString("QUERY_STRING_GET");
 		const std::string	directory_path = getEnvString("REDIRECT_PATH");
-
+		while (std::getline(std::cin, line)) {}
+		if (line.size() != 0)
+			data_post = line;
 		if (request_method == "GET")
 			handleGetMethod(directory_path, data_get);
 		else if (request_method == "POST")
@@ -45,7 +48,7 @@ static void handleGetMethod(const std::string directory_path, const std::string 
 	}
 
 	ss << file.rdbuf();
-	
+
 	std::cout << "Content-Type: text/plain\r\n";
 	std::cout << "Status_code: 200\r\n";
 	std::cout << "\r\n";
