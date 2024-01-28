@@ -38,10 +38,10 @@ void	Client::set_property_for_cgi(Request &request)
 		throw NOT_FOUND;
 	}
 
-	// this->get_cgi_instance().set_env(request, 8);
+	this->get_cgi_instance().set_body(request.get_message_body());
 	this->get_cgi_instance().set_env(request, get_client_soket());
+	this->get_cgi_instance().set_fd();
 	std::cout<<"END_SET_PROPERTY_FOR_CGI\n";
-	// Cgi::execute_cgi(request, get_cgi_instance());
 }
 
 void	Client::do_method_without_cgi(Request &request)
@@ -125,7 +125,7 @@ void	Client::assemble_response()
 	if (response.get_header_field("Connection") == "keep-alive")
 		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");
 	response.set_header_field ("Access-Control-Allow-Origin", "*");
-	if (get_status_code() > BAD_REQUEST)
+	if (get_status_code() >= BAD_REQUEST)
 	{
 		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html");
 		std::stringstream	ss;

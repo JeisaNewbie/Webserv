@@ -12,10 +12,11 @@ Request::Request()
 	this->autoindex = false;
 	this->index = false;
 	this->file_name = "";
+	this->content_length = 0;
 }
 
 Request::~Request() {}
-//15000
+
 void	Request::reset_data()
 {
 	request_msg.clear();
@@ -639,7 +640,10 @@ void	Request::check_body_limits()
 {
 	// std::cout <<"CLIENT_MAX_BODY_SIZE: " << cycle->getClientMaxBodySize()<<std::endl;
 	if (content_length > cycle->getClientMaxBodySize())
+	{
+		std::cout <<"CHECK_BODY_LIMITS_CONTENT_LENGTH: " << content_length << std::endl;
 		throw REQUEST_ENTITY_TOO_LARGE;
+	}
 }
 
 void	Request::check_host()
