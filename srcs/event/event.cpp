@@ -10,8 +10,6 @@ static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
 
 // 삭제하기
-
-
 void printState(struct kevent* cur_event) {
 	std::cout << "client[" << cur_event->ident << "] flags: " << cur_event->flags << ", filter: " << cur_event->filter << "\n";
 	if (cur_event->flags & EV_EOF)
@@ -206,10 +204,12 @@ static void prepConnect(Cycle& cycle) {
         int     optval = 1;
         setsockopt(new_listen_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
-        if (bind(new_listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1)
+        if (bind(new_listen_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(sockaddr_in)) == -1) {
+			// listen_socket_list.clear();  // 열린 소켓들 다 닫아줘야하나?
             throw Exception(EVENT_FAIL_BIND);
+		}
         if (listen(new_listen_socket, LISTEN_QUEUE_SIZE) == -1)
-            throw Exception(EVENT_FAIL_LISTEN); // 열린 소켓들 다 닫아줘야하나?
+            throw Exception(EVENT_FAIL_LISTEN);
         if (fcntl(new_listen_socket, F_SETFL, O_NONBLOCK) == -1)
             throw Exception(EVENT_FAIL_FCNTL);
     }
