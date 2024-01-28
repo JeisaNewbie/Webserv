@@ -8,10 +8,8 @@ void	Client::reset_data()
 {
 	std::cout<<"RESET_DATA_REQUEST\n";
 	get_request_instance().reset_data();
-	std::cout<<"RESET_DATA_RESPONSE\n";
 	get_response_instance().reset_data();
-	std::cout<<"RESET_DATA_CGI\n";
-	std::cout<<"RESET_DATA_DONE\n";
+	// this->cgi_fd_arr[get_cgi_instance().get_fd()] = 0;
 }
 
 void	Client::init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket)

@@ -258,13 +258,37 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 		res += recieve_size;
 	}
 	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
+
+	if (clients[client_socket].find("chunked") != STR_NOT_FOUND	\
+		&& clients[client_socket].find("0\r\n") == STR_NOT_FOUND) {
+		const int	timeout_seconds = 30;
+		time_t		start_time = time(NULL);
+
+		while (TRUE) {
+			time_t	cur_time = time(NULL);
+			double	passed_seconds = difftime(cur_time, start_time);
+
+			recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0);
+			if (recieve_size > 0) {
+				buf[recieve_size] = '\0';
+				std::string	tmp(buf, recieve_size);
+				clients[client_socket] += tmp;
+				if (tmp.find("0\r\n") != STR_NOT_FOUND)
+					return TRUE;
+			}
+			if (recieve_size == 0)
+				return FALSE;
+			if (passed_seconds >= timeout_seconds)
+				break;
+		}
+		return TRUE;
+	}
+			
 	if (recieve_size <= 0 && res != data_size) {
 		disconnectClient(worker, client_socket);
 		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
-	else if (recieve_size == 0 && errno == EAGAIN)
-		return FALSE;
 	std::cout << "recieve message[" << client_socket << "]:\n" << clients[client_socket] <<"\n";
 	std::cout <<"---------------END_OF_RECIEVED_MESSAGE-----------------------\n";
 	return TRUE;
