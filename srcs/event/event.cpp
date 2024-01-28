@@ -49,8 +49,6 @@ void startConnect(Cycle& cycle) {
     std::map<int, Client>	server;
     uintptr_t				cgi_fd_arr[MAX_FD] = {0,};
     std::vector<Client*>	cgi_fork_list;
-	std::vector<Client*>::iterator	it_cfl;
-	std::vector<Client*>::iterator	ite_cfl;
 
     prepConnect(cycle);
     std::cout << "---------------------webserver start---------------------\n";
@@ -70,8 +68,6 @@ void startConnect(Cycle& cycle) {
 
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
-		// it_cfl = cgi_fork_list.begin();
-		// ite_cfl = cgi_fork_list.end();
 
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
 			if (cgi_fork_list[i]->get_cgi() == false)
@@ -79,17 +75,25 @@ void startConnect(Cycle& cycle) {
 				cgi_fork_list.erase(cgi_fork_list.begin() + i--);
 				continue;
 			}
-			if (cgi_fork_list[i]->get_cgi_fork_status() == true) ;
-				// check_timeout(cgi_fork_list[i]);
+			if (cgi_fork_list[i]->get_cgi_fork_status() == true) {
+				time_t&	start_time = cgi_fork_list[i]->get_cgi_start_time();
+				double	passed_seconds = difftime(time(NULL), start_time);
+
+				if (passed_seconds >= TIME_OUT) {
+					write(cgi_fork_list[i]->get_cgi_instance().get_fd(), "Status: 500\r\n\r\n", 15);
+					//parse_cgi_response(cgi, false); kill(cgi_fork_list[i]->get_cgi_instance().get_pid());
+					cgi_fork_list.erase(cgi_fork_list.begin() + i--);
+					continue;
+				}
+			}
 			else
 			{
 				Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
 								cgi_fork_list[i]->get_cgi_instance());
 				cgi_fork_list[i]->set_cgi_fork_status (true);
-				//set_timeout;
+				cgi_fork_list[i]->set_cgi_start_time();
 			}
 		}
-		cgi_fork_list.clear();
 
 		for (int i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
@@ -261,7 +265,6 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 
 	if (clients[client_socket].find("chunked") != STR_NOT_FOUND	\
 		&& clients[client_socket].find("0\r\n") == STR_NOT_FOUND) {
-		const int	timeout_seconds = 30;
 		time_t		start_time = time(NULL);
 
 		while (TRUE) {
@@ -278,7 +281,7 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 			}
 			if (recieve_size == 0)
 				return FALSE;
-			if (passed_seconds >= timeout_seconds)
+			if (passed_seconds >= TIME_OUT)
 				break;
 		}
 		return TRUE;
