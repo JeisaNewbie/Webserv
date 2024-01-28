@@ -15,7 +15,7 @@ Request::Request()
 }
 
 Request::~Request() {}
-//15000
+
 void	Request::reset_data()
 {
 	request_msg.clear();
