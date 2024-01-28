@@ -9,9 +9,8 @@
 #include <sys/file.h>
 #include "../request/Request.hpp"
 #include "../response/Response.hpp"
-// #include "../core/core.hpp"
+#include "../core/core.hpp"
 // #include "../utils/Status.hpp"
-#include "../core/cycle.hpp"
 // #include "../method/Method.hpp"
 #include "../method/Get.hpp"
 #include "../method/Post.hpp"
@@ -34,9 +33,9 @@ class Client {
 		Request		request;
 		Response	response;
 		Cgi			cgi;
+		Timeout		timeout;
 		uintptr_t	client_soket;
-		uintptr_t	**cgi_fd_arr;
-		time_t		cgi_start_time;
+		uintptr_t	**cgi_fd_arr; // ??
 	public:
 		Phase phase;
 		Client();
@@ -56,6 +55,7 @@ class Client {
 		Request		&get_request_instance ();
 		Response	&get_response_instance ();
 		Cgi			&get_cgi_instance();
+		Timeout		&get_timeout_instance();
 		Phase		get_current_phase();
 		int			get_status_code();
 		bool		get_cgi();
@@ -71,5 +71,4 @@ class Client {
 		void		set_cgi_fd_arr(uintptr_t client_soket);
 		void		set_cgi_fork_status (bool status);
 		void		set_port(uint32_t port);
-		void		set_cgi_start_time();
 };

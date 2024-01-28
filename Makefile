@@ -6,7 +6,7 @@
 #    By: eunwolee <eunwolee@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/27 15:41:44 by eunwolee         ###   ########.fr        #
+#    Updated: 2024/01/28 19:40:55 by eunwolee         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,6 +33,7 @@ SRCS =	core/main.cpp \
 		block/server.cpp \
 		worker/worker.cpp \
 		event/event.cpp \
+		event/timeout.cpp \
 		request/Request.cpp \
 		response/Response.cpp \
 		method/Method.cpp \

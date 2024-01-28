@@ -13,7 +13,7 @@
 # define PORT 80
 
 typedef std::map<int, std::string> clients_t;
-typedef std::vector<struct kevent> kevent_t;
+typedef struct kevent kevent_t;
 class Worker {
 	public:
 		Worker(void);

@@ -8,10 +8,11 @@ static void acceptNewClient(Worker& worker, uintptr_t listen_socket, std::map<in
 static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t data_size);
 static bool sendToClient(Worker& worker, int client_socket, Client& client);
 static void disconnectClient(Worker& worker, int client_socket);
+static void checkCgiForkList(std::vector<Client*>& cgi_fork_list);
 
 // 삭제하기
-void printState(struct kevent* cur_event) {
-	std::cout << "client[" << cur_event->ident << "] flags: " << cur_event->flags << ", filter: " << cur_event->filter << "\n";
+void printState(kevent_t* cur_event) {
+	std::cout << "client[" << cur_event->ident << "]\n";
 	if (cur_event->flags & EV_EOF)
 		std::cout << "EOF\n";
 	if (cur_event->flags & EV_ERROR)
@@ -30,7 +31,7 @@ void printState(struct kevent* cur_event) {
 }
 
 void test(int kq) {
-    struct kevent tmp[2];
+    kevent_t tmp[2];
     struct timespec timeout;
     timeout.tv_sec = 0;
     timeout.tv_nsec = 0;
@@ -41,13 +42,19 @@ void test(int kq) {
     std::cout << "\n\n\n";
 }
 
+// static void checkCgiForkList(std::vector<Client*>& read_event_list) {
+// 	for (int i = 0; i < read_event_list.size(); i++) {
+// 	}
+// }
+
 void startConnect(Cycle& cycle) {
     Worker					worker;
     std::vector<uintptr_t>&	listen_socket_list = cycle.getListenSocketList();
     clients_t&				clients = worker.getClients();
-    kevent_t				event_list(cycle.getWorkerConnections() * 2);
+    std::vector<kevent_t>	event_list(cycle.getWorkerConnections() * 2);
     std::map<int, Client>	server;
     uintptr_t				cgi_fd_arr[MAX_FD] = {0,};
+    std::vector<Client*>	read_event_list;
     std::vector<Client*>	cgi_fork_list;
 
     prepConnect(cycle);
@@ -57,43 +64,19 @@ void startConnect(Cycle& cycle) {
         addEvent(worker, listen_socket_list[i], EVFILT_READ, EV_ADD, 0, 0, NULL);
 
 	uint32_t		new_events;
-	struct kevent*	cur_event;
-	struct timespec	timeout;
+	kevent_t*		cur_event;
+	struct timespec	kevent_timeout;
 
 	while (1) {
-		timeout.tv_sec = 5;
-		timeout.tv_nsec = 0;
+		kevent_timeout.tv_sec = 5;
+		kevent_timeout.tv_nsec = 0;
 
-		new_events = kevent(worker.getEventQueue(), NULL, 0, &event_list[0], event_list.size(), &timeout);
+		new_events = kevent(worker.getEventQueue(), NULL, 0, &event_list[0], event_list.size(), &kevent_timeout);
 
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
-
-		for (int i = 0; i < cgi_fork_list.size(); i++) {
-			if (cgi_fork_list[i]->get_cgi() == false)
-			{
-				cgi_fork_list.erase(cgi_fork_list.begin() + i--);
-				continue;
-			}
-			if (cgi_fork_list[i]->get_cgi_fork_status() == true) {
-				time_t&	start_time = cgi_fork_list[i]->get_cgi_start_time();
-				double	passed_seconds = difftime(time(NULL), start_time);
-
-				if (passed_seconds >= TIME_OUT) {
-					write(cgi_fork_list[i]->get_cgi_instance().get_fd(), "Status: 500\r\n\r\n", 15);
-					//parse_cgi_response(cgi, false); kill(cgi_fork_list[i]->get_cgi_instance().get_pid());
-					cgi_fork_list.erase(cgi_fork_list.begin() + i--);
-					continue;
-				}
-			}
-			else
-			{
-				Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
-								cgi_fork_list[i]->get_cgi_instance());
-				cgi_fork_list[i]->set_cgi_fork_status (true);
-				cgi_fork_list[i]->set_cgi_start_time();
-			}
-		}
+		
+		checkCgiForkList(cgi_fork_list);
 
 		for (int i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
@@ -222,7 +205,7 @@ static void prepConnect(Cycle& cycle) {
 static void addEvent(Worker& worker, uintptr_t ident, int16_t filter,	\
 						uint16_t flags,	uint32_t fflags,				\
 						intptr_t data, void* udata) {
-	struct kevent	temp;
+	kevent_t	temp;
 
 	EV_SET(&temp, ident, filter, flags | EV_CLEAR, fflags, data, udata);
 	kevent(worker.getEventQueue(), &temp, 1, NULL, 0, NULL);
@@ -265,12 +248,9 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 
 	if (clients[client_socket].find("chunked") != STR_NOT_FOUND	\
 		&& clients[client_socket].find("0\r\n") == STR_NOT_FOUND) {
-		time_t		start_time = time(NULL);
+		Timeout	timeout;
 
 		while (TRUE) {
-			time_t	cur_time = time(NULL);
-			double	passed_seconds = difftime(cur_time, start_time);
-
 			recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0);
 			if (recieve_size > 0) {
 				buf[recieve_size] = '\0';
@@ -281,7 +261,7 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 			}
 			if (recieve_size == 0)
 				return FALSE;
-			if (passed_seconds >= TIME_OUT)
+			if (timeout.checkTimeoutOver() == true)
 				break;
 		}
 		return TRUE;
@@ -314,4 +294,29 @@ static void disconnectClient(Worker& worker, int client_socket) {
 	close(client_socket);
 	clients.erase(client_socket);
 	worker.decCurConnection();
+}
+
+static void checkCgiForkList(std::vector<Client*>& cgi_fork_list) {
+	for (int i = 0; i < cgi_fork_list.size(); i++) {
+		if (cgi_fork_list[i]->get_cgi() == false)
+		{
+			cgi_fork_list.erase(cgi_fork_list.begin() + i--);
+			continue;
+		}
+		if (cgi_fork_list[i]->get_cgi_fork_status() == true) {
+			if (cgi_fork_list[i]->get_timeout_instance().checkTimeoutOver() == true) {
+				kill(cgi_fork_list[i]->get_cgi_instance().get_pid(), SIGKILL);
+				write(cgi_fork_list[i]->get_cgi_instance().get_fd(), "Status: 500\r\n\r\n", 15); //이벤트 발생 테스트해보기
+				cgi_fork_list.erase(cgi_fork_list.begin() + i--);
+				continue;
+			}
+		}
+		else
+		{
+			Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
+							cgi_fork_list[i]->get_cgi_instance());
+			cgi_fork_list[i]->set_cgi_fork_status (true);
+			cgi_fork_list[i]->get_timeout_instance().setSavedTime();
+		}
+	}
 }
