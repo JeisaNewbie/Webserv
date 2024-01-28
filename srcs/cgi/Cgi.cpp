@@ -128,6 +128,7 @@ std::string	&Cgi::get_response_from_cgi()
 		// std::cout<<len<<std::endl;
 		// std::cout<<cgi_body<<std::endl;
 	}
+	std::memset(buf, 0, sizeof(buf));
 
 	// std::cout<<"BEFORE_GET_CHILD_PROCESS\n";
 	// std::cout<<"AFTER_GET_CHILD_PROCESS\n";

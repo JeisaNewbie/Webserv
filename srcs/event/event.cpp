@@ -72,8 +72,6 @@ void startConnect(Cycle& cycle) {
 
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
-		// it_cfl = cgi_fork_list.begin();
-		// ite_cfl = cgi_fork_list.end();
 
 		for (int i = 0; i < cgi_fork_list.size(); i++) {
 			if (cgi_fork_list[i]->get_cgi() == false)
@@ -91,7 +89,7 @@ void startConnect(Cycle& cycle) {
 				//set_timeout;
 			}
 		}
-		cgi_fork_list.clear();
+		// cgi_fork_list.clear();
 
 		for (int i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
@@ -128,6 +126,7 @@ void startConnect(Cycle& cycle) {
 					std::string&	request_msg = clients[tmp_ident]; // cur_event->udata
 					Client&			event_client = server[tmp_ident];
 
+					std::cout<<"PARSING_START\n";
 					event_client.do_parse(request_msg, cycle);
 					event_client.get_response_instance().set_body("");
 					// event_client.get_request_instance().check_members();
@@ -251,12 +250,14 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 	intptr_t	res = 0;
 
 	while ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) > 0) {
-		std::cout << "BUFFER: " << buf << std::endl;
+		// std::cout << "BUFFER: \n" << buf << std::endl;
+		std::cout << "DATA_SIZE: " << data_size << ", RECIEVE_SIZE: " << recieve_size << std::endl;
 		buf[recieve_size] = '\0';
 		std::string	tmp(buf, recieve_size);
-		clients[client_socket] += tmp;
+		clients[client_socket] += buf;
 		res += recieve_size;
 	}
+	std::cout << "received_msg: \n" << clients[client_socket] << std::endl;
 	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
 
 	if (clients[client_socket].find("chunked") != STR_NOT_FOUND	\
@@ -283,9 +284,9 @@ static bool recieveFromClient(Worker& worker, uintptr_t client_socket, intptr_t 
 		}
 		return TRUE;
 	}
-			
+
 	if (recieve_size <= 0 && res != data_size) {
-		disconnectClient(worker, client_socket);
+		// disconnectClient(worker, client_socket);
 		eventException(worker.getErrorLog(), EVENT_FAIL_RECV, client_socket);
 		return FALSE;
 	}
