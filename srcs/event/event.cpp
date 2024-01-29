@@ -78,20 +78,21 @@ void startConnect(Cycle& cycle) {
 			if (cgi_fork_list[i]->get_cgi_fork_status() == true) {
 				time_t&	start_time = cgi_fork_list[i]->get_cgi_start_time();
 				double	passed_seconds = difftime(time(NULL), start_time);
-
-				if (passed_seconds >= TIME_OUT) {
-					write(cgi_fork_list[i]->get_cgi_instance().get_fd(), "Status: 500\r\n\r\n", 15);
-					//parse_cgi_response(cgi, false); kill(cgi_fork_list[i]->get_cgi_instance().get_pid());
+				std::cout << "PASSED_SECONDS: " << passed_seconds << std::endl;
+				if (passed_seconds >= 3) {
+					std::cout << "PASSED_SECONDS_PASSED\n";
+					write(cgi_fork_list[i]->get_cgi_instance().get_fd(), "Status: 500\r\n\r\nINFINITY", 24);
+					kill(cgi_fork_list[i]->get_cgi_instance().get_pid(), SIGKILL);
 					cgi_fork_list.erase(cgi_fork_list.begin() + i--);
 					continue;
 				}
 			}
 			else
 			{
-				Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
-								cgi_fork_list[i]->get_cgi_instance());
 				cgi_fork_list[i]->set_cgi_fork_status (true);
 				cgi_fork_list[i]->set_cgi_start_time();
+				Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
+								cgi_fork_list[i]->get_cgi_instance());
 			}
 		}
 

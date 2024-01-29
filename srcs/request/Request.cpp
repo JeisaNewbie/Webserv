@@ -113,9 +113,12 @@ void	Request::parse_request()
 		if (this->pos == delimeter)
 		{
 			this->message_body = msg.substr (this->pos + 2);
-			break ;
+			break;
 		}
-		this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
+		std::string tmp = msg.substr (this->pos, delimeter - this->pos + 2);
+		std::cout << "PARSE_REQUEST_WHILE_HEADER: " << tmp << std::endl;
+		// this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
+		this->headers.push_back (tmp);
 	}
 	std::cout << "PARSE_REQUEST_END\n";
 }
@@ -600,7 +603,10 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 	size_t	crlf = header_element.find ("\r\n");
 
 	if (pos == std::string::npos || crlf == std::string::npos)
+	{
+		std::cout << "HEADER: " << header_element << std::endl;
 		throw BAD_REQUEST;
+	}
 
 	// std::cout<<"HEADER_FIELD: "<<header_element<<std::endl;
 	std::string	key = lower (header_element.substr (0, pos).c_str(), pos);
