@@ -14,9 +14,8 @@ void	Client::reset_data()
 
 void	Client::init_client(uintptr_t client_soket)
 {
-	// this->cgi_fd_arr = cgi_fd_arr;
 	set_client_soket(client_soket);
-	// set_cgi_fd_arr(client_soket);
+	get_timeout_instance().setSavedTime();
 }
 
 void	Client::do_parse(Cycle &cycle)
@@ -159,5 +158,4 @@ void		Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
 void		Client::set_cgi_fork_status (bool status) {get_cgi_instance().set_cgi_fork_status(status);}
 uintptr_t	Client::get_client_soket() {return this->client_soket;}
 void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}
-void		Client::set_cgi_fd_arr(uintptr_t client_soket) {*(this->cgi_fd_arr[get_cgi_instance().get_fd()]) = client_soket;}
 void		Client::set_port(uint32_t port) {get_request_instance().set_port(port);}
