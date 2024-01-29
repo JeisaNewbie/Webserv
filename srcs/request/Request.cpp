@@ -4,6 +4,7 @@
 Request::Request()
 {
 	this->pos = 0;
+	this->content_length = 0;
 	this->chunked = false;
 	this->port = 80;
 	this->expect = false;
