@@ -8,6 +8,7 @@ static void acceptNewClient(Cycle& cycle, int kq, uintptr_t listen_socket, std::
 static bool recieveFromClient(Client& client);
 static bool sendToClient(Client& client);
 static void disconnectClient(int client_socket);
+static void checkReadEventList(std::vector<Client*>& read_event_list, Cycle& cycle, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list);
 static void checkCgiForkList(std::vector<Client*>& cgi_fork_list);
 
 // 삭제하기
@@ -40,50 +41,6 @@ void test(int kq) {
     printState(&tmp[0]);
     printState(&tmp[1]);
     std::cout << "\n\n\n";
-}
-
-static void checkReadEventList(std::vector<Client*>& read_event_list, Cycle& cycle, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list) {
-	for (int i = 0; i < read_event_list.size(); i++) {
-		if (read_event_list[i]->get_timeout_instance().checkTimeout() == false) {
-			if (recieveFromClient(*read_event_list[i]) == false) {
-				read_event_list.erase(read_event_list.begin() + i--);
-				continue;
-			}
-		}
-		else {
-			read_event_list.erase(read_event_list.begin() + i--);
-			// request parsing
-			read_event_list[i]->do_parse(cycle);
-			read_event_list[i]->get_response_instance().set_body("");
-			// read_event_list[i]->get_request_instance().check_members();
-			if (read_event_list[i]->get_status_code() < MOVED_PERMANENTLY && read_event_list[i]->get_expect() == false)
-			{
-				try
-				{
-					if (read_event_list[i]->get_cgi() == true)
-					{
-						read_event_list[i]->set_property_for_cgi(read_event_list[i]->get_request_instance());
-						uintptr_t	fd = read_event_list[i]->get_cgi_instance().get_fd();
-
-						addEvent(kq, fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, cycle.getEventTypeCgi());
-						cgi_fd_arr[fd] = read_event_list[i]->get_client_soket();
-						cgi_fork_list.push_back(read_event_list[i]);
-
-						continue;
-					}
-					read_event_list[i]->do_method_without_cgi(read_event_list[i]->get_request_instance());
-				}
-				catch(int e)
-				{
-					read_event_list[i]->set_status_code(e);
-				}
-			}
-			read_event_list[i]->assemble_response();
-			read_event_list[i]->get_request_instance().get_request_msg() = "";
-			addEvent(kq, read_event_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, cycle.getEventTypeClient());
-			std::cout << "---------------end of assebling message--------------\n";
-		}
-	}
 }
 
 void startConnect(Cycle& cycle) {
@@ -141,8 +98,10 @@ void startConnect(Cycle& cycle) {
 				}
 				else if (*event_type == "client") {
 					Client&			event_client = server[tmp_ident];
+
 					// std::string&	request_msg = event_client.get_request_instance().get_request_msg();
 					
+					event_client.init_client(cur_event->ident);
 					read_event_list.push_back(&event_client);
 				}
 				else {
@@ -233,7 +192,7 @@ static void acceptNewClient(Cycle& cycle, int kq, uintptr_t listen_socket, std::
 	}
 	std::cout<<"LITSENING_SOCKET: " << listen_socket << std::endl;
 	std::cout<<"CLIENT_SOCKET: " << client_socket << std::endl;
-	addEvent(kq, client_socket, EVFILT_READ, EV_ADD, 0, 0, cycle.getEventTypeListen());
+	addEvent(kq, client_socket, EVFILT_READ, EV_ADD, 0, 0, cycle.getEventTypeClient());
 	// worker.incCurConnection(); 필요함
 }
 
@@ -249,9 +208,7 @@ static bool recieveFromClient(Client& client) {
 		return FALSE;
 	}
 	std::cout << "BUFFER: " << buf << std::endl;
-	buf[recieve_size] = '\0'; // 없어도 되나?
-	std::string	tmp(buf, recieve_size);
-	request_msg += tmp;
+	request_msg += buf;
 
 	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
 	std::cout << "recieve message[" << client_socket << "]:\n" << request_msg <<"\n";
@@ -278,6 +235,50 @@ static void disconnectClient(int client_socket) {
 	// worker.decCurConnection(); 필요함
 }
 
+static void checkReadEventList(std::vector<Client*>& read_event_list, Cycle& cycle, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list) {
+	for (int i = 0; i < read_event_list.size(); i++) {
+		if (read_event_list[i]->get_timeout_instance().checkTimeout(READ_TIME_OUT) == false) {
+			if (recieveFromClient(*read_event_list[i]) == false) {
+				read_event_list.erase(read_event_list.begin() + i--);
+				continue;
+			}
+		}
+		else {
+			// request parsing
+			read_event_list[i]->do_parse(cycle);
+			read_event_list[i]->get_response_instance().set_body("");
+			// read_event_list[i]->get_request_instance().check_members();
+			if (read_event_list[i]->get_status_code() < MOVED_PERMANENTLY && read_event_list[i]->get_expect() == false)
+			{
+				try
+				{
+					if (read_event_list[i]->get_cgi() == true)
+					{
+						read_event_list[i]->set_property_for_cgi(read_event_list[i]->get_request_instance());
+						uintptr_t	fd = read_event_list[i]->get_cgi_instance().get_fd();
+
+						addEvent(kq, fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, cycle.getEventTypeCgi());
+						cgi_fd_arr[fd] = read_event_list[i]->get_client_soket();
+						cgi_fork_list.push_back(read_event_list[i]);
+
+						continue;
+					}
+					read_event_list[i]->do_method_without_cgi(read_event_list[i]->get_request_instance());
+				}
+				catch(int e)
+				{
+					read_event_list[i]->set_status_code(e);
+				}
+			}
+			read_event_list[i]->assemble_response();
+			read_event_list[i]->get_request_instance().get_request_msg() = "";
+			addEvent(kq, read_event_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, cycle.getEventTypeClient());
+			std::cout << "---------------end of assebling message--------------\n";
+			read_event_list.erase(read_event_list.begin() + i--);
+		}
+	}
+}
+
 static void checkCgiForkList(std::vector<Client*>& cgi_fork_list) {
 	for (int i = 0; i < cgi_fork_list.size(); i++) {
 		if (cgi_fork_list[i]->get_cgi() == false)
@@ -286,7 +287,7 @@ static void checkCgiForkList(std::vector<Client*>& cgi_fork_list) {
 			continue;
 		}
 		if (cgi_fork_list[i]->get_cgi_fork_status() == true) {
-			if (cgi_fork_list[i]->get_timeout_instance().checkTimeout() == true) {
+			if (cgi_fork_list[i]->get_timeout_instance().checkTimeout(CGI_TIME_OUT) == true) {
 				kill(cgi_fork_list[i]->get_cgi_instance().get_pid(), SIGKILL);
 				write(cgi_fork_list[i]->get_cgi_instance().get_fd(), "Status: 500\r\n\r\n", 15); //이벤트 발생 테스트해보기
 				cgi_fork_list.erase(cgi_fork_list.begin() + i--);
