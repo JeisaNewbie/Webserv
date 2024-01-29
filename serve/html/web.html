@@ -58,16 +58,28 @@
             }
         }
 
+        function sendServerDataPost(url, method, data) {
+            var xhr = new XMLHttpRequest();
+            xhr.open(method, url, true);
+            xhr.send(data)
+        }
+
         function promptForGet() {
             var getData = prompt("Enter the file name to read: example.txt");
             if (getData)
                 sendServerData("script.cpp?getdata=" + getData, "GET");
         }
 
+        // function promptForPost() {
+        //     var postData = prompt("Enter the data to post:");
+        //     if (postData)
+        //         sendServerDataPost("script.cpp?postdata=" + postData, "POST");
+        // }
+
         function promptForPost() {
             var postData = prompt("Enter the data to post:");
             if (postData)
-                sendServerData("script.cpp?postdata=" + postData, "POST");
+                sendServerDataPost("script.cpp", "POST", postData);
         }
 
         function promptForDelete() {

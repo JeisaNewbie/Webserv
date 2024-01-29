@@ -70,7 +70,7 @@ void startConnect(Cycle& cycle) {
 
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
-		
+
 		checkReadEventList(read_event_list, cycle, worker.getEventQueue(), cgi_fd_arr, cgi_fork_list);
 		checkCgiForkList(cgi_fork_list);
 
@@ -98,9 +98,9 @@ void startConnect(Cycle& cycle) {
 				}
 				else if (*event_type == "client") {
 					Client&			event_client = server[tmp_ident];
-
+					std::cout << "EV_TYPE_CLI_TMP_IDENT: " << tmp_ident << std::endl;
 					// std::string&	request_msg = event_client.get_request_instance().get_request_msg();
-					
+
 					event_client.init_client(cur_event->ident);
 					read_event_list.push_back(&event_client);
 				}
@@ -201,14 +201,45 @@ static bool recieveFromClient(Client& client) {
 	std::string&	request_msg = client.get_request_instance().get_request_msg();
 	char			buf[BUF_SIZE] = {0,};
 	ssize_t			recieve_size;
+	ssize_t			header_end;
+	ssize_t			content_length;
+	ssize_t			body_length;
 
-	if ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) == 0) {
+	std::cout << "RECIEVE_FROM_CLI_CLI_SOCKET: " << client_socket << std::endl;
+	if ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) <= 0) {
 		disconnectClient(client_socket);
 		eventException(EVENT_FAIL_RECV, client_socket);
-		return FALSE;
+		return -1;
 	}
-	std::cout << "BUFFER: " << buf << std::endl;
+	// std::cout << "BUFFER: " << buf << std::endl;
 	request_msg += buf;
+	header_end = request_msg.find ("\r\n\r\n");
+
+	if (header_end == std::string::npos)
+		return false;
+
+	if (request_msg.find("POST") == 0)
+	{
+		if (request_msg.find ("Content-Length: ") != std::string::npos)
+		{
+			content_length = std::stol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)), NULL, 10);
+			body_length = request_msg.size() - header_end;
+			if (content_length != body_length)
+			{
+				client.get_timeout_instance().setSavedTime();
+				return false;
+			}
+		}
+		else if (request_msg.find("Chunked") != std::string::npos)
+		{
+			if (request_msg.find ("\0\r\n") == std::string::npos)
+			{
+				client.get_timeout_instance().setSavedTime();
+				return false;
+			}
+			return true;
+		}
+	}
 
 	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
 	std::cout << "recieve message[" << client_socket << "]:\n" << request_msg <<"\n";

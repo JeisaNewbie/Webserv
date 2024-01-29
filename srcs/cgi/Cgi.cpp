@@ -104,7 +104,7 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi) // cgi 무한루프 발생시 
 		dup2 (cgi.fd_file_in, STDIN_FILENO);
 		dup2 (cgi.fd_file_out, STDOUT_FILENO);
 		execve (cgi.cgi_name.c_str(), NULL, cgi.env_cgi);
-		write (STDOUT_FILENO, "Status: 500\r\n\r\n", 15);
+		write (STDOUT_FILENO, "Status: 500\r\n\r\n", 16);
 		exit (1);
 	}
 
@@ -118,7 +118,7 @@ std::string	&Cgi::get_response_from_cgi()
 
 	waitpid (this->pid, &status, 0);
 	lseek (this->fd_file_out, 0, SEEK_SET);
-
+	std::cout << "WAIT_PID_DONE\n";
 	while (len)
 	{
 		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
@@ -128,6 +128,7 @@ std::string	&Cgi::get_response_from_cgi()
 		// std::cout<<len<<std::endl;
 		// std::cout<<cgi_body<<std::endl;
 	}
+	std::memset(buf, 0, sizeof(buf));
 
 	// std::cout<<"BEFORE_GET_CHILD_PROCESS\n";
 	// std::cout<<"AFTER_GET_CHILD_PROCESS\n";
@@ -152,6 +153,6 @@ std::string	&Cgi::get_response_from_cgi()
 void	Cgi::set_body (std::string &body) {this->cgi_body = body;}
 void	Cgi::set_name (std::string &name) {this->cgi_name = name;}
 int		Cgi::get_fd() {return this->fd_file_out;}
+pid_t	Cgi::get_pid() {return this->pid;}
 void	Cgi::set_cgi_fork_status(bool status) {this->fork_status = status;}
 bool	Cgi::get_cgi_fork_status() {return this->fork_status;}
-pid_t	Cgi::get_pid() {return this->pid;}
