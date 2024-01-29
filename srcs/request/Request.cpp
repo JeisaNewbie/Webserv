@@ -50,11 +50,10 @@ void	Request::reset_data()
 	this->file_name = "";
 }
 
-void	Request::process_request_parsing(std::string &request_msg, Cycle &cycle)
+void	Request::process_request_parsing(Cycle &cycle)
 {
 	try
 	{
-		this->request_msg = request_msg;
 		this->cycle = &cycle;
 		// std::cout<< "parse_request\n";
 		parse_request ();
@@ -1051,6 +1050,7 @@ bool			Request::get_index() {return this->index;}
 bool 			Request::get_cgi() {return this->cgi;}
 bool 			Request::get_expect() {return this->expect;}
 bool			Request::get_chunked() {return this->chunked;}
+std::string&	Request::get_request_msg() {return this->request_msg;}
 std::string&	Request::get_message_body() {return this->message_body;}
 std::string&	Request::get_redirect_path() {return this->redirect_path;}
 std::string&	Request::get_autoindex_path() {return this->autoindex_path;}

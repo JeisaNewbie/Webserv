@@ -80,7 +80,7 @@ private:
 public:
 	Request();
 	~Request();
-	void											process_request_parsing(std::string &request_msg, Cycle &cycle);
+	void											process_request_parsing(Cycle &cycle);
 	void											parse_request();
 	void											parse_request_line();
 	void											parse_header_fields();
@@ -96,6 +96,7 @@ public:
 	int												get_status_code();
 	std::string&									get_method();
 	bool											get_chunked();
+	std::string&									get_request_msg();
 	std::string&									get_redirect_path();
 	std::string&									get_autoindex_path();
 	std::string&									get_path();

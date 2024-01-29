@@ -22,7 +22,6 @@ enum costom_error_type {
 	CONF_LACK_DIRCTV,
 	CONF_FAIL_TOKENIZE,
 
-	WORK_FAIL_OPEN,
 	WORK_FAIL_CREATE_KQ,
 	WORK_FAIL_CREATE_SOCKET,
 	
@@ -63,6 +62,6 @@ class Exception {
 };
 
 int		mainException(Exception& e);
-void	eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd);
+void	eventException(int _costom_error, uintptr_t client_fd);
 
 #endif

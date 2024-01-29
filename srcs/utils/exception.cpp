@@ -89,10 +89,6 @@ void	Exception::setMessage(int costom_error) {
 		message = "Failed to tokenize configure command";
 		break;
 
-	case WORK_FAIL_OPEN:
-		message = "Failed to open log file";
-		break;
-
 	case WORK_FAIL_CREATE_KQ:
 		message = "Failed to create kqueue";
 		break;
@@ -155,16 +151,8 @@ int mainException(Exception& e) {
 	return e.getCostomError();
 }
 
-void eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd) {
-	std::string	tmp;
-
-	if (client_fd != 0) {
-		tmp = std::to_string(client_fd);
-		error_log.write(tmp.c_str(), tmp.length());
-		error_log.write(": ", 2);
-	}
-	tmp = std::string(Exception(_costom_error).what());
-	error_log.write(tmp.c_str(), tmp.length());
-	error_log.write("\n\n", 2);
-	error_log.flush();
+void eventException(int _costom_error, uintptr_t client_fd) {
+	if (client_fd != 0)
+		std::cout << client_fd << ": ";
+	std::cout << Exception(_costom_error).what() << "\n";
 }

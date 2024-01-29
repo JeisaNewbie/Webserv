@@ -9,9 +9,8 @@
 #include <sys/file.h>
 #include "../request/Request.hpp"
 #include "../response/Response.hpp"
-// #include "../core/core.hpp"
+#include "../core/core.hpp"
 // #include "../utils/Status.hpp"
-#include "../core/cycle.hpp"
 // #include "../method/Method.hpp"
 #include "../method/Get.hpp"
 #include "../method/Post.hpp"
@@ -34,9 +33,9 @@ class Client {
 		Request		request;
 		Response	response;
 		Cgi			cgi;
+		Timeout		timeout;
 		uintptr_t	client_soket;
-		uintptr_t	**cgi_fd_arr;
-		time_t		cgi_start_time;
+		uintptr_t	**cgi_fd_arr; // ??
 	public:
 		Phase phase;
 		Client();
@@ -45,17 +44,18 @@ class Client {
 
 		// Client& operator=(const Client& ref);
 
-		void		do_parse(std::string &request_msg, Cycle &cycle);
+		void		do_parse(Cycle &cycle);
 		void		set_property_for_cgi(Request &request);
 		void		do_method_without_cgi(Request &request);
 		void		parse_cgi_response(Cgi &cgi);
 		void		assemble_response();
-		void		init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket);
+		void		init_client(uintptr_t client_soket);
 		void		reset_data();
 
 		Request		&get_request_instance ();
 		Response	&get_response_instance ();
 		Cgi			&get_cgi_instance();
+		Timeout		&get_timeout_instance();
 		Phase		get_current_phase();
 		int			get_status_code();
 		bool		get_cgi();
@@ -71,5 +71,4 @@ class Client {
 		void		set_cgi_fd_arr(uintptr_t client_soket);
 		void		set_cgi_fork_status (bool status);
 		void		set_port(uint32_t port);
-		void		set_cgi_start_time();
 };

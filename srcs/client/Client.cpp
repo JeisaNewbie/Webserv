@@ -12,16 +12,16 @@ void	Client::reset_data()
 	// this->cgi_fd_arr[get_cgi_instance().get_fd()] = 0;
 }
 
-void	Client::init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket)
+void	Client::init_client(uintptr_t client_soket)
 {
-	this->cgi_fd_arr = cgi_fd_arr;
+	// this->cgi_fd_arr = cgi_fd_arr;
 	set_client_soket(client_soket);
-	set_cgi_fd_arr(client_soket);
+	// set_cgi_fd_arr(client_soket);
 }
 
-void	Client::do_parse(std::string &request_msg, Cycle &cycle)
+void	Client::do_parse(Cycle &cycle)
 {
-	get_request_instance().process_request_parsing(request_msg, cycle);
+	get_request_instance().process_request_parsing(cycle);
 }
 
 void	Client::set_property_for_cgi(Request &request)
@@ -147,12 +147,12 @@ Phase		Client::get_current_phase() {return this->phase;}
 Request& 	Client::get_request_instance () {return this->request;}
 Response&	Client::get_response_instance () {return this->response;}
 Cgi&		Client::get_cgi_instance() {return this->cgi;}
+Timeout&	Client::get_timeout_instance() {return this->timeout;}
 int			Client::get_status_code() {return get_request_instance().get_status_code();}
 bool		Client::get_cgi() {return this->get_request_instance().get_cgi();}
 bool		Client::get_cgi_fork_status () {return get_cgi_instance().get_cgi_fork_status();}
 bool		Client::get_expect() {return this->get_request_instance().get_expect();}
 bool		Client::get_chunked() {return this->get_request_instance().get_chunked();}
-time_t&		Client::get_cgi_start_time() {return this->cgi_start_time;}
 void		Client::set_phase (Phase state) {this->phase = state;}
 void		Client::set_status_code(int status_code) {get_request_instance().set_status_code(status_code);}
 void		Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
@@ -161,4 +161,3 @@ uintptr_t	Client::get_client_soket() {return this->client_soket;}
 void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}
 void		Client::set_cgi_fd_arr(uintptr_t client_soket) {*(this->cgi_fd_arr[get_cgi_instance().get_fd()]) = client_soket;}
 void		Client::set_port(uint32_t port) {get_request_instance().set_port(port);}
-void		Client::set_cgi_start_time() {time(&cgi_start_time);}
