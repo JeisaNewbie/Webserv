@@ -5,7 +5,7 @@ static void addEvent(int kq, uintptr_t ident, int16_t filter,			\
 						uint16_t flags,	uint32_t fflags,						\
 						intptr_t data, char* udata);
 static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int, Client>& server);
-static bool recieveFromClient(Event& event, Client& client);
+static int recieveFromClient(Event& event, Client& client);
 static bool sendToClient(Event& event, Client& client);
 static void disconnectClient(Event& event, int client_socket);
 static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list);
@@ -270,7 +270,7 @@ static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int,
 	event.incCurConnection();
 }
 
-static bool recieveFromClient(Event& event, Client& client) {
+static int recieveFromClient(Event& event, Client& client) {
 	uintptr_t		client_socket = client.get_client_soket();
 	std::string&	request_msg = client.get_request_instance().get_request_msg();
 	char			buf[BUF_SIZE] = {0,};
