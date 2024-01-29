@@ -13,7 +13,7 @@ class Timeout {
 
 		void	setSavedTime(void);
 		
-		bool	checkTimeout(void);
+		bool	checkTimeout(uint32_t timeout);
 
 	private:
 		time_t	saved_time;

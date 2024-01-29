@@ -9,7 +9,8 @@
 # include <iostream>
 
 # define LISTEN_QUEUE_SIZE 15
-# define TIME_OUT 30
+# define READ_TIME_OUT 1
+# define CGI_TIME_OUT 30
 
 void startConnect(Cycle& cycle);
 
