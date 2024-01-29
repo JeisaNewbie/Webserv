@@ -22,7 +22,6 @@ class Worker {
 		int				getEventQueue(void) const;
 		int				getCurConnection(void) const;
 		clients_t&		getClients(void);
-		std::ofstream&	getErrorLog(void);
 
 		void			incCurConnection(void);
 		void			decCurConnection(void);
@@ -35,7 +34,6 @@ class Worker {
 		int				event_queue;
 		uint32_t		cur_connection;
 		clients_t		clients;
-		std::ofstream	error_log;
 };
 
 #endif

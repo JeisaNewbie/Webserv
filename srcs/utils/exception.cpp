@@ -89,10 +89,6 @@ void	Exception::setMessage(int costom_error) {
 		message = "Failed to tokenize configure command";
 		break;
 
-	case WORK_FAIL_OPEN:
-		message = "Failed to open log file";
-		break;
-
 	case WORK_FAIL_CREATE_KQ:
 		message = "Failed to create kqueue";
 		break;
