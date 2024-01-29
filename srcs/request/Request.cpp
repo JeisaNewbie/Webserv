@@ -603,7 +603,7 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 
 	if (pos == std::string::npos || crlf == std::string::npos)
 	{
-		std::cout << "HEADER: " << header_element << std::endl;
+		// std::cout << "HEADER: " << header_element << std::endl;
 		throw BAD_REQUEST;
 	}
 

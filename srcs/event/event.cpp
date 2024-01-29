@@ -5,7 +5,7 @@ static void addEvent(int kq, uintptr_t ident, int16_t filter,			\
 						uint16_t flags,	uint32_t fflags,						\
 						intptr_t data, std::string* udata);
 static void acceptNewClient(Event& event, int kq, uintptr_t listen_socket, std::map<int, Client>& server);
-static bool recieveFromClient(Event& event, Client& client);
+static int recieveFromClient(Event& event, Client& client);
 static bool sendToClient(Event& event, Client& client);
 static void disconnectClient(Event& event, int client_socket);
 static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list);
@@ -98,7 +98,7 @@ void startConnect(Cycle& cycle) {
 
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
-		
+
 		checkReadTimeout(read_timeout_list, event, event.getEventQueue(), cgi_fd_arr, cgi_fork_list);
 		checkCgiForkList(cgi_fork_list);
 
@@ -140,29 +140,29 @@ void startConnect(Cycle& cycle) {
 						continue;
 					}
 					else if (res == true) {
-						read_timeout_list[i]->do_parse(cycle);
-						read_timeout_list[i]->get_response_instance().set_body("");
-						// read_timeout_list[i]->get_request_instance().check_members();
-						if (read_timeout_list[i]->get_status_code() < MOVED_PERMANENTLY && read_timeout_list[i]->get_expect() == false)
+						event_client.do_parse(cycle);
+						event_client.get_response_instance().set_body("");
+						// event_client.get_request_instance().check_members();
+						if (event_client.get_status_code() < MOVED_PERMANENTLY && event_client.get_expect() == false)
 						{
 							try
 							{
-								if (read_timeout_list[i]->get_cgi() == true)
+								if (event_client.get_cgi() == true)
 								{
-									read_timeout_list[i]->set_property_for_cgi(read_timeout_list[i]->get_request_instance());
-									uintptr_t	fd = read_timeout_list[i]->get_cgi_instance().get_fd();
+									event_client.set_property_for_cgi(event_client.get_request_instance());
+									uintptr_t	fd = event_client.get_cgi_instance().get_fd();
 
 									addEvent(event.getEventQueue(), fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeCgi());
-									cgi_fd_arr[fd] = read_timeout_list[i]->get_client_soket();
+									cgi_fd_arr[fd] = event_client.get_client_soket();
 									cgi_fork_list.push_back(read_timeout_list[i]);
 
 									continue;
 								}
-								read_timeout_list[i]->do_method_without_cgi(read_timeout_list[i]->get_request_instance());
+								event_client.do_method_without_cgi(event_client.get_request_instance());
 							}
 							catch(int e)
 							{
-								read_timeout_list[i]->set_status_code(e);
+								event_client.set_status_code(e);
 							}
 						}
 					}
@@ -174,9 +174,9 @@ void startConnect(Cycle& cycle) {
 					std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
-					read_timeout_list[i]->assemble_response();
-					read_timeout_list[i]->get_request_instance().get_request_msg() = "";
-					addEvent(event.getEventQueue(), read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+					server[tmp_ident].assemble_response();
+					server[tmp_ident].get_request_instance().get_request_msg() = "";
+					addEvent(event.getEventQueue(), server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
 					std::cout << "---------------end of assebling message--------------\n";
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
@@ -256,7 +256,7 @@ static void acceptNewClient(Event& event, int kq, uintptr_t listen_socket, std::
 	event.incCurConnection();
 }
 
-static bool recieveFromClient(Event& event, Client& client) {
+static int recieveFromClient(Event& event, Client& client) {
 	uintptr_t		client_socket = client.get_client_soket();
 	std::string&	request_msg = client.get_request_instance().get_request_msg();
 	char			buf[BUF_SIZE] = {0,};
@@ -271,7 +271,7 @@ static bool recieveFromClient(Event& event, Client& client) {
 		eventException(EVENT_FAIL_RECV, client_socket);
 		return -1;
 	}
-	// std::cout << "BUFFER: " << buf << std::endl;
+	std::cout << "BUFFER: " << buf << std::endl;
 	request_msg += buf;
 	header_end = request_msg.find ("\r\n\r\n");
 
@@ -304,7 +304,7 @@ static bool recieveFromClient(Event& event, Client& client) {
 	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
 	std::cout << "recieve message[" << client_socket << "]:\n" << request_msg <<"\n";
 	std::cout <<"---------------END_OF_RECIEVED_MESSAGE-----------------------\n";
-	return TRUE;
+	return true;
 }
 
 static bool sendToClient(Event& event, Client& client) {
