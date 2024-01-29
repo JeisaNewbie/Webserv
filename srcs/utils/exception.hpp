@@ -63,6 +63,6 @@ class Exception {
 };
 
 int		mainException(Exception& e);
-void	eventException(std::ofstream& error_log, int _costom_error, uintptr_t client_fd);
+void	eventException(int _costom_error, uintptr_t client_fd);
 
 #endif

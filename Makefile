@@ -6,7 +6,7 @@
 #    By: eunwolee <eunwolee@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/28 19:40:55 by eunwolee         ###   ########.fr        #
+#    Updated: 2024/01/28 20:43:08 by eunwolee         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -103,12 +103,10 @@ $(OBJS_DIR):
 	@mkdir ${OBJS_DIR}/cgi
 	@mkdir ${OBJS_DIR}/method
 	@mkdir ${OBJS_DIR}/utils
-	@mkdir log
 
 clean:
 	@echo "$(PECOCK)CLEANING OBJS... 🧹$(RESET)"
 	@$(RM) $(OBJS_DIR)
-	@$(RM) log
 
 fclean:
 	@echo "$(GREEN)CLEANING ALL... 🗑️$(RESET)"

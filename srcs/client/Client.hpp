@@ -44,7 +44,7 @@ class Client {
 
 		// Client& operator=(const Client& ref);
 
-		void		do_parse(std::string &request_msg, Cycle &cycle);
+		void		do_parse(Cycle &cycle);
 		void		set_property_for_cgi(Request &request);
 		void		do_method_without_cgi(Request &request);
 		void		parse_cgi_response(Cgi &cgi);

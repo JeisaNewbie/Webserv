@@ -19,9 +19,9 @@ void	Client::init_client(uintptr_t **cgi_fd_arr, uintptr_t client_soket)
 	set_cgi_fd_arr(client_soket);
 }
 
-void	Client::do_parse(std::string &request_msg, Cycle &cycle)
+void	Client::do_parse(Cycle &cycle)
 {
-	get_request_instance().process_request_parsing(request_msg, cycle);
+	get_request_instance().process_request_parsing(cycle);
 }
 
 void	Client::set_property_for_cgi(Request &request)
