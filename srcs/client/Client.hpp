@@ -36,6 +36,7 @@ class Client {
 		Cgi			cgi;
 		uintptr_t	client_soket;
 		uintptr_t	**cgi_fd_arr;
+		time_t		cgi_start_time;
 	public:
 		Phase phase;
 		Client();
@@ -62,6 +63,7 @@ class Client {
 		bool		get_chunked();
 		bool		get_expect();
 		uintptr_t	get_client_soket();
+		time_t&		get_cgi_start_time();
 		void		set_phase (Phase state);
 		void		set_status_code(int status_code);
 		void		set_cgi (bool flag);
@@ -69,4 +71,5 @@ class Client {
 		void		set_cgi_fd_arr(uintptr_t client_soket);
 		void		set_cgi_fork_status (bool status);
 		void		set_port(uint32_t port);
+		void		set_cgi_start_time();
 };
