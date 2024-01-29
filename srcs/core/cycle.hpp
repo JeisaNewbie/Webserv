@@ -31,9 +31,6 @@ class Cycle {
 		const std::string&		getDefaultErrorRoot(void) const;
 		std::list<Server>&		getServerList(void);
 		std::vector<uintptr_t>&	getListenSocketList(void);
-		std::string*			getEventTypeListen(void);
-		std::string*			getEventTypeClient(void);
-		std::string*			getEventTypeCgi(void);
 
 	private:
 		Cycle(void);
@@ -48,10 +45,6 @@ class Cycle {
 
 		std::list<Server>		server_list;
 		std::vector<uintptr_t>  listen_socket_list;
-
-		std::string				event_type_listen;
-		std::string				event_type_client;
-		std::string				event_type_cgi;
 };
 
 #endif

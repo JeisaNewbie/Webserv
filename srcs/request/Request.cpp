@@ -57,13 +57,13 @@ void	Request::process_request_parsing(Cycle &cycle)
 		this->cycle = &cycle;
 		// std::cout<< "parse_request\n";
 		parse_request ();
-		// std::cout<< "parse_request_line\n";
+		std::cout<< "parse_request_line\n";
 		parse_request_line ();
-		// std::cout<< "parse_header_fields\n";
+		std::cout<< "parse_header_fields\n";
 		parse_header_fields ();
-		// std::cout<< "check_members\n";
+		std::cout<< "check_members\n";
 		// check_members();
-		// std::cout<< "check_header_is_valid\n";
+		std::cout<< "check_header_is_valid\n";
 		check_header_is_valid ();
 		// std::cout << "matching_server\n";
 		matching_server(); // port와 listen이 일치하는지 확인 &&  host와 server_name 일치 확인 -> location과 uri(path)와 일치하는지 확인 (만약 path가 absolute form으로 올경우 그중 path를 파싱해서 path 와 location 비교)
@@ -79,18 +79,30 @@ void	Request::process_request_parsing(Cycle &cycle)
 
 void	Request::parse_request()
 {
+	std::cout << "PARSE_REQUEST_START\n";
 	std::string &msg = this->request_msg;
 	size_t delimeter = msg.find ("\r\n");
+	this->pos = 0;
+
+	if (delimeter == std::string::npos)
+		throw BAD_REQUEST;
 
 	if (delimeter == 0)
 	{
+		std::cout << "PARSE_REQUEST_DELIMETER_0\n";
 		this->pos = 2;
+		if (this->pos >= this->request_msg.size())
+			throw BAD_REQUEST;
 		delimeter = msg.find ("\r\n", this->pos);
 		if (delimeter == std::string::npos)
 			throw BAD_REQUEST;
+		std::cout << "PARSE_REQUEST_DELIMETER_0_DONE\n";
 	}
 
+	std::cout << "PARSE_REQUEST_WHILE_READY\n";
+	std::cout << "POS: " << this->pos << ", DELIMETER: " << delimeter << std::endl;
 	this->request_line = msg.substr (this->pos, delimeter - this->pos);
+	std::cout << "PARSE_REQUEST_WHILE_START\n";
 
 	while (delimeter != std::string::npos)
 	{
@@ -100,10 +112,14 @@ void	Request::parse_request()
 		if (this->pos == delimeter)
 		{
 			this->message_body = msg.substr (this->pos + 2);
-			break ;
+			break;
 		}
-		this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
+		std::string tmp = msg.substr (this->pos, delimeter - this->pos + 2);
+		std::cout << "PARSE_REQUEST_WHILE_HEADER: " << tmp << std::endl;
+		// this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
+		this->headers.push_back (tmp);
 	}
+	std::cout << "PARSE_REQUEST_END\n";
 }
 
 void	Request::parse_request_line()
@@ -119,7 +135,7 @@ void	Request::parse_request_line()
 	std::string::iterator query_start;
 	std::string::iterator query_end;
 	char	ch;
-
+	std::cout << "PARSE_REQUEST_LINE_START\n";
 	enum {
 		start = 0,
 		method,
@@ -586,7 +602,10 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 	size_t	crlf = header_element.find ("\r\n");
 
 	if (pos == std::string::npos || crlf == std::string::npos)
+	{
+		std::cout << "HEADER: " << header_element << std::endl;
 		throw BAD_REQUEST;
+	}
 
 	// std::cout<<"HEADER_FIELD: "<<header_element<<std::endl;
 	std::string	key = lower (header_element.substr (0, pos).c_str(), pos);

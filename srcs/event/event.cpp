@@ -4,14 +4,15 @@ static void prepConnect(Cycle& cycle);
 static void addEvent(int kq, uintptr_t ident, int16_t filter,			\
 						uint16_t flags,	uint32_t fflags,						\
 						intptr_t data, std::string* udata);
-static void acceptNewClient(Cycle& cycle, int kq, uintptr_t listen_socket, std::map<int, Client>& server);
-static bool recieveFromClient(Client& client);
-static bool sendToClient(Client& client);
-static void disconnectClient(int client_socket);
-static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Cycle& cycle, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list);
+static void acceptNewClient(Event& event, int kq, uintptr_t listen_socket, std::map<int, Client>& server);
+static bool recieveFromClient(Event& event, Client& client);
+static bool sendToClient(Event& event, Client& client);
+static void disconnectClient(Event& event, int client_socket);
+static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list);
 static void checkCgiForkList(std::vector<Client*>& cgi_fork_list);
 
-Event::Event(void) : cur_connection(0) {
+Event::Event(void) : cur_connection(0),	event_type_listen("listen"),	\
+					event_type_client("client"), event_type_cgi("cgi") {
 	event_queue = kqueue();
 	if (event_queue == -1)
 		throw Exception(EVENT_FAIL_CREATE_KQ);
@@ -29,11 +30,14 @@ Event& Event::operator =(const Event& src) {
 	return *this;
 }
 
-int		Event::getEventQueue(void) const { return event_queue; }
-int		Event::getCurConnection(void) const { return cur_connection; }
+int				Event::getEventQueue(void) const { return event_queue; }
+int				Event::getCurConnection(void) const { return cur_connection; }
 
-void	Event::incCurConnection(void) { cur_connection++; };
-void	Event::decCurConnection(void) { cur_connection--; };
+void			Event::incCurConnection(void) { cur_connection++; }
+void			Event::decCurConnection(void) { cur_connection--; }
+std::string*	Event::getEventTypeListen(void) { return &event_type_listen; }
+std::string*	Event::getEventTypeClient(void) { return &event_type_client; }
+std::string*	Event::getEventTypeCgi(void) { return &event_type_listen; }
 
 // 삭제하기
 void printState(kevent_t* cur_event) {
@@ -80,7 +84,7 @@ void startConnect(Cycle& cycle) {
     std::cout << "---------------------webserver start---------------------\n";
 
     for (int i = 0; i < listen_socket_list.size(); i++)
-        addEvent(event.getEventQueue(), listen_socket_list[i], EVFILT_READ, EV_ADD, 0, 0, cycle.getEventTypeListen());
+        addEvent(event.getEventQueue(), listen_socket_list[i], EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeListen());
 
 	uint32_t		new_events;
 	kevent_t*		cur_event;
@@ -95,7 +99,7 @@ void startConnect(Cycle& cycle) {
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
 		
-		checkReadTimeout(read_timeout_list, cycle, event.getEventQueue(), cgi_fd_arr, cgi_fork_list);
+		checkReadTimeout(read_timeout_list, event, event.getEventQueue(), cgi_fd_arr, cgi_fork_list);
 		checkCgiForkList(cgi_fork_list);
 
 		for (int i = 0; i < new_events; i++) {
@@ -108,7 +112,7 @@ void startConnect(Cycle& cycle) {
 			// recv, send 함수에서 처리되니까 삭제해도 될 듯
 			// else if (cur_event->flags & EV_ERROR) {
 			// 	eventException(EVENT_SET_ERROR_FLAG, cur_event->ident);
-			// 	disconnectClient(worker, cur_event->ident);
+			// 	disconnectClient(Event& event, worker, cur_event->ident);
 			// }
 			else if (cur_event->filter == EVFILT_READ) {
 				std::string*						event_type = static_cast<std::string*>(cur_event->udata);
@@ -116,10 +120,11 @@ void startConnect(Cycle& cycle) {
 
 				if (*event_type == "listen") {
 					std::cout <<"ACCEPT_NEW_CLI\n";
-					// if (event.getCurConnection() < cycle.getWorkerConnections()) //필요함
-						acceptNewClient(cycle, event.getEventQueue(), tmp_ident, server);
-					// else // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
-						// eventException(EVENT_CONNECT_FULL, 0);
+					if (event.getCurConnection() < cycle.getWorkerConnections()) //필요함
+						acceptNewClient(event, event.getEventQueue(), tmp_ident, server);
+					else // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
+						eventException(EVENT_CONNECT_FULL, 0);
+					continue;
 				}
 				else if (*event_type == "client") {
 					Client&	event_client = server[tmp_ident];
@@ -129,7 +134,7 @@ void startConnect(Cycle& cycle) {
 						read_timeout_list.push_back(&event_client);
 					}
 
-					int	res = recieveFromClient(event_client);
+					int	res = recieveFromClient(event, event_client);
 					if (res == -1) {
 						// read_timeout_list에서 지우기
 						continue;
@@ -147,7 +152,7 @@ void startConnect(Cycle& cycle) {
 									read_timeout_list[i]->set_property_for_cgi(read_timeout_list[i]->get_request_instance());
 									uintptr_t	fd = read_timeout_list[i]->get_cgi_instance().get_fd();
 
-									addEvent(event.getEventQueue(), fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, cycle.getEventTypeCgi());
+									addEvent(event.getEventQueue(), fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeCgi());
 									cgi_fd_arr[fd] = read_timeout_list[i]->get_client_soket();
 									cgi_fork_list.push_back(read_timeout_list[i]);
 
@@ -171,11 +176,11 @@ void startConnect(Cycle& cycle) {
 				}
 					read_timeout_list[i]->assemble_response();
 					read_timeout_list[i]->get_request_instance().get_request_msg() = "";
-					addEvent(event.getEventQueue(), read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, cycle.getEventTypeClient());
+					addEvent(event.getEventQueue(), read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
 					std::cout << "---------------end of assebling message--------------\n";
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
-				if (sendToClient(server[cur_event->ident]) == FALSE)
+				if (sendToClient(event, server[cur_event->ident]) == FALSE)
 					continue;
 				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
 				if (server.find (cur_event->ident) != server.end())
@@ -233,7 +238,7 @@ static void addEvent(int kq, uintptr_t ident, int16_t filter,	\
 	kevent(kq, &temp, 1, NULL, 0, NULL);
 }
 
-static void acceptNewClient(Cycle& cycle, int kq, uintptr_t listen_socket, std::map<int, Client>& server) {
+static void acceptNewClient(Event& event, int kq, uintptr_t listen_socket, std::map<int, Client>& server) {
 	uintptr_t	client_socket;
 
 	if ((client_socket = accept(listen_socket, NULL, NULL)) == -1) {
@@ -247,23 +252,54 @@ static void acceptNewClient(Cycle& cycle, int kq, uintptr_t listen_socket, std::
 	}
 	std::cout<<"LITSENING_SOCKET: " << listen_socket << std::endl;
 	std::cout<<"CLIENT_SOCKET: " << client_socket << std::endl;
-	addEvent(kq, client_socket, EVFILT_READ, EV_ADD, 0, 0, cycle.getEventTypeClient());
-	// event.incCurConnection(); 필요함
+	addEvent(kq, client_socket, EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeClient());
+	event.incCurConnection();
 }
 
-static bool recieveFromClient(Client& client) {
+static bool recieveFromClient(Event& event, Client& client) {
 	uintptr_t		client_socket = client.get_client_soket();
 	std::string&	request_msg = client.get_request_instance().get_request_msg();
 	char			buf[BUF_SIZE] = {0,};
 	ssize_t			recieve_size;
+	ssize_t			header_end;
+	ssize_t			content_length;
+	ssize_t			body_length;
 
-	if ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) == 0) {
-		disconnectClient(client_socket);
+	std::cout << "RECIEVE_FROM_CLI_CLI_SOCKET: " << client_socket << std::endl;
+	if ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) <= 0) {
+		disconnectClient(event, client_socket);
 		eventException(EVENT_FAIL_RECV, client_socket);
-		return FALSE;
+		return -1;
 	}
-	std::cout << "BUFFER: " << buf << std::endl;
+	// std::cout << "BUFFER: " << buf << std::endl;
 	request_msg += buf;
+	header_end = request_msg.find ("\r\n\r\n");
+
+	if (header_end == std::string::npos)
+		return false;
+
+	if (request_msg.find("POST") == 0)
+	{
+		if (request_msg.find ("Content-Length: ") != std::string::npos)
+		{
+			content_length = std::stol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)), NULL, 10);
+			body_length = request_msg.size() - header_end;
+			if (content_length != body_length)
+			{
+				client.get_timeout_instance().setSavedTime();
+				return false;
+			}
+		}
+		else if (request_msg.find("Chunked") != std::string::npos)
+		{
+			if (request_msg.find ("\0\r\n") == std::string::npos)
+			{
+				client.get_timeout_instance().setSavedTime();
+				return false;
+			}
+			return true;
+		}
+	}
 
 	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
 	std::cout << "recieve message[" << client_socket << "]:\n" << request_msg <<"\n";
@@ -271,31 +307,31 @@ static bool recieveFromClient(Client& client) {
 	return TRUE;
 }
 
-static bool sendToClient(Client& client) {
+static bool sendToClient(Event& event, Client& client) {
 	std::string response_msg = client.get_response_instance().get_response_message();
 	int client_socket = client.get_client_soket();
 
 	if (send(client_socket, response_msg.c_str(), response_msg.length() + 1, 0) == -1) {
-		disconnectClient(client_socket);
+		disconnectClient(event, client_socket);
 		eventException(EVENT_FAIL_SEND, client_socket);
 		return FALSE;
 	}
 	return TRUE;
 }
 
-static void disconnectClient(int client_socket) {
+static void disconnectClient(Event& event, int client_socket) {
 
 	std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
 	close(client_socket);
-	// event.decCurConnection(); 필요함
+	event.decCurConnection();
 }
 
-static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Cycle& cycle, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list) {
+static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list) {
 	for (int i = 0; i < read_timeout_list.size(); i++) {
 		if (read_timeout_list[i]->get_timeout_instance().checkTimeout(READ_TIME_OUT) == true) {
 			read_timeout_list[i]->set_status_code(REQUEST_TIMEOUT);
 			read_timeout_list[i]->assemble_response();
-			addEvent(kq, read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, cycle.getEventTypeClient());
+			addEvent(kq, read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
 		}
 	}
 }
