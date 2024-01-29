@@ -115,8 +115,8 @@ void startConnect(Cycle& cycle) {
 			// 	disconnectClient(Event& event, worker, cur_event->ident);
 			// }
 			else if (cur_event->filter == EVFILT_READ) {
-				std::string*						event_type = static_cast<std::string*>(cur_event->udata);
-				uintptr_t 							tmp_ident = cur_event->ident;
+				std::string*	event_type = static_cast<std::string*>(cur_event->udata);
+				uintptr_t 		tmp_ident = cur_event->ident;
 
 				if (*event_type == "listen") {
 					std::cout <<"ACCEPT_NEW_CLI\n";
@@ -136,33 +136,35 @@ void startConnect(Cycle& cycle) {
 
 					int	res = recieveFromClient(event, event_client);
 					if (res == -1) {
-						// read_timeout_list에서 지우기
+						for (int i = 0; i < read_timeout_list.size(); i++)
+							if (read_timeout_list[i] == &event_client)
+								read_timeout_list.erase(read_timeout_list.begin());
 						continue;
 					}
 					else if (res == true) {
-						read_timeout_list[i]->do_parse(cycle);
-						read_timeout_list[i]->get_response_instance().set_body("");
-						// read_timeout_list[i]->get_request_instance().check_members();
-						if (read_timeout_list[i]->get_status_code() < MOVED_PERMANENTLY && read_timeout_list[i]->get_expect() == false)
+						event_client.do_parse(cycle);
+						event_client.get_response_instance().set_body("");
+						// event_client.get_request_instance().check_members();
+						if (event_client.get_status_code() < MOVED_PERMANENTLY && event_client.get_expect() == false)
 						{
 							try
 							{
-								if (read_timeout_list[i]->get_cgi() == true)
+								if (event_client.get_cgi() == true)
 								{
-									read_timeout_list[i]->set_property_for_cgi(read_timeout_list[i]->get_request_instance());
-									uintptr_t	fd = read_timeout_list[i]->get_cgi_instance().get_fd();
+									event_client.set_property_for_cgi(event_client.get_request_instance());
+									uintptr_t	fd = event_client.get_cgi_instance().get_fd();
 
 									addEvent(event.getEventQueue(), fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeCgi());
-									cgi_fd_arr[fd] = read_timeout_list[i]->get_client_soket();
-									cgi_fork_list.push_back(read_timeout_list[i]);
+									cgi_fd_arr[fd] = event_client.get_client_soket();
+									cgi_fork_list.push_back(&event_client);
 
 									continue;
 								}
-								read_timeout_list[i]->do_method_without_cgi(read_timeout_list[i]->get_request_instance());
+								event_client.do_method_without_cgi(event_client.get_request_instance());
 							}
 							catch(int e)
 							{
-								read_timeout_list[i]->set_status_code(e);
+								event_client.set_status_code(e);
 							}
 						}
 					}
@@ -174,11 +176,11 @@ void startConnect(Cycle& cycle) {
 					std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
-					read_timeout_list[i]->assemble_response();
-					read_timeout_list[i]->get_request_instance().get_request_msg() = "";
-					addEvent(event.getEventQueue(), read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
-					std::cout << "---------------end of assebling message--------------\n";
-			}
+				server[tmp_ident].assemble_response();
+				server[tmp_ident].get_request_instance().get_request_msg() = "";
+				addEvent(event.getEventQueue(), server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+				std::cout << "---------------end of assebling message--------------\n";
+				}
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(event, server[cur_event->ident]) == FALSE)
 					continue;
@@ -332,6 +334,7 @@ static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& eve
 			read_timeout_list[i]->set_status_code(REQUEST_TIMEOUT);
 			read_timeout_list[i]->assemble_response();
 			addEvent(kq, read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+			read_timeout_list.erase(read_timeout_list.begin() + i--);
 		}
 	}
 }
