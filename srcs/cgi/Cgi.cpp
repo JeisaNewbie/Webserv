@@ -154,3 +154,4 @@ void	Cgi::set_name (std::string &name) {this->cgi_name = name;}
 int		Cgi::get_fd() {return this->fd_file_out;}
 void	Cgi::set_cgi_fork_status(bool status) {this->fork_status = status;}
 bool	Cgi::get_cgi_fork_status() {return this->fork_status;}
+pid_t	Cgi::get_pid() {return this->pid;}

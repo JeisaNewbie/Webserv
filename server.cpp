@@ -88,7 +88,7 @@ int main() {
 
     addEvent(kq, listen_socket, EVFILT_READ, EV_ADD, 0, 0, NULL);
 
-    kevent_t		event_list(8);
+    std::vector<struct kevent>	event_list(8);
 	struct timespec	timeout;
 	timeout.tv_sec = 5;
 	timeout.tv_nsec = 0;

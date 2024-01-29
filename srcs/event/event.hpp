@@ -2,7 +2,6 @@
 # define EVENT_HPP
 
 # include <map>
-# include <ctime>
 # include <vector>
 # include <cstring>
 # include <fcntl.h>
@@ -15,4 +14,3 @@
 void startConnect(Cycle& cycle);
 
 #endif
-

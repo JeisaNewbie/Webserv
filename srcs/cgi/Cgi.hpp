@@ -43,4 +43,5 @@ class Cgi {
 		void			set_cgi_fork_status(bool status);
 		bool			get_cgi_fork_status();
 		int				get_fd();
+		pid_t			get_pid();
 };

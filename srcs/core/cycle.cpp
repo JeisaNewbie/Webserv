@@ -1,7 +1,8 @@
 #include "core.hpp"
 
 Cycle::Cycle(const char** _envp) : envp(_envp), worker_connections(0),	\
-		client_max_body_size(0), uri_limit_length(0) {}
+		client_max_body_size(0), uri_limit_length(0),					\
+		event_type_listen("listen"), event_type_client("client"), event_type_cgi("cgi"){}
 
 Cycle::Cycle(const Cycle& src) { *this = src; }
 
@@ -35,3 +36,6 @@ const std::string&		Cycle::getMainRoot(void) const { return main_root; }
 const std::string&		Cycle::getDefaultErrorRoot(void) const { return default_error_root; }
 std::list<Server>&		Cycle::getServerList(void) { return server_list; }
 std::vector<uintptr_t>&	Cycle::getListenSocketList(void) { return listen_socket_list; }
+std::string*			Cycle::getEventTypeListen(void) { return &event_type_listen; }
+std::string*			Cycle::getEventTypeClient(void) { return &event_type_client; }
+std::string*			Cycle::getEventTypeCgi(void) { return &event_type_listen; }
