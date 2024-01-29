@@ -136,9 +136,12 @@ void startConnect(Cycle& cycle) {
 
 					int	res = recieveFromClient(event, event_client);
 					if (res == -1) {
-						for (int i = 0; i < read_timeout_list.size(); i++)
-							if (read_timeout_list[i] == &event_client)
-								read_timeout_list.erase(read_timeout_list.begin());
+						for (int i = 0; i < read_timeout_list.size(); i++) {
+							if (read_timeout_list[i] == &event_client) {
+								read_timeout_list.erase(read_timeout_list.begin() + i);
+								break;
+							}
+						}
 						continue;
 					}
 					else if (res == true) {
@@ -179,6 +182,12 @@ void startConnect(Cycle& cycle) {
 				server[tmp_ident].assemble_response();
 				server[tmp_ident].get_request_instance().get_request_msg() = "";
 				addEvent(event.getEventQueue(), server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+				for (int i = 0; i < read_timeout_list.size(); i++) {
+					if (read_timeout_list[i] == &server[tmp_ident]) {
+						read_timeout_list.erase(read_timeout_list.begin() + i);
+						break;
+					}
+				}
 				std::cout << "---------------end of assebling message--------------\n";
 				}
 			else if (cur_event->filter == EVFILT_WRITE) {
@@ -189,6 +198,7 @@ void startConnect(Cycle& cycle) {
 					server[cur_event->ident].reset_data();
 			}
 		}
+		
 	}
 }
 
