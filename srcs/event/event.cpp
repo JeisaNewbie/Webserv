@@ -115,8 +115,8 @@ void startConnect(Cycle& cycle) {
 			// 	disconnectClient(Event& event, worker, cur_event->ident);
 			// }
 			else if (cur_event->filter == EVFILT_READ) {
-				std::string*						event_type = static_cast<std::string*>(cur_event->udata);
-				uintptr_t 							tmp_ident = cur_event->ident;
+				std::string*	event_type = static_cast<std::string*>(cur_event->udata);
+				uintptr_t 		tmp_ident = cur_event->ident;
 
 				if (*event_type == "listen") {
 					std::cout <<"ACCEPT_NEW_CLI\n";
@@ -136,13 +136,24 @@ void startConnect(Cycle& cycle) {
 
 					int	res = recieveFromClient(event, event_client);
 					if (res == -1) {
-						// read_timeout_list에서 지우기
+						for (int i = 0; i < read_timeout_list.size(); i++) {
+							if (read_timeout_list[i] == &event_client) {
+								read_timeout_list.erase(read_timeout_list.begin() + i);
+								break;
+							}
+						}
 						continue;
 					}
 					else if (res == true) {
 						event_client.do_parse(cycle);
 						event_client.get_response_instance().set_body("");
 						// event_client.get_request_instance().check_members();
+						for (int i = 0; i < read_timeout_list.size(); i++) {
+							if (read_timeout_list[i] == &server[tmp_ident]) {
+								read_timeout_list.erase(read_timeout_list.begin() + i);
+								break;
+							}
+						}
 						if (event_client.get_status_code() < MOVED_PERMANENTLY && event_client.get_expect() == false)
 						{
 							try
@@ -154,7 +165,7 @@ void startConnect(Cycle& cycle) {
 
 									addEvent(event.getEventQueue(), fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeCgi());
 									cgi_fd_arr[fd] = event_client.get_client_soket();
-									cgi_fork_list.push_back(read_timeout_list[i]);
+									cgi_fork_list.push_back(&event_client);
 
 									continue;
 								}
@@ -166,6 +177,8 @@ void startConnect(Cycle& cycle) {
 							}
 						}
 					}
+					else
+						continue;
 				}
 				else {
 					std::cout << "READ_ELSE_CUR_EVENT->IDENT: " << cur_event->ident << std::endl;
@@ -174,11 +187,12 @@ void startConnect(Cycle& cycle) {
 					std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
-					server[tmp_ident].assemble_response();
-					server[tmp_ident].get_request_instance().get_request_msg() = "";
-					addEvent(event.getEventQueue(), server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
-					std::cout << "---------------end of assebling message--------------\n";
-			}
+				std::cout << "START_ASSEMBLE_RESPONSE\n";
+				server[tmp_ident].assemble_response();
+				server[tmp_ident].get_request_instance().get_request_msg() = "";
+				addEvent(event.getEventQueue(), server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+				std::cout << "---------------end of assebling message--------------\n";
+				}
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(event, server[cur_event->ident]) == FALSE)
 					continue;
@@ -274,29 +288,42 @@ static int recieveFromClient(Event& event, Client& client) {
 	std::cout << "BUFFER: " << buf << std::endl;
 	request_msg += buf;
 	header_end = request_msg.find ("\r\n\r\n");
+	std::cout <<"-ZERO\n";
 
 	if (header_end == std::string::npos)
+	{
+		client.get_timeout_instance().setSavedTime();
+		std::cout <<"--ZERO\n";
 		return false;
+	}
 
+	std::cout <<"ZERO\n";
 	if (request_msg.find("POST") == 0)
 	{
+		std::cout <<"ONE\n";
 		if (request_msg.find ("Content-Length: ") != std::string::npos)
 		{
+			std::cout <<"TWO\n";
 			content_length = std::stol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)), NULL, 10);
-			body_length = request_msg.size() - header_end;
+			body_length = request_msg.size() - (header_end + 4);
+			std::cout << "BODY_LENGTH: " << body_length << std::endl;
+			std::cout <<"TWO_TWO\n";
 			if (content_length != body_length)
 			{
 				client.get_timeout_instance().setSavedTime();
 				return false;
 			}
 		}
-		else if (request_msg.find("Chunked") != std::string::npos)
+		else if (request_msg.find("chunked") != std::string::npos)
 		{
-			if (request_msg.find ("\0\r\n") == std::string::npos)
+			std::cout <<"THREE\n";
+			if (request_msg.find ("0\r\n", header_end) == std::string::npos)
 			{
+				std::cout <<"FOUR\n";
 				client.get_timeout_instance().setSavedTime();
 				return false;
 			}
+			std::cout << "CHUNKED_DONE: " << request_msg.find("0\r\n") << std::endl;
 			return true;
 		}
 	}
@@ -318,7 +345,6 @@ static bool sendToClient(Event& event, Client& client) {
 	}
 	return TRUE;
 }
-
 static void disconnectClient(Event& event, int client_socket) {
 
 	std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
@@ -332,6 +358,7 @@ static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& eve
 			read_timeout_list[i]->set_status_code(REQUEST_TIMEOUT);
 			read_timeout_list[i]->assemble_response();
 			addEvent(kq, read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+			read_timeout_list.erase(read_timeout_list.begin() + i--);
 		}
 	}
 }
