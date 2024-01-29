@@ -6,7 +6,7 @@
 #    By: eunwolee <eunwolee@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/08/06 22:47:37 by eunwolee          #+#    #+#              #
-#    Updated: 2024/01/28 20:43:08 by eunwolee         ###   ########.fr        #
+#    Updated: 2024/01/29 19:04:36 by eunwolee         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,7 +31,6 @@ SRCS =	core/main.cpp \
 		config/cmd.cpp \
 		block/location.cpp \
 		block/server.cpp \
-		worker/worker.cpp \
 		event/event.cpp \
 		event/timeout.cpp \
 		request/Request.cpp \
@@ -95,7 +94,6 @@ $(OBJS_DIR):
 	@mkdir ${OBJS_DIR}/core
 	@mkdir ${OBJS_DIR}/config
 	@mkdir ${OBJS_DIR}/block
-	@mkdir ${OBJS_DIR}/worker
 	@mkdir ${OBJS_DIR}/event
 	@mkdir ${OBJS_DIR}/request
 	@mkdir ${OBJS_DIR}/response

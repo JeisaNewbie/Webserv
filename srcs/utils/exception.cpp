@@ -89,11 +89,11 @@ void	Exception::setMessage(int costom_error) {
 		message = "Failed to tokenize configure command";
 		break;
 
-	case WORK_FAIL_CREATE_KQ:
+	case EVENT_FAIL_CREATE_KQ:
 		message = "Failed to create kqueue";
 		break;
 
-	case WORK_FAIL_CREATE_SOCKET:
+	case EVENT_FAIL_CREATE_SOCKET:
 		message = "Failed to create socket";
 		break;
 
