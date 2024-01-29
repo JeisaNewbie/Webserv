@@ -3,8 +3,8 @@
 static void prepConnect(Cycle& cycle);
 static void addEvent(int kq, uintptr_t ident, int16_t filter,			\
 						uint16_t flags,	uint32_t fflags,						\
-						intptr_t data, std::string* udata);
-static void acceptNewClient(Event& event, int kq, uintptr_t listen_socket, std::map<int, Client>& server);
+						intptr_t data, char* udata);
+static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int, Client>& server);
 static bool recieveFromClient(Event& event, Client& client);
 static bool sendToClient(Event& event, Client& client);
 static void disconnectClient(Event& event, int client_socket);
@@ -35,9 +35,9 @@ int				Event::getCurConnection(void) const { return cur_connection; }
 
 void			Event::incCurConnection(void) { cur_connection++; }
 void			Event::decCurConnection(void) { cur_connection--; }
-std::string*	Event::getEventTypeListen(void) { return &event_type_listen; }
-std::string*	Event::getEventTypeClient(void) { return &event_type_client; }
-std::string*	Event::getEventTypeCgi(void) { return &event_type_listen; }
+char*			Event::getEventTypeListen(void) { return event_type_listen; }
+char*			Event::getEventTypeClient(void) { return event_type_client; }
+char*			Event::getEventTypeCgi(void) { return event_type_cgi; }
 
 // 삭제하기
 void printState(kevent_t* cur_event) {
@@ -115,18 +115,18 @@ void startConnect(Cycle& cycle) {
 			// 	disconnectClient(Event& event, worker, cur_event->ident);
 			// }
 			else if (cur_event->filter == EVFILT_READ) {
-				std::string*	event_type = static_cast<std::string*>(cur_event->udata);
-				uintptr_t 		tmp_ident = cur_event->ident;
+				char*		event_type = static_cast<char*>(cur_event->udata);
+				uintptr_t 	tmp_ident = cur_event->ident;
 
-				if (*event_type == "listen") {
+				if (strcmp(event_type, "listen") == 0) {
 					std::cout <<"ACCEPT_NEW_CLI\n";
 					if (event.getCurConnection() < cycle.getWorkerConnections()) //필요함
-						acceptNewClient(event, event.getEventQueue(), tmp_ident, server);
+						acceptNewClient(event, tmp_ident, server);
 					else // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
 						eventException(EVENT_CONNECT_FULL, 0);
 					continue;
 				}
-				else if (*event_type == "client") {
+				else if (strcmp(event_type, "client") == 0) {
 					Client&	event_client = server[tmp_ident];
 
 					if (event_client.get_request_instance().get_request_msg() == "") {
@@ -136,14 +136,23 @@ void startConnect(Cycle& cycle) {
 
 					int	res = recieveFromClient(event, event_client);
 					if (res == -1) {
-						for (int i = 0; i < read_timeout_list.size(); i++)
-							if (read_timeout_list[i] == &event_client)
-								read_timeout_list.erase(read_timeout_list.begin());
+						for (int i = 0; i < read_timeout_list.size(); i++) {
+							if (read_timeout_list[i] == &event_client) {
+								read_timeout_list.erase(read_timeout_list.begin() + i);
+								break;
+							}
+						}
 						continue;
 					}
 					else if (res == true) {
 						event_client.do_parse(cycle);
 						event_client.get_response_instance().set_body("");
+						for (int i = 0; i < read_timeout_list.size(); i++) {
+							if (read_timeout_list[i] == &server[tmp_ident]) {
+								read_timeout_list.erase(read_timeout_list.begin() + i);
+								break;
+							}
+						}
 						// event_client.get_request_instance().check_members();
 						if (event_client.get_status_code() < MOVED_PERMANENTLY && event_client.get_expect() == false)
 						{
@@ -168,6 +177,8 @@ void startConnect(Cycle& cycle) {
 							}
 						}
 					}
+					else
+						continue;
 				}
 				else {
 					std::cout << "READ_ELSE_CUR_EVENT->IDENT: " << cur_event->ident << std::endl;
@@ -189,6 +200,7 @@ void startConnect(Cycle& cycle) {
 					server[cur_event->ident].reset_data();
 			}
 		}
+		
 	}
 }
 
@@ -233,14 +245,14 @@ static void prepConnect(Cycle& cycle) {
 
 static void addEvent(int kq, uintptr_t ident, int16_t filter,	\
 						uint16_t flags,	uint32_t fflags,		\
-						intptr_t data, std::string* udata) {
+						intptr_t data, char* udata) {
 	kevent_t	temp;
 
 	EV_SET(&temp, ident, filter, flags | EV_CLEAR, fflags, data, static_cast<void *>(udata));
 	kevent(kq, &temp, 1, NULL, 0, NULL);
 }
 
-static void acceptNewClient(Event& event, int kq, uintptr_t listen_socket, std::map<int, Client>& server) {
+static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int, Client>& server) {
 	uintptr_t	client_socket;
 
 	if ((client_socket = accept(listen_socket, NULL, NULL)) == -1) {
@@ -254,7 +266,7 @@ static void acceptNewClient(Event& event, int kq, uintptr_t listen_socket, std::
 	}
 	std::cout<<"LITSENING_SOCKET: " << listen_socket << std::endl;
 	std::cout<<"CLIENT_SOCKET: " << client_socket << std::endl;
-	addEvent(kq, client_socket, EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeClient());
+	addEvent(event.getEventQueue(), client_socket, EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeClient());
 	event.incCurConnection();
 }
 
@@ -352,6 +364,7 @@ static void checkCgiForkList(std::vector<Client*>& cgi_fork_list) {
 				std::cout << "CGI_SCRIPT_TIMEOUT\n";
 				kill(cgi_fork_list[i]->get_cgi_instance().get_pid(), SIGKILL);
 				write(cgi_fork_list[i]->get_cgi_instance().get_fd(), "Status: 500\r\n\r\n", 15); //이벤트 발생 테스트해보기
+				std::cout << "\n\na\n\n";
 				cgi_fork_list.erase(cgi_fork_list.begin() + i--);
 				continue;
 			}
