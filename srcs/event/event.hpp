@@ -28,22 +28,22 @@ class Event {
 
 		Event& operator =(const Event& src);
 
-		int				getEventQueue(void) const;
-		int				getCurConnection(void) const;
+		int		getEventQueue(void) const;
+		int		getCurConnection(void) const;
 
-		void			incCurConnection(void);
-		void			decCurConnection(void);
-		std::string*	getEventTypeListen(void);
-		std::string*	getEventTypeClient(void);
-		std::string*	getEventTypeCgi(void);
+		void	incCurConnection(void);
+		void	decCurConnection(void);
+		char*	getEventTypeListen(void);
+		char*	getEventTypeClient(void);
+		char*	getEventTypeCgi(void);
 
 	private:
 		int			event_queue;
 		uint32_t	cur_connection;
 
-		std::string	event_type_listen;
-		std::string	event_type_client;
-		std::string	event_type_cgi;
+		char		event_type_listen[8];
+		char		event_type_client[7];
+		char		event_type_cgi[4];
 };
 
 void startConnect(Cycle& cycle);
