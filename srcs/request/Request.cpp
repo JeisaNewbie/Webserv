@@ -603,7 +603,7 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 
 	if (pos == std::string::npos || crlf == std::string::npos)
 	{
-		std::cout << "HEADER: " << header_element << std::endl;
+		// std::cout << "HEADER: " << header_element << std::endl;
 		throw BAD_REQUEST;
 	}
 
@@ -734,8 +734,9 @@ void	Request::check_transfer_encoding()
 	if (pos != 0)
 		throw NOT_IMPLEMENTED; //chunked외에 다른 인코딩이 있다는 뜻. 자원되지 않는 인코딩은 501
 
-	if (transfer_encoding_value.find ("\r\n", pos + 7) != 0)
+	if (transfer_encoding_value.find ("\r\n", transfer_encoding_value.find ("chunked") + 6) != 0)
 	{
+		std::cout << "TRANSFER_ENCODING_CHUNKED_IS_NOT_FINAL\n";
 		this->header["connection"] = "close\r\n";
 		throw BAD_REQUEST;
 	}
@@ -750,7 +751,10 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 	size_t		pos = 0;
 
 	if (msg.find ("0\r\n") == std::string::npos)
+	{
+		std::cout << "NO_0CRLF\n";
 		throw BAD_REQUEST;
+	}
 	this->message_body = "";
 
 	while (1)
