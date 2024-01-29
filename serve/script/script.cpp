@@ -22,7 +22,7 @@ int main() {
 		std::string	data_post = getEnvString("QUERY_STRING_POST");
 		const std::string	data_get = getEnvString("QUERY_STRING_GET");
 		const std::string	directory_path = getEnvString("REDIRECT_PATH");
-		while (std::getline(std::cin, line)) {}
+		// while (std::getline(std::cin, line)) {}
 		if (line.size() != 0)
 			data_post = line;
 		if (request_method == "GET")

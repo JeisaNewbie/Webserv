@@ -6,7 +6,6 @@
 # include "../config/cmd.hpp"
 # include "../block/server.hpp"
 # include "../block/location.hpp"
-# include "../worker/worker.hpp"
 # include "../event/event.hpp"
 # include "../event/timeout.hpp"
 # include "../request/Request.hpp"
