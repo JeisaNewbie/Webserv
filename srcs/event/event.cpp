@@ -5,7 +5,7 @@ static void addEvent(int kq, uintptr_t ident, int16_t filter,			\
 						uint16_t flags,	uint32_t fflags,						\
 						intptr_t data, char* udata);
 static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int, Client>& server);
-static int recieveFromClient(Event& event, Client& client);
+static int	recieveFromClient(Event& event, Client& client);
 static bool sendToClient(Event& event, Client& client);
 static void disconnectClient(Event& event, int client_socket);
 static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list);
@@ -98,7 +98,7 @@ void startConnect(Cycle& cycle) {
 
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
-		
+
 		checkReadTimeout(read_timeout_list, event, event.getEventQueue(), cgi_fd_arr, cgi_fork_list);
 		checkCgiForkList(cgi_fork_list);
 
@@ -154,6 +154,12 @@ void startConnect(Cycle& cycle) {
 							}
 						}
 						// event_client.get_request_instance().check_members();
+						for (int i = 0; i < read_timeout_list.size(); i++) {
+							if (read_timeout_list[i] == &server[tmp_ident]) {
+								read_timeout_list.erase(read_timeout_list.begin() + i);
+								break;
+							}
+						}
 						if (event_client.get_status_code() < MOVED_PERMANENTLY && event_client.get_expect() == false)
 						{
 							try
@@ -187,6 +193,7 @@ void startConnect(Cycle& cycle) {
 					std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
+				std::cout << "START_ASSEMBLE_RESPONSE\n";
 				server[tmp_ident].assemble_response();
 				server[tmp_ident].get_request_instance().get_request_msg() = "";
 				addEvent(event.getEventQueue(), server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
@@ -200,7 +207,7 @@ void startConnect(Cycle& cycle) {
 					server[cur_event->ident].reset_data();
 			}
 		}
-		
+
 	}
 }
 
@@ -285,32 +292,45 @@ static int recieveFromClient(Event& event, Client& client) {
 		eventException(EVENT_FAIL_RECV, client_socket);
 		return -1;
 	}
-	// std::cout << "BUFFER: " << buf << std::endl;
+	std::cout << "BUFFER: " << buf << std::endl;
 	request_msg += buf;
 	header_end = request_msg.find ("\r\n\r\n");
+	std::cout <<"-ZERO\n";
 
 	if (header_end == std::string::npos)
+	{
+		client.get_timeout_instance().setSavedTime();
+		std::cout <<"--ZERO\n";
 		return false;
+	}
 
+	std::cout <<"ZERO\n";
 	if (request_msg.find("POST") == 0)
 	{
+		std::cout <<"ONE\n";
 		if (request_msg.find ("Content-Length: ") != std::string::npos)
 		{
+			std::cout <<"TWO\n";
 			content_length = std::stol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)), NULL, 10);
-			body_length = request_msg.size() - header_end;
+			body_length = request_msg.size() - (header_end + 4);
+			std::cout << "BODY_LENGTH: " << body_length << std::endl;
+			std::cout <<"TWO_TWO\n";
 			if (content_length != body_length)
 			{
 				client.get_timeout_instance().setSavedTime();
 				return false;
 			}
 		}
-		else if (request_msg.find("Chunked") != std::string::npos)
+		else if (request_msg.find("chunked") != std::string::npos)
 		{
-			if (request_msg.find ("\0\r\n") == std::string::npos)
+			std::cout <<"THREE\n";
+			if (request_msg.find ("0\r\n", header_end) == std::string::npos)
 			{
+				std::cout <<"FOUR\n";
 				client.get_timeout_instance().setSavedTime();
 				return false;
 			}
+			std::cout << "CHUNKED_DONE: " << request_msg.find("0\r\n") << std::endl;
 			return true;
 		}
 	}
@@ -318,7 +338,7 @@ static int recieveFromClient(Event& event, Client& client) {
 	std::cout << "recieve_size: " << recieve_size << ", errno: " << errno << "\n";
 	std::cout << "recieve message[" << client_socket << "]:\n" << request_msg <<"\n";
 	std::cout <<"---------------END_OF_RECIEVED_MESSAGE-----------------------\n";
-	return TRUE;
+	return true;
 }
 
 static bool sendToClient(Event& event, Client& client) {
@@ -332,7 +352,6 @@ static bool sendToClient(Event& event, Client& client) {
 	}
 	return TRUE;
 }
-
 static void disconnectClient(Event& event, int client_socket) {
 
 	std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
