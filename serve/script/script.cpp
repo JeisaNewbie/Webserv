@@ -1,12 +1,9 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <cstdlib>
-#include <cstring>
 #include <dirent.h>
 #include <ctime>
 #include <string>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <exception>
 
@@ -23,22 +20,20 @@ int main() {
 	signal(SIGTERM, handleSignal);
 
 	try {
-		while (1) {}
+		// while (1) {}
 		std::string			data_post;
 		std::string			request_method = getEnvString("REQUEST_METHOD");
 		const std::string	data_get = getEnvString("QUERY_STRING_GET");
 		const std::string	directory_path = getEnvString("REDIRECT_PATH");
 
 		while (std::getline(std::cin, data_post)) {}
-
 		if (request_method == "GET")
 			handleGetMethod(directory_path, data_get);
 		else if (request_method == "POST")
 			handlePostMethod(directory_path, data_post);
 	}
-	catch(const std::exception& e) {
-		std::cerr << "Script exception caught: " << e.what() << std::endl;
-		return -1;
+	catch(std::exception& e) {
+		return 1;
 	}
 
 	std::cerr << "SCRIPT_DONE\n";
@@ -72,6 +67,9 @@ static void handlePostMethod(const std::string directory_path, const std::string
 		std::string		new_file_name = createUniqueFileName();
 		std::ofstream	new_file(std::string(directory_path) + new_file_name);
 
+		if (new_file.is_open() == false)
+			throw std::runtime_error("open");
+
 		new_file << post_data;
 		new_file.close();
 
@@ -82,7 +80,6 @@ static void handlePostMethod(const std::string directory_path, const std::string
 static void handleSignal(int signum) {
 	// 파일 내용 삭제
 	static_cast<void>(signum);
-	std::cout << "Status_code: 500\r\n";
 	exit(1);
 }
 
@@ -90,7 +87,7 @@ static std::string getEnvString(const char* str) {
 	const char*	tmp = getenv(str);
 
 	if (tmp == NULL)
-		throw std::runtime_error("get env");
+		throw std::runtime_error("getenv");
 
 	return std::string(tmp);
 }
