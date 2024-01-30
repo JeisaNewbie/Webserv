@@ -172,5 +172,6 @@ void		Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
 void		Client::set_read_fail (bool flag) {this->read_fail = flag;}
 void		Client::set_cgi_fork_status (bool status) {get_cgi_instance().set_cgi_fork_status(status);}
 uintptr_t	Client::get_client_soket() {return this->client_soket;}
+uintptr_t*	Client::get_client_soket_ptr() {return &(this->client_soket);}
 void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}
 void		Client::set_port(uint32_t port) {get_request_instance().set_port(port);}

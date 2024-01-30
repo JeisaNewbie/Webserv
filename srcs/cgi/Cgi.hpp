@@ -7,6 +7,7 @@
 #include <sstream>
 #include "../request/Request.hpp"
 #include "../utils/Utils.hpp"
+#include "../event/event.hpp"
 
 #define	READ			0
 #define	WRITE			1
@@ -36,7 +37,7 @@ class Cgi {
 		std::string&	get_response_from_cgi();
 		void			set_env(Request &request, uintptr_t client_soket);
 		char			**get_char_arr_of_env();
-		static void		execute_cgi(Request &request, Cgi &cgi);
+		static void		execute_cgi(Event& event, uintptr_t* client_socket, Request &request, Cgi &cgi);
 		void			set_body (std::string &body);
 		void			set_name (std::string &name);
 		void			set_fd();

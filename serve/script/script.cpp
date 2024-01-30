@@ -12,12 +12,18 @@
 
 static void			handleGetMethod(const std::string directory_path, const std::string get_data);
 static void			handlePostMethod(const std::string directory_path, const std::string post_data);
+static void			handleSignal(int);
 static std::string	getEnvString(const char* str);
 static std::string	createUniqueFileName();
 
 int main() {
+
+	std::cerr << "SCRIPT_START\n";
+
+	signal(SIGTERM, handleSignal);
+
 	try {
-		while (1) {}
+		// while (1) {}
 		std::string			data_post;
 		std::string			request_method = getEnvString("REQUEST_METHOD");
 		// std::string			data_post = getEnvString("QUERY_STRING_POST");
@@ -72,8 +78,15 @@ static void handlePostMethod(const std::string directory_path, const std::string
 		new_file << post_data;
 		new_file.close();
 
-		std::cout << "Status_code: 201\r\n\0";
+		std::cout << "Status_code: 201\r\n";
 	}
+}
+
+static void handleSignal(int signum) {
+	// 파일 내용 삭제
+	static_cast<void>(signum);
+	std::cout << "Status_code: 500\r\n";
+	exit(1);
 }
 
 static std::string getEnvString(const char* str) {
