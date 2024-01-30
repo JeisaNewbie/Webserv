@@ -46,6 +46,7 @@ private:
 	bool											chunked;
 	int												status_code;
 	bool											expect;
+	bool											default_error;
 	bool											cgi;
 	bool											redirect;
 	bool											autoindex;

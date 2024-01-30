@@ -170,7 +170,6 @@ void startConnect(Cycle& cycle) {
 								break;
 							}
 						}
-						// event_client.get_request_instance().check_members();
 						for (int i = 0; i < read_timeout_list.size(); i++) {
 							if (read_timeout_list[i] == &server[tmp_ident]) {
 								read_timeout_list.erase(read_timeout_list.begin() + i);
@@ -238,6 +237,7 @@ void startConnect(Cycle& cycle) {
 		}
 	}
 }
+
 
 static void prepConnect(Cycle& cycle) {
     sockaddr_in					server_addr;
