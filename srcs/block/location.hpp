@@ -2,6 +2,7 @@
 # define LOCATION_HPP
 
 # include <iostream>
+# include <vector>
 
 # define METHOD_GET		0x00000001
 # define METHOD_POST	0x00000010
