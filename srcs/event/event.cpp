@@ -121,9 +121,8 @@ void startConnect(Cycle& cycle) {
 		for (int i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
 			printState(cur_event);
-
-			if ((cur_event->flags & EV_EOF && cur_event->filter != EVFILT_PROC)	\
-				|| cur_event->flags & EV_ERROR) {
+			if ((cur_event->flags & EV_EOF && cur_event->filter != EVFILT_PROC)	|| cur_event->flags & EV_ERROR) {
+				// if (send (cur_event->ident, "", 0, 0) == -1)
 				disconnectClient(event, cur_event->ident);
 				continue;
 			}
@@ -182,8 +181,8 @@ void startConnect(Cycle& cycle) {
 							{
 								if (event_client.get_cgi() == true)
 								{
+									std::cout << "CGI_BODY: " << event_client.get_request_instance().get_message_body () << std::endl;
 									event_client.set_property_for_cgi(event_client.get_request_instance());
-									uintptr_t	fd = event_client.get_cgi_instance().get_fd();
 
 									std::cout << "\n\nEXECUTE_CGI\n\n\n";
 									Cgi::execute_cgi(event, event_client.get_client_soket_ptr(), event_client.get_request_instance(),	\
@@ -217,6 +216,12 @@ void startConnect(Cycle& cycle) {
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(event, server[cur_event->ident]) == FALSE)
 					continue;
+				// if (sendToClient(event, server[cur_event->ident]) == FALSE)
+				// {
+				// 	server.erase(cur_event->ident);
+				// 	continue;
+				// }
+				// sendToClient(event, server[cur_event->ident]);
 				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
 				if (server.find (cur_event->ident) != server.end())
 					server[cur_event->ident].reset_data();
@@ -286,6 +291,7 @@ static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int,
 		eventException(EVENT_FAIL_ACCEPT, 0);
 		return ;
 	}
+
 	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1) {
 		// 소켓 닫기
 		eventException(EVENT_FAIL_FCNTL, 0);
@@ -325,14 +331,14 @@ static int recieveFromClient(Event& event, Client& client) {
 	}
 
 	std::cout <<"ZERO\n";
-	if (request_msg.find("POST") == 0)
+	if (request_msg.find("POST") == 0 && request_msg.find ("100-continue") == std::string::npos)
 	{
 		std::cout <<"ONE\n";
 		if (request_msg.find ("Content-Length: ") != std::string::npos)
 		{
 			std::cout <<"TWO\n";
 			content_length = std::stol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)), NULL, 10);
-			client.body_length = request_msg.size() - (header_end + 4); // request_msg_size가 변경되기때문에 buff로 수정
+			client.body_length = request_msg.size() - (header_end + 4);
 			std::cout << "BODY_LENGTH: " << client.body_length << std::endl;
 			std::cout << "NEW_REQUEST_MSG: \n" << request_msg << std::endl;
 			std::cout <<"TWO_TWO\n";
@@ -366,11 +372,19 @@ static bool sendToClient(Event& event, Client& client) {
 	std::string response_msg = client.get_response_instance().get_response_message();
 	int client_socket = client.get_client_soket();
 
+	if (send(client_socket, "", 0, 0) == -1)
+	{
+		disconnectClient(event, client_socket);
+		eventException(EVENT_FAIL_SEND, client_socket);
+		return FALSE;
+	}
+
 	if (send(client_socket, response_msg.c_str(), response_msg.length() + 1, 0) == -1) {
 		disconnectClient(event, client_socket);
 		eventException(EVENT_FAIL_SEND, client_socket);
 		return FALSE;
 	}
+
 	return TRUE;
 }
 static void disconnectClient(Event& event, int client_socket) {

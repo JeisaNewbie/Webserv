@@ -42,7 +42,9 @@ void	Client::set_property_for_cgi(Request &request)
 	}
 
 	this->get_cgi_instance().set_body(request.get_message_body());
+	std::cout << "SET_CGI_BODY: " << this->get_cgi_instance().get_body() << std::endl;
 	this->get_cgi_instance().set_env(request, get_client_soket());
+	std::cout << "GET_CLI_SOCKET: " << get_client_soket() << std::endl;
 	this->get_cgi_instance().set_fd();
 	std::cout<<"END_SET_PROPERTY_FOR_CGI\n";
 }
@@ -108,6 +110,7 @@ void	Client::parse_cgi_response(Cgi &cgi)
 		{
 			// std::cout<<"THIRD"<<std::endl;
 			get_response_instance().set_body(body.substr (pos + 2, body.find ("\r\n", pos + 2)));
+			std::cout << "parse_cgi_response_body: " << get_response_instance().get_body() << std::endl;
 			break ;
 		}
 
@@ -117,6 +120,7 @@ void	Client::parse_cgi_response(Cgi &cgi)
 	}
 	// std::cout<<"AFTER_BODY_FIND"<<std::endl;
 	set_status_code(std::atoi(get_response_instance().get_header_field("Status_code").c_str()));
+	std::cout << "parse_cgi_response_get_status_code: " << get_status_code() << std::endl;
 	set_cgi(false);
 }
 
@@ -140,7 +144,7 @@ void	Client::assemble_response()
 	}
 
 	if (get_read_fail() == false)
-		response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2)); // request parsing 없이 response 진행할수도 있음
+		response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2));
 
 	if (response.get_header_field("Connection") == "keep-alive")
 		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");

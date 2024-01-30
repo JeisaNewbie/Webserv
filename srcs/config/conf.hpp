@@ -7,7 +7,7 @@
 # include <sstream>
 
 # define TOKEN_SIZE 5
-# define DEFAULT_FILE "default.conf"
+# define DEFAULT_FILE "config/default.conf"
 # define CMD_MAIN_MAX 4
 # define CMD_SRV_MAX 2
 # define CMD_LOC_MAX 4

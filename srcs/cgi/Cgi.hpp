@@ -45,4 +45,5 @@ class Cgi {
 		bool			get_cgi_fork_status();
 		int				get_fd();
 		pid_t			get_pid();
+		std::string 	&get_body();
 };

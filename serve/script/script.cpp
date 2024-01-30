@@ -23,16 +23,14 @@ int main() {
 	signal(SIGTERM, handleSignal);
 
 	try {
-		// while (1) {}
+		while (1) {}
 		std::string			data_post;
 		std::string			request_method = getEnvString("REQUEST_METHOD");
-		// std::string			data_post = getEnvString("QUERY_STRING_POST");
 		const std::string	data_get = getEnvString("QUERY_STRING_GET");
 		const std::string	directory_path = getEnvString("REDIRECT_PATH");
 
 		while (std::getline(std::cin, data_post)) {}
-		// if (line.size() != 0)
-		// 	data_post = line;
+
 		if (request_method == "GET")
 			handleGetMethod(directory_path, data_get);
 		else if (request_method == "POST")
