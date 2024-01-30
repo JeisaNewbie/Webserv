@@ -20,7 +20,11 @@ void set_error_page(std::string path, std::string &content)
 {
 	std::ifstream error (path);
 	if (error.is_open() == false)
-		return;
+	{
+		error.open("/Users/ahkiler/Webserv/serve/error/400.html");
+		if (error.is_open() == false)
+			return;
+	}
 	std::stringstream ss;
 	ss << error.rdbuf();
 	content = ss.str();
