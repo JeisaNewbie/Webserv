@@ -124,6 +124,9 @@ void startConnect(Cycle& cycle) {
 
 			if ((cur_event->flags & EV_EOF && cur_event->filter != EVFILT_PROC)	\
 				|| cur_event->flags & EV_ERROR) {
+				std::cout << "FFLAGS: " << cur_event->fflags << "\n";
+				char tmp[BUF_SIZE] = {0,};
+				std::cout << "TRY_RECV: " << recv(cur_event->ident, &tmp, BUF_SIZE, 0) << "\n";
 				disconnectClient(event, cur_event->ident);
 				continue;
 			}
@@ -137,8 +140,10 @@ void startConnect(Cycle& cycle) {
 					std::cout <<"ACCEPT_NEW_CLI\n";
 					if (event.getCurConnection() < cycle.getWorkerConnections()) //필요함
 						acceptNewClient(event, tmp_ident, server);
-					else // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
+					else { // 연결 되지 않는 클라이언트는 어떻게 되는거지? 에러코드 바꾸기
+						std::cout << "FULLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL\n";
 						eventException(EVENT_CONNECT_FULL, 0);
+					}
 					continue;
 				}
 				else if (strcmp(event_type, "client") == 0) {
@@ -188,6 +193,7 @@ void startConnect(Cycle& cycle) {
 									std::cout << "\n\nEXECUTE_CGI\n\n\n";
 									Cgi::execute_cgi(event, event_client.get_client_soket_ptr(), event_client.get_request_instance(),	\
 													event_client.get_cgi_instance());
+									cgi_fork_list.push_back(&event_client);
 									event_client.set_cgi_fork_status (true);
 									event_client.get_timeout_instance().setSavedTime();
 
@@ -215,11 +221,20 @@ void startConnect(Cycle& cycle) {
 				}
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
-				if (sendToClient(event, server[cur_event->ident]) == FALSE)
-					continue;
-				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
-				if (server.find (cur_event->ident) != server.end())
+				if (sendToClient(event, server[cur_event->ident]) == FALSE) {
+					// std::cout << "CUR_IDENT: " << cur_event->ident << "\n";
+					// std::map<int, Client>::iterator it = server.find (cur_event->ident);
+					// std::cout << it->first << " " << it->second.get_cgi_instance().get_fd() << "\n";
+					// if (it != server.end())
+					// 	server.erase(it);
+					// std::map<int, Client>::iterator it = server.begin();
+					// for (int i = 0; i < server.size(); i++) {
+					// 	if ((it + i))
+					// }
+				}
+				else if (server.find (cur_event->ident) != server.end())
 					server[cur_event->ident].reset_data();
+				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
 			}
 			else if (cur_event->filter == EVFILT_PROC) {
 				std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
@@ -366,7 +381,8 @@ static bool sendToClient(Event& event, Client& client) {
 	std::string response_msg = client.get_response_instance().get_response_message();
 	int client_socket = client.get_client_soket();
 
-	if (send(client_socket, response_msg.c_str(), response_msg.length() + 1, 0) == -1) {
+	if (send(client_socket, response_msg.c_str(), response_msg.length() + 1, 0) == -1	\
+		|| response_msg.find("Connection: close") != std::string::npos) {
 		disconnectClient(event, client_socket);
 		eventException(EVENT_FAIL_SEND, client_socket);
 		return FALSE;
@@ -374,7 +390,9 @@ static bool sendToClient(Event& event, Client& client) {
 	return TRUE;
 }
 static void disconnectClient(Event& event, int client_socket) {
-
+	// char tmp[BUF_SIZE] = {0,};
+	// if (recv(client_socket, &tmp, BUF_SIZE, 0) == 0)
+	// 	return ;
 	std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
 	close(client_socket);
 	event.decCurConnection();
@@ -407,7 +425,7 @@ static void checkCgiForkList(std::vector<Client*>& cgi_fork_list) {
 				std::cout << "CGI_SCRIPT_TIMEOUT\n";
 				kill(cgi_fork_list[i]->get_cgi_instance().get_pid(), SIGTERM);
 				std::cout << "\n\nCGI_KILL\n\n";
-				// cgi_fork_list.erase(cgi_fork_list.begin() + i--);
+				cgi_fork_list.erase(cgi_fork_list.begin() + i--);
 				continue;
 			}
 		}
