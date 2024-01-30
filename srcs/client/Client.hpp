@@ -62,6 +62,7 @@ class Client {
 		bool		get_chunked();
 		bool		get_expect();
 		uintptr_t	get_client_soket();
+		uintptr_t*	get_client_soket_ptr();
 		void		set_phase (Phase state);
 		void		set_status_code(int status_code);
 		void		set_cgi (bool flag);

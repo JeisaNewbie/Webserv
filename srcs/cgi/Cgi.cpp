@@ -84,7 +84,7 @@ void	Cgi::set_fd()
 	this->cgi_body = "";
 }
 
-void	Cgi::execute_cgi(Request &request, Cgi &cgi) // cgi 무한루프 발생시 강제 종료 설정(timeout등)
+void	Cgi::execute_cgi(Event& event, uintptr_t* client_socket, Request &request, Cgi &cgi) // cgi 무한루프 발생시 강제 종료 설정(timeout등)
 {
 	std::cout <<"BEFORE_FORK\n";
 	std::cout <<"CGI_PATH: "<< cgi.cgi_name<<std::endl;
@@ -97,6 +97,8 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi) // cgi 무한루프 발생시 
 		request.set_status_code(INTERNAL_SERVER_ERROR);
 		return ;
 	}
+
+	event.addEvent(cgi.pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, client_socket);
 
 	if (cgi.pid == 0)
 	{

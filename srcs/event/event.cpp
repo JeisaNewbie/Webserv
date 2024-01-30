@@ -1,14 +1,11 @@
 #include "../core/core.hpp"
 
 static void prepConnect(Cycle& cycle);
-static void addEvent(int kq, uintptr_t ident, int16_t filter,					\
-						uint16_t flags,	uint32_t fflags,						\
-						intptr_t data, char* udata);
 static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int, Client>& server);
 static int	recieveFromClient(Event& event, Client& client);
 static bool sendToClient(Event& event, Client& client);
 static void disconnectClient(Event& event, int client_socket);
-static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list);
+static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, std::vector<Client*>& cgi_fork_list);
 static void checkCgiForkList(std::vector<Client*>& cgi_fork_list);
 
 Event::Event(void) : cur_connection(0),	event_type_listen("listen"),	\
@@ -39,6 +36,19 @@ char*	Event::getEventTypeListen(void) { return event_type_listen; }
 char*	Event::getEventTypeClient(void) { return event_type_client; }
 char*	Event::getEventTypeCgi(void) { return event_type_cgi; }
 
+
+
+
+void Event::addEvent(uintptr_t ident, int16_t filter,	\
+						uint16_t flags,	uint32_t fflags,		\
+						intptr_t data, void* udata) {
+	kevent_t	temp;
+
+	EV_SET(&temp, ident, filter, flags, fflags, data, udata);
+	kevent(event_queue, &temp, 1, NULL, 0, NULL);
+}
+
+
 // 삭제하기
 void printState(kevent_t* cur_event) {
 	std::cout << "client[" << cur_event->ident << "]: " << cur_event->data << "\n";
@@ -52,6 +62,8 @@ void printState(kevent_t* cur_event) {
 		std::cout << "READ\n";
 	if (cur_event->filter == EVFILT_WRITE)
 		std::cout << "WRITE\n";
+	if (cur_event->filter == EVFILT_PROC)
+		std::cout << "PROC\n";
 	if (errno == EAGAIN)
 		std::cout << "EAGAIN\n";
 	if (errno == ECONNRESET)
@@ -76,7 +88,6 @@ void startConnect(Cycle& cycle) {
     std::vector<uintptr_t>&	listen_socket_list = cycle.getListenSocketList();
     std::vector<kevent_t>	event_list(cycle.getWorkerConnections() * 2);
     std::map<int, Client>	server;
-    uintptr_t				cgi_fd_arr[MAX_FD] = {0,};
     std::vector<Client*>	read_timeout_list;
     std::vector<Client*>	cgi_fork_list;
 
@@ -84,7 +95,7 @@ void startConnect(Cycle& cycle) {
     std::cout << "---------------------webserver start---------------------\n";
 
     for (int i = 0; i < listen_socket_list.size(); i++)
-        addEvent(event.getEventQueue(), listen_socket_list[i], EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeListen());
+        event.addEvent(listen_socket_list[i], EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeListen());
 
 	uint32_t		new_events;
 	kevent_t*		cur_event;
@@ -96,7 +107,7 @@ void startConnect(Cycle& cycle) {
 		kevent_timeout.tv_nsec = 0;
 
 		std::cout << "CHECK_READ_LIST\n";
-		checkReadTimeout(read_timeout_list, event, event.getEventQueue(), cgi_fd_arr, cgi_fork_list);
+		checkReadTimeout(read_timeout_list, event, cgi_fork_list);
 		std::cout << "CHECK_FORK_LIST\n";
 		checkCgiForkList(cgi_fork_list);
 
@@ -111,7 +122,8 @@ void startConnect(Cycle& cycle) {
 			cur_event = &event_list[i];
 			printState(cur_event);
 
-			if (cur_event->flags & EV_EOF) {
+			if ((cur_event->flags & EV_EOF && cur_event->filter != EVFILT_PROC)	\
+				|| cur_event->flags & EV_ERROR) {
 				disconnectClient(event, cur_event->ident);
 				continue;
 			}
@@ -172,13 +184,16 @@ void startConnect(Cycle& cycle) {
 									event_client.set_property_for_cgi(event_client.get_request_instance());
 									uintptr_t	fd = event_client.get_cgi_instance().get_fd();
 
-									addEvent(event.getEventQueue(), fd, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeCgi());
-									cgi_fd_arr[fd] = event_client.get_client_soket();
-									cgi_fork_list.push_back(&event_client);
+									std::cout << "\n\nEXECUTE_CGI\n\n\n";
+									Cgi::execute_cgi(event, event_client.get_client_soket_ptr(), event_client.get_request_instance(),	\
+													event_client.get_cgi_instance());
+									event_client.set_cgi_fork_status (true);
+									event_client.get_timeout_instance().setSavedTime();
 
 									continue;
 								}
 								event_client.do_method_without_cgi(event_client.get_request_instance());
+
 							}
 							catch(int e)
 							{
@@ -188,26 +203,32 @@ void startConnect(Cycle& cycle) {
 					}
 					else
 						continue;
+					std::cout << "START_ASSEMBLE_RESPONSE\n";
+					server[tmp_ident].assemble_response();
+					server[tmp_ident].get_request_instance().get_request_msg() = "";
+					event.addEvent(server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+					std::cout << "---------------end of assebling message--------------\n";
 				}
-				else {
-					std::cout << "READ_ELSE_CUR_EVENT->IDENT: " << cur_event->ident << std::endl;
-					tmp_ident = cgi_fd_arr[cur_event->ident];
-					std::cout << "READ_ELSE_tmp_ident: " << tmp_ident << std::endl;
-					std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
-					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
-				}
-				std::cout << "START_ASSEMBLE_RESPONSE\n";
-				server[tmp_ident].assemble_response();
-				server[tmp_ident].get_request_instance().get_request_msg() = "";
-				addEvent(event.getEventQueue(), server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
-				std::cout << "---------------end of assebling message--------------\n";
-				}
+			}
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(event, server[cur_event->ident]) == FALSE)
 					continue;
 				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
 				if (server.find (cur_event->ident) != server.end())
 					server[cur_event->ident].reset_data();
+			}
+			else if (cur_event->filter == EVFILT_PROC) {
+				std::cout << "BEFORE_PARSE_CGI_RESPONSE\n";
+				uintptr_t	client_socket = *(static_cast<uintptr_t*>(cur_event->udata));
+				std::cout << "CLIENT_SOCKET: " << client_socket << "\n";
+
+				server[client_socket].parse_cgi_response(server[client_socket].get_cgi_instance());
+
+				std::cout << "START_ASSEMBLE_CGI_RESPONSE\n";
+				server[client_socket].assemble_response();
+				server[client_socket].get_request_instance().get_request_msg() = "";
+				event.addEvent(server[client_socket].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+				std::cout << "---------------end of assebling message--------------\n";
 			}
 		}
 	}
@@ -252,15 +273,6 @@ static void prepConnect(Cycle& cycle) {
     }
 }
 
-static void addEvent(int kq, uintptr_t ident, int16_t filter,	\
-						uint16_t flags,	uint32_t fflags,		\
-						intptr_t data, char* udata) {
-	kevent_t	temp;
-
-	EV_SET(&temp, ident, filter, flags, fflags, data, static_cast<void *>(udata));
-	kevent(kq, &temp, 1, NULL, 0, NULL);
-}
-
 static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int, Client>& server) {
 	uintptr_t	client_socket;
 	// int		bufsize = 1024;
@@ -277,7 +289,7 @@ static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int,
 	std::cout<<"LITSENING_SOCKET: " << listen_socket << std::endl;
 	std::cout<<"CLIENT_SOCKET: " << client_socket << std::endl;
     // setsockopt(client_socket, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize));
-	addEvent(event.getEventQueue(), client_socket, EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeClient());
+	event.addEvent(client_socket, EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeClient());
 	event.incCurConnection();
 }
 
@@ -363,12 +375,12 @@ static void disconnectClient(Event& event, int client_socket) {
 	event.decCurConnection();
 }
 
-static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, int kq, uintptr_t* cgi_fd_arr, std::vector<Client*>& cgi_fork_list) {
+static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, std::vector<Client*>& cgi_fork_list) {
 	for (int i = 0; i < read_timeout_list.size(); i++) {
 		if (read_timeout_list[i]->get_timeout_instance().checkTimeout(READ_TIME_OUT) == true) {
 			read_timeout_list[i]->set_status_code(REQUEST_TIMEOUT);
 			read_timeout_list[i]->assemble_response();
-			addEvent(kq, read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
+			event.addEvent(read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
 			read_timeout_list.erase(read_timeout_list.begin() + i--);
 		}
 	}
@@ -386,20 +398,11 @@ static void checkCgiForkList(std::vector<Client*>& cgi_fork_list) {
 		if (cgi_fork_list[i]->get_cgi_fork_status() == true) {
 			if (cgi_fork_list[i]->get_timeout_instance().checkTimeout(CGI_TIME_OUT) == true) {
 				std::cout << "CGI_SCRIPT_TIMEOUT\n";
-				kill(cgi_fork_list[i]->get_cgi_instance().get_pid(), SIGKILL);
-				write(cgi_fork_list[i]->get_cgi_instance().get_fd(), "Status: 500\r\n\r\n", 15); //이벤트 발생 테스트해보기
+				kill(cgi_fork_list[i]->get_cgi_instance().get_pid(), SIGTERM);
 				std::cout << "\n\nCGI_KILL\n\n";
-				cgi_fork_list.erase(cgi_fork_list.begin() + i--);
+				// cgi_fork_list.erase(cgi_fork_list.begin() + i--);
 				continue;
 			}
-		}
-		else
-		{
-			std::cout << "\n\nEXECUTE_CGI\n\n\n";
-			Cgi::execute_cgi(cgi_fork_list[i]->get_request_instance(),	\
-							cgi_fork_list[i]->get_cgi_instance());
-			cgi_fork_list[i]->set_cgi_fork_status (true);
-			cgi_fork_list[i]->get_timeout_instance().setSavedTime();
 		}
 	}
 }
