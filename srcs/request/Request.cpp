@@ -732,14 +732,11 @@ void	Request::check_transfer_encoding()
 	size_t		pos = transfer_encoding_value.find ("chunked\r\n");
 
 	if (pos != 0)
-		throw NOT_IMPLEMENTED; //chunked외에 다른 인코딩이 있다는 뜻. 자원되지 않는 인코딩은 501
-
-	if (transfer_encoding_value.find ("\r\n", transfer_encoding_value.find ("chunked") + 6) != 0)
 	{
-		std::cout << "TRANSFER_ENCODING_CHUNKED_IS_NOT_FINAL\n";
 		this->header["connection"] = "close\r\n";
-		throw BAD_REQUEST;
+		throw NOT_IMPLEMENTED; //chunked외에 다른 인코딩이 있다는 뜻. 자원되지 않는 인코딩은 501
 	}
+
 	decode_chunked (this->message_body);
 }
 
@@ -767,7 +764,7 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 		if (chunk_size == 0)
 		{
 			set_chunked (true);
-			throw OK;
+			return ;
 		}
 		this->message_body += chunk.substr(delimeter + 2, chunk_size);
 		pos = (delimeter + 2) + (chunk_size + 2);
@@ -884,7 +881,7 @@ void	Request::matching_server()
 	std::list<Server>::iterator ite = servers.end();
 	std::string 				&host = this->host_only;
 
-	// std::cout <<"PATH: " << path << std::endl;
+	std::cout <<"PATH: " << path << std::endl;
 
 	if (path != "/")
 		matching_absolute_path();
@@ -906,7 +903,7 @@ void	Request::matching_server()
 		matched_server = it;
 		break;
 	}
-	// std::cout<<"BEFORE_MATCHING_ROUTE\n";
+	std::cout<<"BEFORE_MATCHING_ROUTE\n";
 	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());
 	if (check_allowed_method () == false)
 		throw METHOD_NOT_ALLOWED;
@@ -1065,6 +1062,7 @@ void			Request::set_cgi (bool flag) {this->cgi = flag;}
 void			Request::set_chunked (bool flag) {this->chunked = flag;}
 void			Request::set_header_key_and_value(const char *key, const char *value){this->header[key] = value;}
 void			Request::set_port(uint32_t port) {this->port = port;}
+void			Request::set_cycle(Cycle &cycle) {this->cycle = &cycle;}
 void			Request::set_header_key_and_value(std::string &key, std::string &value)
 {
 

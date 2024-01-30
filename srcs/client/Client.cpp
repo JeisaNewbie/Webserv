@@ -1,6 +1,10 @@
 #include "Client.hpp"
 
-Client::Client(){}
+Client::Client()
+{
+	body_length = 0;
+	read_fail = false;
+}
 Client::Client(const Client& ref) {}
 Client::~Client() {}
 
@@ -119,25 +123,34 @@ void	Client::parse_cgi_response(Cgi &cgi)
 void	Client::assemble_response()
 {
 	response.set_header_line (get_status_code());
-	response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
-	response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2));
-	if (response.get_header_field("Connection") == "keep-alive")
-		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");
-	response.set_header_field ("Access-Control-Allow-Origin", "*");
+
 	if (get_status_code() >= BAD_REQUEST)
 	{
-		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html");
-		std::stringstream	ss;
+		std::string path = request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html";
+		int file_status = check_path_property(path);
 
-		ss << error.rdbuf();
-		response.set_body(ss.str());
-		std::cout <<"RESPONSE_ERROR: "<<response.get_body()<<std::endl;
-		ss.str("");
-		error.close();
-		response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
+		if (file_status == _FILE)
+			set_error_page (path, response.get_body());
+		else
+		{
+			path = request.get_cycle_instance().getMainRoot() + "/" + request.get_cycle_instance().getDefaultErrorRoot();
+			set_error_page (path, response.get_body());
+		}
+
 	}
-	if (get_request_instance().get_redirect() == true)
+
+	if (get_read_fail() == false)
+		response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2)); // request parsing 없이 response 진행할수도 있음
+
+	if (response.get_header_field("Connection") == "keep-alive")
+		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");
+
+	response.set_header_field ("Access-Control-Allow-Origin", "*");
+	response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
+
+	if (get_read_fail() == false && get_request_instance().get_redirect() == true)
 		get_response_instance().set_header_field("Location", get_request_instance().get_redirect_path());
+
 	response.assemble_message ();
 }
 
@@ -152,9 +165,11 @@ bool		Client::get_cgi() {return this->get_request_instance().get_cgi();}
 bool		Client::get_cgi_fork_status () {return get_cgi_instance().get_cgi_fork_status();}
 bool		Client::get_expect() {return this->get_request_instance().get_expect();}
 bool		Client::get_chunked() {return this->get_request_instance().get_chunked();}
+bool		Client::get_read_fail () {return this->read_fail;}
 void		Client::set_phase (Phase state) {this->phase = state;}
 void		Client::set_status_code(int status_code) {get_request_instance().set_status_code(status_code);}
 void		Client::set_cgi (bool flag) {get_request_instance().set_cgi(flag);}
+void		Client::set_read_fail (bool flag) {this->read_fail = flag;}
 void		Client::set_cgi_fork_status (bool status) {get_cgi_instance().set_cgi_fork_status(status);}
 uintptr_t	Client::get_client_soket() {return this->client_soket;}
 uintptr_t*	Client::get_client_soket_ptr() {return &(this->client_soket);}

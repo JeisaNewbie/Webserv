@@ -110,6 +110,7 @@ public:
 	void											set_header_key_and_value(std::string &key, std::string &value);
 	void											set_header_key_and_value(const char *key, const char *value);
 	void											set_port(uint32_t port);
+	void											set_cycle(Cycle &cycle);
 	void											set_redirect(std::string main_root, std::string sub_root, std::string file);
 	void check_members();
 };
