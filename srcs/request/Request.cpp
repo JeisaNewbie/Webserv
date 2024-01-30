@@ -49,6 +49,7 @@ void	Request::reset_data()
 	this->autoindex = false;
 	this->index = false;
 	this->file_name = "";
+	this->default_error = false;
 }
 
 void	Request::process_request_parsing(Cycle &cycle)
@@ -854,6 +855,21 @@ void	Request::check_is_cgi()
 		this->set_cgi (true);
 		throw OK;
 	}
+
+	// if (origin_path.find(".php") != std::string::npos)
+	// {
+	// 	if (origin_path.find("/script.php") == std::string::npos)
+	// 		throw NOT_FOUND;
+
+	// 	if (method == "DELETE")
+	// 	{
+	// 		path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
+	// 		throw OK;
+	// 	}
+	// 	path = cycle->getMainRoot() + "/serve/script/script_php.cgi";
+	// 	this->set_cgi (true);
+	// 	throw OK;
+	// }
 }
 
 std::string Request::check_index(std::list<Location>::iterator it)
@@ -908,7 +924,7 @@ void	Request::matching_server()
 	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());
 	if (this->default_error == true)
 		throw BAD_REQUEST;
-
+	std::cout << "CHECK_ALLOWED_METHOD\n";
 	if (check_allowed_method () == false)
 		throw METHOD_NOT_ALLOWED;
 
@@ -960,6 +976,14 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 	int												i = 0;
 	std::string										sub_r;
 	std::string										sub_d = path;
+
+	if (*(sub_d.rbegin()) == '/' && sub_d.size() == 1)
+	{
+		matched_location = it_begin;
+		// std::cout << "/_dir\n";
+		// std::cout << "DEFAULT_ERROR: " << ((this->default_error == false) ? "false" : "true") << std::endl;
+		return ;
+	}
 
 	if (*(sub_d.rbegin()) == '/' && sub_d.size() > 1)
 		sub_d = sub_d.substr (0, sub_d.size() - 1);
