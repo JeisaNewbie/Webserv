@@ -70,6 +70,7 @@ static void handlePostMethod(const std::string directory_path, const std::string
 	std::cout << "Content-Type: text/plain\r\n";
 
 	// content 길이 제한 둘까??
+	// std::cout << post_data << std::endl;
 	if (post_data.length() > 0) {
 
 		std::string		new_file_name = createUniqueFileName();

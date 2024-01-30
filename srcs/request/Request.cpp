@@ -74,6 +74,8 @@ void	Request::process_request_parsing(Cycle &cycle)
 	catch(int e)
 	{
 		this->status_code = e;
+		if (this->status_code >= BAD_REQUEST)
+			header["connection"] = "close";
 		this->request_msg = "";
 		std::cout << "REQUEST_PARSING_DONE_AND STATUS_CODE: " << e << std::endl;
 	}
@@ -623,6 +625,7 @@ void	Request::check_header_is_valid()
 	std::cout<< "check_host\n";
 	check_host();
 	std::cout<< "check_transfer_encoding_and_content_length\n";
+	check_expect();
 	check_transfer_encoding_and_content_length();
 	std::cout<< "check_te\n";
 	check_te();
@@ -631,7 +634,6 @@ void	Request::check_header_is_valid()
 	std::cout<<"check_body_limits\n";
 	// check_header_limits(); // config로 설정한 서버의 header limits size를 넘으면 return 413
 	check_body_limits();
-	check_expect();
 }
 void	Request::check_expect()
 {
@@ -641,7 +643,7 @@ void	Request::check_expect()
 	if (protocol_version == "1.0")
 		return;
 
-	if (header["expect"] != "100-continue")
+	if (header["expect"] != "100-continue\r\n")
 		throw EXPECTION_FAILED;
 
 	if (header.find ("content-length") == header_end)

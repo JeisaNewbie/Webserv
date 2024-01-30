@@ -182,8 +182,8 @@ void startConnect(Cycle& cycle) {
 							{
 								if (event_client.get_cgi() == true)
 								{
+									std::cout << "CGI_BODY: " << event_client.get_request_instance().get_message_body () << std::endl;
 									event_client.set_property_for_cgi(event_client.get_request_instance());
-									uintptr_t	fd = event_client.get_cgi_instance().get_fd();
 
 									std::cout << "\n\nEXECUTE_CGI\n\n\n";
 									Cgi::execute_cgi(event, event_client.get_client_soket_ptr(), event_client.get_request_instance(),	\
@@ -325,14 +325,14 @@ static int recieveFromClient(Event& event, Client& client) {
 	}
 
 	std::cout <<"ZERO\n";
-	if (request_msg.find("POST") == 0)
+	if (request_msg.find("POST") == 0 && request_msg.find ("100-continue") == std::string::npos)
 	{
 		std::cout <<"ONE\n";
 		if (request_msg.find ("Content-Length: ") != std::string::npos)
 		{
 			std::cout <<"TWO\n";
 			content_length = std::stol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)), NULL, 10);
-			client.body_length = request_msg.size() - (header_end + 4); // request_msg_size가 변경되기때문에 buff로 수정
+			client.body_length = request_msg.size() - (header_end + 4);
 			std::cout << "BODY_LENGTH: " << client.body_length << std::endl;
 			std::cout << "NEW_REQUEST_MSG: \n" << request_msg << std::endl;
 			std::cout <<"TWO_TWO\n";

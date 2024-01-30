@@ -52,7 +52,8 @@ Status	status_line[] = {
 	{"502", "Bad Gateway"},
 	{"503", "Service Unavailable"},
 	{"504", "Gateway Timeout"},
-	{"505", "HTTP Version Not Supported"}
+	{"505", "HTTP Version Not Supported"},
+	{"100", "Continue"}
 };
 
 Response::Response()
@@ -113,6 +114,7 @@ std::string	&Response::get_body() {return this->body;}
 void	Response::set_header_line (int status_code)
 {
 	int status = status_code;
+
 	if (OK <= status && status < LAST_2XX)
 		status -= OK;
 	else if (MOVED_PERMANENTLY <= status && status < LAST_3XX)
@@ -122,18 +124,20 @@ void	Response::set_header_line (int status_code)
 	else
 		status = status - INTERNAL_SERVER_ERROR + OFF_5XX;
 
+	if (status_code == CONTINUE)
+		status = 51;
 	// std::cout <<"set_header_line_status_code: "<<status_code<<std::endl;
-	std::string code (status_line[status].code);
-	std::string text (status_line[status].text);
+	// std::string code (status_line[status].code);
+	// std::string text (status_line[status].text);
 
 	// std::cout<<"code: "<<status_line[status].code<<std::endl;
 	// std::cout<<"text: "<<status_line[status].text<<std::endl;
 	// std::cout << "set_header_line_start\n";
 
 	header_line = "HTTP/1.1 ";
-	header_line += code;
+	header_line += status_line[status].code;
 	header_line += " ";
-	header_line += text;
+	header_line += status_line[status].text;
 	header_line += "\r\n";
 
 	// std::cout <<header_line;

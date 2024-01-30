@@ -155,9 +155,10 @@ std::string	&Cgi::get_response_from_cgi()
 	return cgi_body;
 }
 
-void	Cgi::set_body (std::string &body) {this->cgi_body = body;}
-void	Cgi::set_name (std::string &name) {this->cgi_name = name;}
-int		Cgi::get_fd() {return this->fd_file_out;}
-pid_t	Cgi::get_pid() {return this->pid;}
-void	Cgi::set_cgi_fork_status(bool status) {this->fork_status = status;}
-bool	Cgi::get_cgi_fork_status() {return this->fork_status;}
+void		Cgi::set_body (std::string &body) {this->cgi_body = body;}
+void		Cgi::set_name (std::string &name) {this->cgi_name = name;}
+int			Cgi::get_fd() {return this->fd_file_out;}
+pid_t		Cgi::get_pid() {return this->pid;}
+std::string &Cgi::get_body () {return this->cgi_body;}
+void		Cgi::set_cgi_fork_status(bool status) {this->fork_status = status;}
+bool		Cgi::get_cgi_fork_status() {return this->fork_status;}
