@@ -15,7 +15,7 @@ Timeout& Timeout::operator =(const Timeout& src) {
 
 void Timeout::setSavedTime(void) { time(&saved_time); }
 
-bool Timeout::checkTimeout(uint32_t timeout) {
+bool Timeout::checkTimeout(size_t timeout) {
 	if (difftime(time(NULL), saved_time) >= timeout)
 		return true;
 	return false;

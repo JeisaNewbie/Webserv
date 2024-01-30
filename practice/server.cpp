@@ -20,7 +20,7 @@ void printState(struct kevent* cur_event) {
 }
 
 void addEvent(int kq, uintptr_t ident, int16_t filter,	\
-						uint16_t flags,	uint32_t fflags,				\
+						uint16_t flags,	size_t fflags,				\
 						intptr_t data, void* udata) {
 	struct kevent	temp;
 

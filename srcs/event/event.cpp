@@ -40,7 +40,7 @@ char*	Event::getEventTypeCgi(void) { return event_type_cgi; }
 
 
 void Event::addEvent(uintptr_t ident, int16_t filter,	\
-						uint16_t flags,	uint32_t fflags,		\
+						uint16_t flags,	size_t fflags,		\
 						intptr_t data, void* udata) {
 	kevent_t	temp;
 
@@ -97,7 +97,7 @@ void startConnect(Cycle& cycle) {
     for (int i = 0; i < listen_socket_list.size(); i++)
         event.addEvent(listen_socket_list[i], EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeListen());
 
-	uint32_t		new_events;
+	size_t		new_events;
 	kevent_t*		cur_event;
 	struct timespec	kevent_timeout;
 
@@ -216,19 +216,8 @@ void startConnect(Cycle& cycle) {
 				}
 			}
 			else if (cur_event->filter == EVFILT_WRITE) {
-				if (sendToClient(event, server[cur_event->ident]) == FALSE) {
-					// std::cout << "CUR_IDENT: " << cur_event->ident << "\n";
-					// std::map<int, Client>::iterator it = server.find (cur_event->ident);
-					// std::cout << it->first << " " << it->second.get_cgi_instance().get_fd() << "\n";
-					// if (it != server.end())
-					// 	server.erase(it);
-					// std::map<int, Client>::iterator it = server.begin();
-					// for (int i = 0; i < server.size(); i++) {
-					// 	if ((it + i))
-					// }
-				}
-				else if (server.find (cur_event->ident) != server.end())
-					server[cur_event->ident].reset_data();
+				sendToClient(event, server[cur_event->ident]);
+				server[cur_event->ident].reset_data();
 				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
 			}
 			else if (cur_event->filter == EVFILT_PROC) {
@@ -342,7 +331,7 @@ static int recieveFromClient(Event& event, Client& client) {
 		if (request_msg.find ("Content-Length: ") != std::string::npos)
 		{
 			std::cout <<"TWO\n";
-			content_length = std::stol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)), NULL, 10);
+			content_length = std::strtol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)).c_str(), NULL, 10);
 			client.body_length = request_msg.size() - (header_end + 4);
 			std::cout << "BODY_LENGTH: " << client.body_length << std::endl;
 			std::cout << "NEW_REQUEST_MSG: \n" << request_msg << std::endl;
@@ -382,6 +371,7 @@ static bool sendToClient(Event& event, Client& client) {
 		eventException(EVENT_FAIL_SEND, client_socket);
 		return FALSE;
 	}
+
 	if (response_msg.find("Connection: close") != std::string::npos) {
 		disconnectClient(event, client_socket);
 		return FALSE;

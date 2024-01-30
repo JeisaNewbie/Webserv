@@ -34,6 +34,7 @@ class Cgi {
 
 		Cgi& operator=(const Cgi& ref);
 
+		void			reset_data();
 		std::string&	get_response_from_cgi();
 		void			set_env(Request &request, uintptr_t client_soket);
 		char			**get_char_arr_of_env();

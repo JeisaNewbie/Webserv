@@ -29,6 +29,13 @@ Cgi& Cgi::operator=(const Cgi& ref)
 	return *this;
 }
 
+void		Cgi::reset_data()
+{
+	this->fork_status = false;
+	this->cgi_body.clear();
+	this->cgi_name.clear();
+}
+
 void		Cgi::set_env(Request &request, uintptr_t client_soket)
 {
 	int i = request.get_path().find(".cpp");

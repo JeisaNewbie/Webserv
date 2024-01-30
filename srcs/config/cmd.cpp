@@ -26,7 +26,7 @@ void mainWorkerConnections(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getWorkerConnections() != VALID)
 		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
-	int	n = stoi(tokens[1]);
+	int	n = std::strtol(tokens[1].c_str(), NULL, 10);
 	if (n <= 0 || MAX_FD < n)
 		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
@@ -37,8 +37,8 @@ void mainWorkerConnections(Cycle& cycle, std::string tokens[]) {
 void mainClientMaxBodySize(Cycle& cycle, std::string tokens[]) {
 	if (cycle.getClientMaxBodySize() != VALID)
 		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
-		
-	long long	n = stoll(tokens[1]);
+
+	long long	n = std::strtol (tokens[1].c_str(), NULL, 10);
 	char		c = tokens[1].back();
 
 	if (c == 'K')
@@ -81,7 +81,7 @@ void serverListen(Cycle& cycle, std::string tokens[]) {
 	if (server.getPort() != VALID)
 		throw Exception(CONF_DUP_DIRCTV, tokens[0]);
 
-	int n = stoi(tokens[1]);
+	int n = std::strtol(tokens[1].c_str(), NULL, 10);
 	if ((n != 80 && n < 1024) || 65535 < n)
 		throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 
@@ -129,7 +129,7 @@ void locationAllowedMethod(Cycle& cycle, std::string tokens[]) {
 		else
 			throw Exception(CONF_INVALID_DIRCTV_VALUE, tokens[1]);
 	}
-	
+
 	location.setAllowedMethod(res);
 }
 

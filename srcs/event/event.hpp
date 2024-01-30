@@ -37,12 +37,12 @@ class Event {
 		void	incCurConnection(void);
 		void	decCurConnection(void);
 		void	addEvent(uintptr_t ident, int16_t filter,	\
-						uint16_t flags,	uint32_t fflags,			\
+						uint16_t flags,	size_t fflags,			\
 						intptr_t data, void* udata);
 
 	private:
 		int			event_queue;
-		uint32_t	cur_connection;
+		size_t	cur_connection;
 
 		char		event_type_listen[8];
 		char		event_type_client[7];

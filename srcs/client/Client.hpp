@@ -13,7 +13,6 @@
 // #include "../utils/Status.hpp"
 // #include "../method/Method.hpp"
 #include "../method/Get.hpp"
-#include "../method/Post.hpp"
 #include "../method/Delete.hpp"
 #include "../utils/Utils.hpp"
 #include "../cgi/Cgi.hpp"
@@ -68,7 +67,7 @@ class Client {
 		void		set_cgi (bool flag);
 		void		set_client_soket(uintptr_t client_soket);
 		void		set_cgi_fork_status (bool status);
-		void		set_port(uint32_t port);
+		void		set_port(size_t port);
 
 		ssize_t		body_length;
 };

@@ -137,7 +137,7 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 			continue;
 		if (str_buf == "}")
 			break;
-		
+
 		token_cnt = tokenizer(buf, tokens);
 		tokens[0] = &tokens[0][1]; //tab으로 시작하니까
 		callCmd(cycle, conf, CONF_MAIN, tokens, setTakeArgCnt(token_cnt));
@@ -273,10 +273,10 @@ static void checkGetlineError(std::ifstream& file) {
 }
 
 static void checkServerDuplication(std::list<Server>& server_list) {
-	uint32_t					port = server_list.back().getPort();
+	size_t					port = server_list.back().getPort();
 	std::string					domain = server_list.back().getDomain();
 	std::list<Server>::iterator	it = server_list.begin();
-	std::list<Server>::iterator	ite = std::prev(server_list.end());
+	std::list<Server>::iterator	ite = server_list.end();
 
 	for (; it != ite; it++) {
 		if (port == it->getPort()	\
@@ -288,7 +288,7 @@ static void checkServerDuplication(std::list<Server>& server_list) {
 static void checkLocationDuplication(std::list<Location>& location_list) {
 	std::string						location_path = location_list.back().getLocationPath();
 	std::list<Location>::iterator	it = location_list.begin();
-	std::list<Location>::iterator	ite = std::prev(location_list.end());
+	std::list<Location>::iterator	ite = location_list.end();
 
 	for (; it != ite; it++) {
 		if (location_path == it->getLocationPath())
