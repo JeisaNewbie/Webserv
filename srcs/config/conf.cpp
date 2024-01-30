@@ -273,25 +273,21 @@ static void checkGetlineError(std::ifstream& file) {
 }
 
 static void checkServerDuplication(std::list<Server>& server_list) {
-	size_t					port = server_list.back().getPort();
-	std::string					domain = server_list.back().getDomain();
-	std::list<Server>::iterator	it = server_list.begin();
-	std::list<Server>::iterator	ite = server_list.end();
+	std::list<Server>::iterator			it = server_list.begin();
+	std::list<Server>::reverse_iterator	ite = server_list.rbegin();
 
-	for (; it != ite; it++) {
-		if (port == it->getPort()	\
-			&& domain == it->getDomain())
-			throw Exception(CONF_DUP_SRV_BLOCK, domain + ":" + to_string(port));
+	for (; &(*it) != &(*ite); it++) {
+		if (ite->getPort() == it->getPort() && ite->getDomain() == it->getDomain())
+			throw Exception(CONF_DUP_SRV_BLOCK, it->getDomain() + ":" + to_string(it->getPort()));
 	}
 }
 
 static void checkLocationDuplication(std::list<Location>& location_list) {
-	std::string						location_path = location_list.back().getLocationPath();
-	std::list<Location>::iterator	it = location_list.begin();
-	std::list<Location>::iterator	ite = location_list.end();
+	std::list<Location>::iterator			it = location_list.begin();
+	std::list<Location>::reverse_iterator	ite = location_list.rbegin();
 
-	for (; it != ite; it++) {
-		if (location_path == it->getLocationPath())
+	for (; &(*it) != &(*ite); it++) {
+		if (ite->getLocationPath() == it->getLocationPath())
 			throw Exception(CONF_DUP_LOC_BLOCK, it->getLocationPath());
 	}
 }

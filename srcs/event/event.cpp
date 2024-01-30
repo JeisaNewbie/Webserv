@@ -1,6 +1,6 @@
 #include "../core/core.hpp"
 
-static void prepConnect(Cycle& cycle);
+static void prepConnect(Cycle& cycle, Event& event);
 static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int, Client>& server);
 static int	recieveFromClient(Event& event, Client& client);
 static bool sendToClient(Event& event, Client& client);
@@ -35,9 +35,6 @@ void	Event::decCurConnection(void) { cur_connection--; }
 char*	Event::getEventTypeListen(void) { return event_type_listen; }
 char*	Event::getEventTypeClient(void) { return event_type_client; }
 char*	Event::getEventTypeCgi(void) { return event_type_cgi; }
-
-
-
 
 void Event::addEvent(uintptr_t ident, int16_t filter,	\
 						uint16_t flags,	size_t fflags,		\
@@ -91,13 +88,10 @@ void startConnect(Cycle& cycle) {
     std::vector<Client*>	read_timeout_list;
     std::vector<Client*>	cgi_fork_list;
 
-    prepConnect(cycle);
+    prepConnect(cycle, event);
     std::cout << "---------------------webserver start---------------------\n";
 
-    for (int i = 0; i < listen_socket_list.size(); i++)
-        event.addEvent(listen_socket_list[i], EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeListen());
-
-	size_t		new_events;
+	uint32_t		new_events;
 	kevent_t*		cur_event;
 	struct timespec	kevent_timeout;
 
@@ -237,8 +231,7 @@ void startConnect(Cycle& cycle) {
 	}
 }
 
-
-static void prepConnect(Cycle& cycle) {
+static void prepConnect(Cycle& cycle, Event& event) {
     sockaddr_in					server_addr;
     std::list<Server>&			server_list = cycle.getServerList();
     std::list<Server>::iterator	it = server_list.begin();
@@ -274,6 +267,7 @@ static void prepConnect(Cycle& cycle) {
             throw Exception(EVENT_FAIL_LISTEN);
         if (fcntl(new_listen_socket, F_SETFL, O_NONBLOCK) == -1)
             throw Exception(EVENT_FAIL_FCNTL);
+        event.addEvent(new_listen_socket, EVFILT_READ, EV_ADD, 0, 0, event.getEventTypeListen());
     }
 }
 
