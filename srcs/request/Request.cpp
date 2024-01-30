@@ -75,7 +75,7 @@ void	Request::process_request_parsing(Cycle &cycle)
 	{
 		this->status_code = e;
 		if (this->status_code >= BAD_REQUEST)
-			header["connection"] = "close";
+			header["connection"] = "close\r\n";
 		this->request_msg = "";
 		std::cout << "REQUEST_PARSING_DONE_AND STATUS_CODE: " << e << std::endl;
 	}

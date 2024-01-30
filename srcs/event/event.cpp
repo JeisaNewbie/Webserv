@@ -121,9 +121,8 @@ void startConnect(Cycle& cycle) {
 		for (int i = 0; i < new_events; i++) {
 			cur_event = &event_list[i];
 			printState(cur_event);
-
-			if ((cur_event->flags & EV_EOF && cur_event->filter != EVFILT_PROC)	\
-				|| cur_event->flags & EV_ERROR) {
+			if ((cur_event->flags & EV_EOF && cur_event->filter != EVFILT_PROC)	|| cur_event->flags & EV_ERROR) {
+				// if (send (cur_event->ident, "", 0, 0) == -1)
 				disconnectClient(event, cur_event->ident);
 				continue;
 			}
@@ -217,6 +216,12 @@ void startConnect(Cycle& cycle) {
 			else if (cur_event->filter == EVFILT_WRITE) {
 				if (sendToClient(event, server[cur_event->ident]) == FALSE)
 					continue;
+				// if (sendToClient(event, server[cur_event->ident]) == FALSE)
+				// {
+				// 	server.erase(cur_event->ident);
+				// 	continue;
+				// }
+				// sendToClient(event, server[cur_event->ident]);
 				std::cout<< "-----------------FINISH SENDING RESPONSE MESSAGE--------------------\n";
 				if (server.find (cur_event->ident) != server.end())
 					server[cur_event->ident].reset_data();
@@ -286,6 +291,7 @@ static void acceptNewClient(Event& event, uintptr_t listen_socket, std::map<int,
 		eventException(EVENT_FAIL_ACCEPT, 0);
 		return ;
 	}
+
 	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1) {
 		// 소켓 닫기
 		eventException(EVENT_FAIL_FCNTL, 0);
@@ -366,11 +372,19 @@ static bool sendToClient(Event& event, Client& client) {
 	std::string response_msg = client.get_response_instance().get_response_message();
 	int client_socket = client.get_client_soket();
 
+	if (send(client_socket, "", 0, 0) == -1)
+	{
+		disconnectClient(event, client_socket);
+		eventException(EVENT_FAIL_SEND, client_socket);
+		return FALSE;
+	}
+
 	if (send(client_socket, response_msg.c_str(), response_msg.length() + 1, 0) == -1) {
 		disconnectClient(event, client_socket);
 		eventException(EVENT_FAIL_SEND, client_socket);
 		return FALSE;
 	}
+
 	return TRUE;
 }
 static void disconnectClient(Event& event, int client_socket) {

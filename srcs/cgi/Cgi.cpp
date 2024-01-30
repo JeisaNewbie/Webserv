@@ -119,22 +119,7 @@ std::string	&Cgi::get_response_from_cgi()
 
 	std::cout << "WAIT_PID_START\n";
 	waitpid (this->pid, &status, 0);
-	lseek (this->fd_file_out, 0, SEEK_SET);
 	std::cout << "WAIT_PID_DONE\n";
-	std::memset(buf, 0, sizeof(buf));
-	while (len)
-	{
-		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
-		if (len == 0)
-			break;
-		cgi_body += buf;
-		std::memset(buf, 0, sizeof(buf));
-		// std::cout<<len<<std::endl;
-		// std::cout<<cgi_body<<std::endl;
-	}
-
-	// std::cout<<"BEFORE_GET_CHILD_PROCESS\n";
-	// std::cout<<"AFTER_GET_CHILD_PROCESS\n";
 	std::cout << "STATUS_CODE: " << WEXITSTATUS(status) << "\n";
 	if (WEXITSTATUS(status))
 	{
@@ -142,8 +127,20 @@ std::string	&Cgi::get_response_from_cgi()
 		fclose (this->f_out);
 		close (this->fd_file_in);
 		close (this->fd_file_out);
-		cgi_body = "";
+		cgi_body = "Status_code: 500\r\n";
 		return cgi_body;
+	}
+
+	lseek (this->fd_file_out, 0, SEEK_SET);
+	std::memset(buf, 0, sizeof(buf));
+
+	while (len)
+	{
+		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
+		if (len == 0)
+			break;
+		cgi_body += buf;
+		std::memset(buf, 0, sizeof(buf));
 	}
 
 	fclose (this->f_in);

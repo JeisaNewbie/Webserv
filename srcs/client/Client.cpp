@@ -142,19 +142,19 @@ void	Client::assemble_response()
 		}
 
 	}
-	std::cout <<"a\n";
+
 	if (get_read_fail() == false)
-		response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2)); // request parsing 없이 response 진행할수도 있음
-	std::cout <<"b\n";
+		response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2));
+
 	if (response.get_header_field("Connection") == "keep-alive")
 		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");
-	std::cout <<"c\n";
+
 	response.set_header_field ("Access-Control-Allow-Origin", "*");
 	response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
-	std::cout <<"dd\n";
+
 	if (get_read_fail() == false && get_request_instance().get_redirect() == true)
 		get_response_instance().set_header_field("Location", get_request_instance().get_redirect_path());
-	std::cout <<"e\n";
+
 	response.assemble_message ();
 }
 
