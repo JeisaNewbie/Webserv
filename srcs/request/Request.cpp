@@ -12,6 +12,7 @@ Request::Request()
 	this->redirect = false;
 	this->autoindex = false;
 	this->index = false;
+	this->default_error = false;
 	this->file_name = "";
 	this->content_length = 0;
 }
@@ -905,6 +906,9 @@ void	Request::matching_server()
 	}
 	std::cout<<"BEFORE_MATCHING_ROUTE\n";
 	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());
+	if (this->default_error == true)
+		throw BAD_REQUEST;
+
 	if (check_allowed_method () == false)
 		throw METHOD_NOT_ALLOWED;
 
@@ -976,9 +980,14 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 		depth = 0;
 	}
 	std::cout<<"MATCHING_ROUTE_DONE\n";
-	matched_location = it_begin;
+
 	if (depth_map.rbegin()->first != 0)
 		matched_location = depth_map.rbegin()->second;
+	else
+	{
+		matched_location = it_begin;
+		this->default_error = true;
+	}
 }
 
 size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *depth)
