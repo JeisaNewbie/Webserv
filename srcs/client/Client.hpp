@@ -18,9 +18,6 @@
 #include "../utils/Utils.hpp"
 #include "../cgi/Cgi.hpp"
 
-// #define	_FILE	1000
-// #define	_DIR		1001
-
 enum Phase {
 	PARSING,
 	METHOD,
@@ -35,6 +32,7 @@ class Client {
 		Cgi			cgi;
 		Timeout		timeout;
 		uintptr_t	client_soket;
+		bool		read_fail;
 	public:
 		Phase phase;
 		Client();
@@ -61,6 +59,8 @@ class Client {
 		bool		get_cgi_fork_status ();
 		bool		get_chunked();
 		bool		get_expect();
+		bool		get_read_fail();
+		void		set_read_fail(bool flag);
 		uintptr_t	get_client_soket();
 		void		set_phase (Phase state);
 		void		set_status_code(int status_code);
@@ -68,4 +68,6 @@ class Client {
 		void		set_client_soket(uintptr_t client_soket);
 		void		set_cgi_fork_status (bool status);
 		void		set_port(uint32_t port);
+
+		ssize_t		body_length;
 };

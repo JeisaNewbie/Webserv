@@ -95,7 +95,7 @@ void startConnect(Cycle& cycle) {
 		kevent_timeout.tv_nsec = 0;
 
 		new_events = kevent(event.getEventQueue(), NULL, 0, &event_list[0], event_list.size(), &kevent_timeout);
-
+		std::cout << "NEW_EVENTS: " << new_events << std::endl;
 		if (new_events == -1)
 			throw Exception(EVENT_FAIL_KEVENT);
 
@@ -128,6 +128,7 @@ void startConnect(Cycle& cycle) {
 				}
 				else if (strcmp(event_type, "client") == 0) {
 					Client&	event_client = server[tmp_ident];
+					event_client.get_request_instance().set_cycle(cycle);
 
 					if (event_client.get_request_instance().get_request_msg() == "") {
 						event_client.init_client(cur_event->ident);
@@ -135,6 +136,7 @@ void startConnect(Cycle& cycle) {
 					}
 
 					int	res = recieveFromClient(event, event_client);
+					std::cout << "RES: " << res << std::endl;
 					if (res == -1) {
 						for (int i = 0; i < read_timeout_list.size(); i++) {
 							if (read_timeout_list[i] == &event_client) {
@@ -184,9 +186,13 @@ void startConnect(Cycle& cycle) {
 						}
 					}
 					else
+					{
+						std::cout << "RES_FAIL\n";
 						continue;
+					}
 				}
 				else {
+
 					std::cout << "READ_ELSE_CUR_EVENT->IDENT: " << cur_event->ident << std::endl;
 					tmp_ident = cgi_fd_arr[cur_event->ident];
 					std::cout << "READ_ELSE_tmp_ident: " << tmp_ident << std::endl;
@@ -194,6 +200,7 @@ void startConnect(Cycle& cycle) {
 					server[tmp_ident].parse_cgi_response(server[tmp_ident].get_cgi_instance());
 				}
 				std::cout << "START_ASSEMBLE_RESPONSE\n";
+				std::cout << server[tmp_ident].get_status_code() << std::endl;
 				server[tmp_ident].assemble_response();
 				server[tmp_ident].get_request_instance().get_request_msg() = "";
 				addEvent(event.getEventQueue(), server[tmp_ident].get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
@@ -284,7 +291,6 @@ static int recieveFromClient(Event& event, Client& client) {
 	ssize_t			recieve_size;
 	ssize_t			header_end;
 	ssize_t			content_length;
-	ssize_t			body_length;
 
 	std::cout << "RECIEVE_FROM_CLI_CLI_SOCKET: " << client_socket << std::endl;
 	if ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) <= 0) {
@@ -312,10 +318,11 @@ static int recieveFromClient(Event& event, Client& client) {
 		{
 			std::cout <<"TWO\n";
 			content_length = std::stol(request_msg.substr ((request_msg.find ("Content-Length: ") + 15), request_msg.find ("\r\n", request_msg.find ("Content-Length: ") + 15)), NULL, 10);
-			body_length = request_msg.size() - (header_end + 4);
-			std::cout << "BODY_LENGTH: " << body_length << std::endl;
+			client.body_length = request_msg.size() - (header_end + 4); // request_msg_size가 변경되기때문에 buff로 수정
+			std::cout << "BODY_LENGTH: " << client.body_length << std::endl;
+			std::cout << "NEW_REQUEST_MSG: \n" << request_msg << std::endl;
 			std::cout <<"TWO_TWO\n";
-			if (content_length != body_length)
+			if (content_length != client.body_length)
 			{
 				client.get_timeout_instance().setSavedTime();
 				return false;
@@ -363,7 +370,10 @@ static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& eve
 	for (int i = 0; i < read_timeout_list.size(); i++) {
 		if (read_timeout_list[i]->get_timeout_instance().checkTimeout(READ_TIME_OUT) == true) {
 			read_timeout_list[i]->set_status_code(REQUEST_TIMEOUT);
+			std::cout << "CHECK_READ_TIMEOUT_ASSEMBLE_RESPONSE\n";
+			read_timeout_list[i]->set_read_fail(true);
 			read_timeout_list[i]->assemble_response();
+			std::cout << "CHECK_READ_TIMEOUT_ADD_EVENT\n";
 			addEvent(kq, read_timeout_list[i]->get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, event.getEventTypeClient());
 			read_timeout_list.erase(read_timeout_list.begin() + i--);
 		}

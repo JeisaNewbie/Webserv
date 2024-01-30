@@ -119,6 +119,7 @@ std::string	&Cgi::get_response_from_cgi()
 	waitpid (this->pid, &status, 0);
 	lseek (this->fd_file_out, 0, SEEK_SET);
 	std::cout << "WAIT_PID_DONE\n";
+	std::memset(buf, 0, sizeof(buf));
 	while (len)
 	{
 		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
