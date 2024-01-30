@@ -17,7 +17,7 @@ static std::string	createUniqueFileName();
 
 int main() {
 	try {
-		// while (1) {}
+		while (1) {}
 		std::string			data_post;
 		std::string			request_method = getEnvString("REQUEST_METHOD");
 		// std::string			data_post = getEnvString("QUERY_STRING_POST");
@@ -33,10 +33,11 @@ int main() {
 			handlePostMethod(directory_path, data_post);
 	}
 	catch(const std::exception& e) {
-		std::cerr << "Exception caught: " << e.what() << std::endl;
+		std::cerr << "Script exception caught: " << e.what() << std::endl;
 		return -1;
 	}
 
+	std::cerr << "SCRIPT_DONE\n";
 	return 0;
 }
 
@@ -51,6 +52,7 @@ static void handleGetMethod(const std::string directory_path, const std::string 
 
 	ss << file.rdbuf();
 
+	std::cerr << "WRITE_TO_FD\n";
 	std::cout << "Content-Type: text/plain\r\n";
 	std::cout << "Status_code: 200\r\n";
 	std::cout << "\r\n";

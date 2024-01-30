@@ -125,6 +125,10 @@ void	Exception::setMessage(int costom_error) {
 		message = "Send function failed";
 		break;
 
+	case EVENT_DISCONNECT:
+		message = "Event is disconnected";
+		break;
+
 	case EVENT_CONNECT_FULL:
 		message = "Connection limit is reached";
 		break;
