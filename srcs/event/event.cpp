@@ -207,6 +207,7 @@ void startConnect(Cycle& cycle) {
 					{
 						std::cout << "RES_FAIL\n";
 						continue;
+					}
 					std::cout << "START_ASSEMBLE_RESPONSE\n";
 					server[tmp_ident].assemble_response();
 					server[tmp_ident].get_request_instance().get_request_msg() = "";
@@ -235,7 +236,6 @@ void startConnect(Cycle& cycle) {
 				std::cout << "---------------end of assebling message--------------\n";
 			}
 		}
-	}
 	}
 }
 
