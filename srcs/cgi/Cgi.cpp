@@ -95,7 +95,6 @@ void	Cgi::execute_cgi(Request &request, Cgi &cgi) // cgi 무한루프 발생시 
 	{
 		request.set_cgi(false);
 		request.set_status_code(INTERNAL_SERVER_ERROR);
-		std::cout <<"FORK_FAIL\n";
 		return ;
 	}
 
@@ -116,6 +115,7 @@ std::string	&Cgi::get_response_from_cgi()
 	int	len = 1;
 	int	status = 0;
 
+	std::cout << "WAIT_PID_START\n";
 	waitpid (this->pid, &status, 0);
 	lseek (this->fd_file_out, 0, SEEK_SET);
 	std::cout << "WAIT_PID_DONE\n";
@@ -126,14 +126,15 @@ std::string	&Cgi::get_response_from_cgi()
 		if (len == 0)
 			break;
 		cgi_body += buf;
+		std::memset(buf, 0, sizeof(buf));
 		// std::cout<<len<<std::endl;
 		// std::cout<<cgi_body<<std::endl;
 	}
-	std::memset(buf, 0, sizeof(buf));
 
 	// std::cout<<"BEFORE_GET_CHILD_PROCESS\n";
 	// std::cout<<"AFTER_GET_CHILD_PROCESS\n";
-	if (WEXITSTATUS(status) == 1)
+	std::cout << "STATUS_CODE: " << WEXITSTATUS(status) << "\n";
+	if (WEXITSTATUS(status))
 	{
 		fclose (this->f_in);
 		fclose (this->f_out);
@@ -148,6 +149,7 @@ std::string	&Cgi::get_response_from_cgi()
 	close (this->fd_file_in);
 	close (this->fd_file_out);
 
+	std::cout << "CGI_BODY: " << cgi_body << "\n";
 	return cgi_body;
 }
 

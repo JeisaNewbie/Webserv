@@ -30,6 +30,12 @@ void	Get::set_autoindex(Request &request, Response &response)
 	std::vector<char *>	files;
 	std::string			file_name;
 
+	if (dir == nullptr)
+	{
+		set_error_page (request.get_cycle_instance().getMainRoot() + "/" + request.get_cycle_instance().getDefaultErrorRoot(), response.get_body());
+		return;
+	}
+
 	while ((diread = readdir (dir)) != nullptr)
 		files.push_back (diread->d_name);
 	closedir (dir);

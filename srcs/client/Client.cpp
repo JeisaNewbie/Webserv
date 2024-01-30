@@ -123,35 +123,34 @@ void	Client::parse_cgi_response(Cgi &cgi)
 void	Client::assemble_response()
 {
 	response.set_header_line (get_status_code());
-	std::cout << "ASSEMBLE_RESPONSE_ONE\n";
-	response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
-	if (get_read_fail() == false)
-		response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2)); // request parsing 없이 response 진행할수도 있음
-	if (response.get_header_field("Connection") == "keep-alive")
-		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");
-	response.set_header_field ("Access-Control-Allow-Origin", "*");
-	std::cout << "ASSEMBLE_RESPONSE_TWO\n";
+
 	if (get_status_code() >= BAD_REQUEST)
 	{
-		std::cout <<"FIEL_ERROR_ZERO"<<std::endl;
-		std::ifstream		error (request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html");
-		std::stringstream	ss;
-		std::cout <<"FIEL_ERROR_ONE"<<std::endl;
-		if (error.is_open() == false)
+		std::string path = request.get_cycle_instance().getMainRoot() + "/serve/error/" + to_string(get_status_code()) + ".html";
+		int file_status = check_path_property(path);
+
+		if (file_status == _FILE)
+			set_error_page (path, response.get_body());
+		else
 		{
-			error.open(request.get_cycle_instance().getMainRoot() + "/" + request.get_cycle_instance().getDefaultErrorRoot());
+			path = request.get_cycle_instance().getMainRoot() + "/" + request.get_cycle_instance().getDefaultErrorRoot();
+			set_error_page (path, response.get_body());
 		}
-		ss << error.rdbuf();
-		response.set_body(ss.str());
-		std::cout <<"RESPONSE_ERROR: "<<response.get_body()<<std::endl;
-		ss.str("");
-		error.close();
-		response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
+
 	}
-	std::cout << "ASSEMBLE_RESPONSE_THREE\n";
+
+	if (get_read_fail() == false)
+		response.set_header_field ("Connection", get_request_instance().get_header_field("connection").substr (0, get_request_instance().get_header_field("connection").size () - 2)); // request parsing 없이 response 진행할수도 있음
+
+	if (response.get_header_field("Connection") == "keep-alive")
+		response.set_header_field ("Keep-Alive", "timeout=50, max=1000");
+
+	response.set_header_field ("Access-Control-Allow-Origin", "*");
+	response.set_header_field ("Content-Length", to_string(get_response_instance().get_body().size()));
+
 	if (get_read_fail() == false && get_request_instance().get_redirect() == true)
 		get_response_instance().set_header_field("Location", get_request_instance().get_redirect_path());
-	std::cout << "ASSEMBLE_RESPONSE_FOUR\n";
+
 	response.assemble_message ();
 }
 
