@@ -30,12 +30,15 @@ class Event {
 
 		int		getEventQueue(void) const;
 		int		getCurConnection(void) const;
-
-		void	incCurConnection(void);
-		void	decCurConnection(void);
 		char*	getEventTypeListen(void);
 		char*	getEventTypeClient(void);
 		char*	getEventTypeCgi(void);
+
+		void	incCurConnection(void);
+		void	decCurConnection(void);
+		void	addEvent(uintptr_t ident, int16_t filter,	\
+						uint16_t flags,	uint32_t fflags,			\
+						intptr_t data, void* udata);
 
 	private:
 		int			event_queue;
