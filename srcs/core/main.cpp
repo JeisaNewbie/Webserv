@@ -4,6 +4,7 @@ int main(int argc, char** argv, char** envp) {
 	Cycle	cycle(const_cast<const char**>(envp));
 	Conf	conf;
 
+
 	cycle.getEnvp();
 	try{
 		setConf(conf, argc, argv[1]);
@@ -12,5 +13,6 @@ int main(int argc, char** argv, char** envp) {
 	} catch(Exception& e){
 		return mainException(e);
 	}
+
 	return 0;
 }
