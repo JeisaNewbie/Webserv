@@ -170,7 +170,6 @@ void startConnect(Cycle& cycle) {
 								break;
 							}
 						}
-						// event_client.get_request_instance().check_members();
 						for (int i = 0; i < read_timeout_list.size(); i++) {
 							if (read_timeout_list[i] == &server[tmp_ident]) {
 								read_timeout_list.erase(read_timeout_list.begin() + i);
@@ -207,6 +206,7 @@ void startConnect(Cycle& cycle) {
 					{
 						std::cout << "RES_FAIL\n";
 						continue;
+					}
 					std::cout << "START_ASSEMBLE_RESPONSE\n";
 					server[tmp_ident].assemble_response();
 					server[tmp_ident].get_request_instance().get_request_msg() = "";
@@ -236,8 +236,8 @@ void startConnect(Cycle& cycle) {
 			}
 		}
 	}
-	}
 }
+
 
 static void prepConnect(Cycle& cycle) {
     sockaddr_in					server_addr;
