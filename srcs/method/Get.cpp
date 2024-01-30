@@ -30,13 +30,13 @@ void	Get::set_autoindex(Request &request, Response &response)
 	std::vector<char *>	files;
 	std::string			file_name;
 
-	if (dir == nullptr)
+	if (dir == NULL)
 	{
 		set_error_page (request.get_cycle_instance().getMainRoot() + "/" + request.get_cycle_instance().getDefaultErrorRoot(), response.get_body());
 		return;
 	}
 
-	while ((diread = readdir (dir)) != nullptr)
+	while ((diread = readdir (dir)) != NULL)
 		files.push_back (diread->d_name);
 	closedir (dir);
 	std::string	index = "<html>\n<head>\n<title>Index of " + request.get_path() + "</title>\n</head>\n<body>\n";

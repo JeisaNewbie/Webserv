@@ -32,7 +32,7 @@ private:
 	std::string										path;
 	std::string										file_name;
 	std::string										host_only;
-	uint32_t										port;
+	size_t										port;
 	std::string										query;
 	std::string										protocol_version;
 	std::string										method;
@@ -110,10 +110,9 @@ public:
 	void											set_chunked (bool flag);
 	void											set_header_key_and_value(std::string &key, std::string &value);
 	void											set_header_key_and_value(const char *key, const char *value);
-	void											set_port(uint32_t port);
+	void											set_port(size_t port);
 	void											set_cycle(Cycle &cycle);
 	void											set_redirect(std::string main_root, std::string sub_root, std::string file);
-	void check_members();
 };
 
 #endif

@@ -13,6 +13,7 @@ void	Client::reset_data()
 	std::cout<<"RESET_DATA_REQUEST\n";
 	get_request_instance().reset_data();
 	get_response_instance().reset_data();
+	get_cgi_instance().reset_data();
 	// this->cgi_fd_arr[get_cgi_instance().get_fd()] = 0;
 }
 
@@ -51,15 +52,8 @@ void	Client::set_property_for_cgi(Request &request)
 
 void	Client::do_method_without_cgi(Request &request)
 {
-	// std::cout<<"METHOD_WITHOUT_CGI_START\n";
-	// std::cout<<request.get_path()<<std::endl;
-
-	//set_autoindex(); ->if no -> find_index(); -> if no -> 404.html;
 	std::string path = request.get_path();
 	int			path_property = check_path_property (path);
-
-	// if (path_property == -1)
-	// 	throw NOT_FOUND;
 
 	std::string	&method = request.get_method();
 
@@ -98,29 +92,23 @@ void	Client::parse_cgi_response(Cgi &cgi)
 	size_t		pos = 0;
 
 	delimeter = body.find ("\r\n", pos);
-	// std::cout<<"BODY_FIND_NO_ERR"<<std::endl;
 	while (delimeter != std::string::npos)
 	{
 		delimeter = body.find ("\r\n", pos);
 		if (delimeter == std::string::npos)
 			break;
-		// std::cout<<"FIRST"<<std::endl;
 
 		if (pos == delimeter)
 		{
-			// std::cout<<"THIRD"<<std::endl;
 			get_response_instance().set_body(body.substr (pos + 2, body.find ("\r\n", pos + 2)));
-			std::cout << "parse_cgi_response_body: " << get_response_instance().get_body() << std::endl;
 			break ;
 		}
 
 		get_response_instance().set_header_field(body.substr (pos, delimeter - pos));
-		// std::cout<<"SECOND"<<std::endl;
 		pos = delimeter + 2;
 	}
-	// std::cout<<"AFTER_BODY_FIND"<<std::endl;
+
 	set_status_code(std::atoi(get_response_instance().get_header_field("Status_code").c_str()));
-	std::cout << "parse_cgi_response_get_status_code: " << get_status_code() << std::endl;
 	set_cgi(false);
 }
 
@@ -178,4 +166,4 @@ void		Client::set_cgi_fork_status (bool status) {get_cgi_instance().set_cgi_fork
 uintptr_t	Client::get_client_soket() {return this->client_soket;}
 uintptr_t*	Client::get_client_soket_ptr() {return &(this->client_soket);}
 void		Client::set_client_soket(uintptr_t client_soket) {this->client_soket = client_soket;}
-void		Client::set_port(uint32_t port) {get_request_instance().set_port(port);}
+void		Client::set_port(size_t port) {get_request_instance().set_port(port);}

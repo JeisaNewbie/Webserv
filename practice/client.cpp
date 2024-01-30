@@ -24,7 +24,7 @@ int
 
 	int power = 0;
 	for (int i = 3; i >= 0; i--) {
-		int	   num = stoi(addrs[i]);
+		int	   num = std::strtol(addrs[i].c_str(), NULL, 10);
 		string binary = bitset< 8 >(num).to_string();
 		for (int j = binary.length() - 1; j >= 0; j--) {
 			res += (binary[j] - '0') * pow(2, power);

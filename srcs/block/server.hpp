@@ -14,16 +14,16 @@ class Server {
 
 		Server& operator =(const Server& src);
 
-		void						setPort(uint32_t _port);
+		void						setPort(size_t _port);
 		void						setDomain(std::string _domain);
 
-		uint32_t					getPort(void) const;
+		size_t					getPort(void) const;
 		const std::string&			getDomain(void) const;
 		std::list<Location>&		getLocationList(void);
 		const std::list<Location>&	getLocationListConst(void) const;
 
 	private:
-		uint32_t			port;
+		size_t			port;
 		std::string			domain;
 
 		std::list<Location> location_list;

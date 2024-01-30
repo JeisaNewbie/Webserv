@@ -37,7 +37,7 @@ class Cycle {
 
 		const char**			envp;
 
-		uint32_t				worker_connections;
+		size_t				worker_connections;
 		size_t					client_max_body_size;
 		size_t					uri_limit_length;
 		std::string				main_root;

@@ -1042,38 +1042,6 @@ size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *
 	return *depth;
 }
 
-void	Request::check_members()
-{
-
-	std::cout << "--------------------------------------------------------------\n";
-	std::cout << "Request_line: " << this->request_line << std::endl;
-	std::cout << std::endl;
-	std::cout << "Request_method: " << this->method << std::endl;
-	std::cout << std::endl;
-	std::cout << "Request_uri: " << this->uri << std::endl;
-	std::cout << std::endl;
-	std::cout << "Request_path: " << this->path << std::endl;
-	std::cout << std::endl;
-	std::cout << "Request_query: " << this->query << std::endl;
-	std::cout << std::endl;
-	for (std::map<std::string, std::string>::iterator it = this->query_elements.begin(); it != this->query_elements.end(); it++)
-		std::cout << "Request_query_element[ " << it->first << " ]: " << it->second << std::endl<<std::endl;
-
-	std::cout<< "---------------Request_headers-----------------------------------------------\n";
-
-	for (std::list<std::string>::iterator it = this->headers.begin(); it != this->headers.end(); it++)
-		std::cout << *it << std::endl;
-
-	std::cout<< "---------------Request_headers_after_parsing-----------------------------------------------\n";
-
-	for (std::map<std::string, std::string>::iterator it = this->header.begin(); it != this->header.end(); it++)
-		std::cout << it->first << " | " << it->second << std::endl;
-
-	std::cout << "--------------------------------------------------------------\n";
-	std::cout << "Request_body: " << this->message_body << std::endl;
-	std::cout<< "--------------------------------------------------------------\n";
-}
-
 //-----------------------------getter && setter------------------------------
 Cycle&			Request::get_cycle_instance() {return *(this->cycle);}
 std::string&	Request::get_header_field(const char *key) {return this->header[key];}
@@ -1096,7 +1064,7 @@ void 			Request::set_status_code(int status_code) {this->status_code = status_co
 void			Request::set_cgi (bool flag) {this->cgi = flag;}
 void			Request::set_chunked (bool flag) {this->chunked = flag;}
 void			Request::set_header_key_and_value(const char *key, const char *value){this->header[key] = value;}
-void			Request::set_port(uint32_t port) {this->port = port;}
+void			Request::set_port(size_t port) {this->port = port;}
 void			Request::set_cycle(Cycle &cycle) {this->cycle = &cycle;}
 void			Request::set_header_key_and_value(std::string &key, std::string &value)
 {

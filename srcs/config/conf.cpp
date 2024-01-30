@@ -137,7 +137,7 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 			continue;
 		if (str_buf == "}")
 			break;
-		
+
 		token_cnt = tokenizer(buf, tokens);
 		tokens[0] = &tokens[0][1]; //tab으로 시작하니까
 		callCmd(cycle, conf, CONF_MAIN, tokens, setTakeArgCnt(token_cnt));
