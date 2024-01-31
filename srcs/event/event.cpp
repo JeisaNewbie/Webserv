@@ -205,8 +205,8 @@ void Event::reclaimProcess(Client& client) {
 
 void Event::disconnectClient(int client_socket) {
 	std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
-	close(client_socket);
-	cur_connection--;
+	if (close(client_socket) == 0)
+		cur_connection--;
 }
 
 void Event::checkReadTimeout(Event& event, std::vector<Client*>& read_timeout_list) {
