@@ -109,7 +109,7 @@ void parseConf(Cycle& cycle, Conf& conf) {
 
 		if (checkConfLocation(tokens) == CONF_MAIN)
 			parseMain(cycle, conf, file);
-		else // CONF_SRV
+		else if (checkConfLocation(tokens) == CONF_SRV)
 			parseServer(cycle, conf, file);
 	}
 	checkGetlineError(file);
@@ -139,7 +139,7 @@ static void parseMain(Cycle& cycle, Conf& conf, std::ifstream& file) {
 			break;
 
 		token_cnt = tokenizer(buf, tokens);
-		tokens[0] = &tokens[0][1]; //tab으로 시작하니까
+		tokens[0] = &tokens[0][1];
 		callCmd(cycle, conf, CONF_MAIN, tokens, setTakeArgCnt(token_cnt));
 	}
 	checkGetlineError(file);
@@ -152,7 +152,7 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 	std::string			str_buf;
 	std::list<Server>&	server_list = cycle.getServerList();
 
-	server_list.push_back(Server()); //복사해서 추가함
+	server_list.push_back(Server());
 
 	while (file.getline(buf, sizeof(buf))) {
 		str_buf = static_cast<std::string>(buf);
@@ -163,7 +163,7 @@ static void parseServer(Cycle& cycle, Conf& conf, std::ifstream& file) {
 			break;
 
 		token_cnt = tokenizer(buf, tokens);
-		tokens[0] = &tokens[0][1]; //tab으로 시작하니까
+		tokens[0] = &tokens[0][1];
 
 		if (tokens[0] == "location") {
 			if (token_cnt != 3 || tokens[2] != "{")
@@ -191,7 +191,7 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 	std::list<Location>&	location_list = cycle.getServerList().back().getLocationList();
 
 	checkLocationDuplication(location_list);
-	location_list.push_back(Location(location_path)); //복사해서 추가함
+	location_list.push_back(Location(location_path));
 
 	while (file.getline(buf, sizeof(buf))) {
 		str_buf = static_cast<std::string>(buf);
@@ -202,7 +202,7 @@ static void parseLocation(Cycle& cycle, Conf& conf, std::ifstream& file,	\
 			break;
 
 		token_cnt = tokenizer(buf, tokens);
-		tokens[0] = &tokens[0][2]; //tab 2개로 시작하니까
+		tokens[0] = &tokens[0][2];
 		callCmd(cycle, conf, CONF_LOC, tokens, setTakeArgCnt(token_cnt));
 	}
 	checkGetlineError(file);
@@ -249,7 +249,7 @@ static int tokenizer(char* str, std::string* tokens) {
 	int					idx = 0;
 
 	while (getline(istr, token, ' '))
-		if (token.empty() == FALSE) // 공백이 두 개 이상 이어질 때, 공백과 공백 사이에 빈 토큰이 생성됨
+		if (token.empty() == FALSE)
 			tokens[idx++] = token;
 
 	if (istr.eof() == FALSE)

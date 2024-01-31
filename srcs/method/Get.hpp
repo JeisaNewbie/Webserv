@@ -9,6 +9,6 @@ class Get : public Method {
 		/* data */
 	public:
 		static void create_response(Response &response);
-		static void	make_body(Response &response, std::string &path);
+		static bool	make_body(Response &response, std::string &path);
 		static void	set_autoindex(Request &request, Response &response);
 };

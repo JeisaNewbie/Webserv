@@ -21,7 +21,7 @@ void set_error_page(std::string path, std::string &content)
 	std::ifstream error (path);
 	if (error.is_open() == false)
 	{
-		error.open("/Users/eunwoolee/vscode_workspace/Webserv/serve/error/400.html");
+		error.open("/Users/eunwolee/private/Webserv/serve/error/400.html");
 		if (error.is_open() == false)
 			return;
 	}

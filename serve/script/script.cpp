@@ -20,7 +20,7 @@ int main() {
 	signal(SIGTERM, handleSignal);
 
 	try {
-		// while (1) {}
+		// while (1) {} // 무한루프 테스트
 		std::string			data_post;
 		std::string			request_method = getEnvString("REQUEST_METHOD");
 		const std::string	data_get = getEnvString("QUERY_STRING_GET");
@@ -78,7 +78,6 @@ static void handlePostMethod(const std::string directory_path, const std::string
 }
 
 static void handleSignal(int signum) {
-	// 파일 내용 삭제
 	static_cast<void>(signum);
 	exit(1);
 }
