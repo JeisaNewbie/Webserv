@@ -28,24 +28,26 @@ class Event {
 
 		Event& operator =(const Event& src);
 
-		int		getEventQueue(void) const;
-		int		getCurConnection(void) const;
-		char*	getEventTypeListen(void);
-		char*	getEventTypeClient(void);
-		char*	getEventTypeCgi(void);
+		int			getEventQueue(void) const;
+		int			getCurConnection(void) const;
+		kevent_t&	getEventOfList(int idx);
+		char*		getEventTypeListen(void);
+		char*		getEventTypeClient(void);
+		char*		getEventTypeCgi(void);
 
-		void	incCurConnection(void);
-		void	decCurConnection(void);
-		void	addEvent(uintptr_t ident, int16_t filter,	\
-						uint16_t flags,	size_t fflags,			\
-						intptr_t data, void* udata);
-		int		pollingEvent();
+		void		incCurConnection(void);
+		void		decCurConnection(void);
+		void		addEvent(uintptr_t ident, int16_t filter,	\
+							uint16_t flags,	size_t fflags,		\
+							intptr_t data, void* udata);
+		size_t		pollingEvent();
 
 	private:
 		int						event_queue;
 		size_t					cur_connection;
 
 	    std::vector<kevent_t>	event_list;
+		struct timespec			kevent_timeout;
 
 		char					event_type_listen[8];
 		char					event_type_client[7];
