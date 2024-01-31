@@ -30,21 +30,19 @@ class Cycle {
 		const std::string&		getMainRoot(void) const;
 		const std::string&		getDefaultErrorRoot(void) const;
 		std::list<Server>&		getServerList(void);
-		std::vector<uintptr_t>&	getListenSocketList(void);
 
 	private:
 		Cycle(void);
 
 		const char**			envp;
 
-		size_t				worker_connections;
+		size_t					worker_connections;
 		size_t					client_max_body_size;
 		size_t					uri_limit_length;
 		std::string				main_root;
 		std::string				default_error_root;
 
 		std::list<Server>		server_list;
-		std::vector<uintptr_t>  listen_socket_list;
 };
 
 #endif

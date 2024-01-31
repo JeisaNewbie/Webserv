@@ -91,7 +91,7 @@ void	Cgi::set_fd()
 	this->cgi_body = "";
 }
 
-void	Cgi::execute_cgi(Event& event, uintptr_t* client_socket, Request &request, Cgi &cgi) // cgi 무한루프 발생시 강제 종료 설정(timeout등)
+pid_t	Cgi::execute_cgi(uintptr_t* client_socket, Request &request, Cgi &cgi)
 {
 	std::cout <<"BEFORE_FORK\n";
 	std::cout <<"CGI_PATH: "<< cgi.cgi_name<<std::endl;
@@ -102,11 +102,8 @@ void	Cgi::execute_cgi(Event& event, uintptr_t* client_socket, Request &request, 
 	{
 		request.set_cgi(false);
 		request.set_status_code(INTERNAL_SERVER_ERROR);
-		return ;
+		return -1;
 	}
-
-	event.addEvent(cgi.pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, client_socket);
-
 	if (cgi.pid == 0)
 	{
 		dup2 (cgi.fd_file_in, STDIN_FILENO);
@@ -115,6 +112,8 @@ void	Cgi::execute_cgi(Event& event, uintptr_t* client_socket, Request &request, 
 		write (STDOUT_FILENO, "Status: 500\r\n\r\n", 16);
 		exit (1);
 	}
+
+	return cgi.pid;
 
 	std::cout<<"AFTER_FORK\n";
 }

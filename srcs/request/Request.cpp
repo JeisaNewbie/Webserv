@@ -941,7 +941,7 @@ void	Request::matching_server()
 	}
 	else if (matched_location->getIndex().size() != 0)
 	{
-		// std::cout<<"BEFORE_SET_REDIRECT\n";
+		std::cout<<"BEFORE_SET_REDIRECT\n";
 		this->file_name = check_index(matched_location);
 		if (this->file_name != "")
 			set_redirect(cycle->getMainRoot(), matched_location->getSubRoot(), file_name);

@@ -6,12 +6,12 @@
 # include "../config/cmd.hpp"
 # include "../block/server.hpp"
 # include "../block/location.hpp"
-# include "../event/event.hpp"
-# include "../event/timeout.hpp"
 # include "../request/Request.hpp"
 # include "../response/Response.hpp"
 # include "../utils/exception.hpp"
 # include "../utils/Status.hpp"
+# include "../event/event.hpp"
+# include "../event/timeout.hpp"
 # include "../client/Client.hpp"
 
 # define FALSE 0

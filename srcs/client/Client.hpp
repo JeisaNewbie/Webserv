@@ -16,6 +16,7 @@
 #include "../method/Delete.hpp"
 #include "../utils/Utils.hpp"
 #include "../cgi/Cgi.hpp"
+# include "../event/timeout.hpp"
 
 enum Phase {
 	PARSING,

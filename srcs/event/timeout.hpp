@@ -3,6 +3,10 @@
 
 # include <ctime>
 
+# include "../event/event.hpp"
+
+class Event;
+
 class Timeout {
 	public:
 		Timeout(void);
@@ -11,12 +15,13 @@ class Timeout {
 
 		Timeout& operator =(const Timeout& src);
 
-		void	setSavedTime(void);
+		void		setSavedTime(void);
 
-		bool	checkTimeout(size_t timeout);
+		bool		checkTimeout(size_t timeout);
 
 	private:
-		time_t	saved_time;
+		time_t						saved_time;
+
 };
 
 #endif
