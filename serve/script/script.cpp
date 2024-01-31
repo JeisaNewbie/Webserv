@@ -20,7 +20,7 @@ int main() {
 	signal(SIGTERM, handleSignal);
 
 	try {
-		while (1) {}
+		// while (1) {}
 		std::string			data_post;
 		std::string			request_method = getEnvString("REQUEST_METHOD");
 		const std::string	data_get = getEnvString("QUERY_STRING_GET");

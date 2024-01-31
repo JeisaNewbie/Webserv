@@ -8,11 +8,14 @@ static void disconnectClient(Event& event, int client_socket);
 static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, std::vector<Client*>& cgi_fork_list);
 static void checkCgiForkList(std::vector<Client*>& cgi_fork_list);
 
-Event::Event(void) : cur_connection(0),	event_type_listen("listen"),	\
-					event_type_client("client"), event_type_cgi("cgi") {
+Event::Event(int event_list_size) : cur_connection(0),	event_type_listen("listen"),	\
+									event_type_client("client"), event_type_cgi("cgi") {
 	event_queue = kqueue();
 	if (event_queue == -1)
 		throw Exception(EVENT_FAIL_CREATE_KQ);
+	event_list.resize(event_list_size);
+	kevent_timeout.tv_sec = 5;
+	kevent_timeout.tv_nsec = 0;
 }
 
 Event::Event(const Event& src) {
@@ -27,14 +30,15 @@ Event& Event::operator =(const Event& src) {
 	return *this;
 }
 
-int		Event::getEventQueue(void) const { return event_queue; }
-int		Event::getCurConnection(void) const { return cur_connection; }
+int			Event::getEventQueue(void) const { return event_queue; }
+int			Event::getCurConnection(void) const { return cur_connection; }
+kevent_t&	Event::getEventOfList(int idx) { return event_list[idx]; }
 
-void	Event::incCurConnection(void) { cur_connection++; }
-void	Event::decCurConnection(void) { cur_connection--; }
-char*	Event::getEventTypeListen(void) { return event_type_listen; }
-char*	Event::getEventTypeClient(void) { return event_type_client; }
-char*	Event::getEventTypeCgi(void) { return event_type_cgi; }
+void		Event::incCurConnection(void) { cur_connection++; }
+void		Event::decCurConnection(void) { cur_connection--; }
+char*		Event::getEventTypeListen(void) { return event_type_listen; }
+char*		Event::getEventTypeClient(void) { return event_type_client; }
+char*		Event::getEventTypeCgi(void) { return event_type_cgi; }
 
 void Event::addEvent(uintptr_t ident, int16_t filter,	\
 						uint16_t flags,	size_t fflags,		\
@@ -45,6 +49,15 @@ void Event::addEvent(uintptr_t ident, int16_t filter,	\
 	kevent(event_queue, &temp, 1, NULL, 0, NULL);
 }
 
+size_t Event::pollingEvent() {
+	uint32_t	new_events;
+
+	new_events = kevent(event_queue, NULL, 0, &event_list[0], event_list.size(), &kevent_timeout);
+	
+	if (new_events == -1)
+		throw Exception(EVENT_FAIL_KEVENT);
+	return new_events;
+}
 
 // 삭제하기
 void printState(kevent_t* cur_event) {
@@ -81,9 +94,8 @@ void test(int kq) {
 }
 
 void startConnect(Cycle& cycle) {
-    Event					event;
+    Event					event(cycle.getWorkerConnections() * 2);
     std::vector<uintptr_t>&	listen_socket_list = cycle.getListenSocketList();
-    std::vector<kevent_t>	event_list(cycle.getWorkerConnections() * 2);
     std::map<int, Client>	server;
     std::vector<Client*>	read_timeout_list;
     std::vector<Client*>	cgi_fork_list;
@@ -93,12 +105,8 @@ void startConnect(Cycle& cycle) {
 
 	uint32_t		new_events;
 	kevent_t*		cur_event;
-	struct timespec	kevent_timeout;
 
 	while (1) {
-		kevent_t	*test_event;
-		kevent_timeout.tv_sec = 5;
-		kevent_timeout.tv_nsec = 0;
 
 		std::cout << "CHECK_READ_LIST\n";
 		checkReadTimeout(read_timeout_list, event, cgi_fork_list);
@@ -106,14 +114,12 @@ void startConnect(Cycle& cycle) {
 		checkCgiForkList(cgi_fork_list);
 
 		std::cout << "KEVENT\n";
-		new_events = kevent(event.getEventQueue(), NULL, 0, &event_list[0], event_list.size(), &kevent_timeout);
+		new_events = event.pollingEvent();
 		std::cout << "NEW_EVENT: " << new_events << "\n";
 
-		if (new_events == -1)
-			throw Exception(EVENT_FAIL_KEVENT);
 
 		for (int i = 0; i < new_events; i++) {
-			cur_event = &event_list[i];
+			cur_event = &event.getEventOfList(i);
 			printState(cur_event);
 			if ((cur_event->flags & EV_EOF && cur_event->filter != EVFILT_PROC)	|| cur_event->flags & EV_ERROR) {
 				disconnectClient(event, cur_event->ident);
@@ -123,7 +129,6 @@ void startConnect(Cycle& cycle) {
 			else if (cur_event->filter == EVFILT_READ) {
 				char*		event_type = static_cast<char*>(cur_event->udata);
 				uintptr_t 	tmp_ident = cur_event->ident;
-				test_event = cur_event;
 
 				if (strcmp(event_type, "listen") == 0) {
 					std::cout <<"ACCEPT_NEW_CLI\n";
