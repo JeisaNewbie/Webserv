@@ -5,7 +5,6 @@
 #include <map>
 #include <list>
 #include <iostream>
-// #include "../core/core.hpp"
 
 class Response {
 	private:
@@ -19,8 +18,6 @@ class Response {
 		Response();
 		Response(const Response& ref);
 		~Response();
-
-		// Response& operator=(const Response& ref);
 
 		std::string &get_response_message();
 		std::string	&get_header_line ();

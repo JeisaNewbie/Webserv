@@ -121,8 +121,8 @@ void Event::sendToClient(Client& client) {
 		eventException(EVENT_FAIL_SEND, client_socket);
 	}
 
-	// if (response_msg.find("Connection: close") != std::string::npos)
-	// 	disconnectClient(client_socket);
+	if (response_msg.find("Connection: close") != std::string::npos)
+		disconnectClient(client_socket);
 }
 
 int Event::recieveFromClient(Client& client) {
@@ -134,7 +134,7 @@ int Event::recieveFromClient(Client& client) {
 	ssize_t			content_length;
 
 	if ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) <= 0) {
-		// disconnectClient(client_socket);
+		disconnectClient(client_socket);
 		eventException(EVENT_FAIL_RECV, client_socket);
 		return -1;
 	}

@@ -104,7 +104,6 @@ void	Request::parse_request()
 			break;
 		}
 		std::string tmp = msg.substr (this->pos, delimeter - this->pos + 2);
-		// this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
 		this->headers.push_back (tmp);
 	}
 }
@@ -462,10 +461,10 @@ void	Request::parse_request_line()
 		case major_digit:
 
 			if (!('0' <= ch && ch <= '9'))
-				throw BAD_REQUEST; //invalid parsing
+				throw BAD_REQUEST;
 
 			if (ch != '1')
-				throw HTTP_VERSION_NOT_SUPPORTED; //invalid version
+				throw HTTP_VERSION_NOT_SUPPORTED;
 
 			state = dot;
 			break ;
@@ -478,7 +477,7 @@ void	Request::parse_request_line()
 				break ;
 			}
 
-			throw BAD_REQUEST; //invalid parsing
+			throw BAD_REQUEST;
 
 		case minor_digit:
 
@@ -496,10 +495,10 @@ void	Request::parse_request_line()
 
 			default:
 				if ('0' <= ch && ch <= '9')
-					throw HTTP_VERSION_NOT_SUPPORTED; //invalid version
+					throw HTTP_VERSION_NOT_SUPPORTED;
 
 				if (!('0' <= ch && ch <= '9'))
-					throw BAD_REQUEST; //invalid parsing
+					throw BAD_REQUEST;
 			}
 
 			break ;
@@ -519,7 +518,7 @@ void	Request::parse_request_line()
 				break;
 
 			default:
-				throw BAD_REQUEST; //invalid parsing
+				throw BAD_REQUEST;
 			}
 
 			break ;
@@ -531,7 +530,7 @@ void	Request::parse_request_line()
 				return ;
 
 			default:
-				throw BAD_REQUEST; //invalid parsing
+				throw BAD_REQUEST;
 			}
 		}
 	}
@@ -700,13 +699,13 @@ void	Request::check_transfer_encoding()
 	if (pos != 0)
 	{
 		this->header["connection"] = "close\r\n";
-		throw NOT_IMPLEMENTED; //chunked외에 다른 인코딩이 있다는 뜻. 자원되지 않는 인코딩은 501
+		throw NOT_IMPLEMENTED;
 	}
 
 	decode_chunked (this->message_body);
 }
 
-void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chunkded error"
+void	Request::decode_chunked(std::string &msg)
 {
 	std::string	chunk = msg;
 	size_t		chunk_size = 0;
@@ -968,9 +967,6 @@ size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *
 	if (route == "" && dest == "")
 		throw std::string::npos;
 
-	// if ((route == dest) && depth == 0)
-	// 	throw std::string::npos;
-
 	if (route == dest)
 	{
 		(*depth)++;
@@ -985,7 +981,6 @@ size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *
 	return *depth;
 }
 
-//-----------------------------getter && setter------------------------------
 Cycle&			Request::get_cycle_instance() {return *(this->cycle);}
 std::string&	Request::get_header_field(const char *key) {return this->header[key];}
 std::string&	Request::get_query_value(const char *key) {return this->query_elements[key];}
@@ -1050,7 +1045,7 @@ std::string	Request::lower(const char *key, size_t end)
 	for (size_t i = 0; i < end; i++)
 	{
 		if (lowcase[static_cast<unsigned int>(key[i])] == '\0')
-			throw BAD_REQUEST; //INVALID_HEADER
+			throw BAD_REQUEST;
 		tmp_key.at(i) = lowcase[static_cast<unsigned int>(key[i])];
 	}
 

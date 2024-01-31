@@ -12,10 +12,6 @@
 
 # include "../client/Client.hpp"
 
-// # include <fstream>
-// # include <unistd.h>
-// # include <string.h>
-
 # define LISTEN_QUEUE_SIZE 30
 # define READ_TIME_OUT 30
 # define CGI_TIME_OUT 30

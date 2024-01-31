@@ -2,7 +2,6 @@
 
 #include <dirent.h>
 #include "Method.hpp"
-// #include "../core/core.hpp"
 
 class Get : public Method {
 	private:
