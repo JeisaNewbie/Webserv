@@ -8,8 +8,9 @@ static void disconnectClient(Event& event, int client_socket);
 static void checkReadTimeout(std::vector<Client*>& read_timeout_list, Event& event, std::vector<Client*>& cgi_fork_list);
 static void checkCgiForkList(std::vector<Client*>& cgi_fork_list);
 
-Event::Event(void) : cur_connection(0),	event_type_listen("listen"),	\
-					event_type_client("client"), event_type_cgi("cgi") {
+Event::Event(int event_list_size) : cur_connection(0),	event_type_listen("listen"),	\
+									event_type_client("client"), event_type_cgi("cgi") {
+	event_list.resize(event_list_size);
 	event_queue = kqueue();
 	if (event_queue == -1)
 		throw Exception(EVENT_FAIL_CREATE_KQ);
@@ -81,9 +82,8 @@ void test(int kq) {
 }
 
 void startConnect(Cycle& cycle) {
-    Event					event;
+    Event					event(cycle.getWorkerConnections() * 2);
     std::vector<uintptr_t>&	listen_socket_list = cycle.getListenSocketList();
-    std::vector<kevent_t>	event_list(cycle.getWorkerConnections() * 2);
     std::map<int, Client>	server;
     std::vector<Client*>	read_timeout_list;
     std::vector<Client*>	cgi_fork_list;
