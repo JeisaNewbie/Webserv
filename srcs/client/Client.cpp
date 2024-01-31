@@ -126,7 +126,7 @@ void	Client::assemble_response()
 			set_error_page (path, response.get_body());
 		else
 		{
-			path = "/Users/ahkiler/Webserv/" + request.get_cycle_instance().getDefaultErrorRoot();
+			path = "/Users/eunwoolee/vscode_workspace/Webserv" + request.get_cycle_instance().getDefaultErrorRoot();
 			set_error_page (path, response.get_body());
 		}
 

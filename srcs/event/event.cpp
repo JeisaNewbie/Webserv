@@ -121,12 +121,12 @@ void Event::sendToClient(Client& client) {
 	int client_socket = client.get_client_soket();
 
 	if (send(client_socket, response_msg.c_str(), response_msg.length() + 1, 0) == -1) {
-		disconnectClient(client_socket);
+		// disconnectClient(client_socket);
 		eventException(EVENT_FAIL_SEND, client_socket);
 	}
 
-	if (response_msg.find("Connection: close") != std::string::npos)
-		disconnectClient(client_socket);
+	// if (response_msg.find("Connection: close") != std::string::npos)
+	// 	disconnectClient(client_socket);
 }
 
 int Event::recieveFromClient(Client& client) {
@@ -139,7 +139,7 @@ int Event::recieveFromClient(Client& client) {
 
 	std::cout << "RECIEVE_FROM_CLI_CLI_SOCKET: " << client_socket << std::endl;
 	if ((recieve_size = recv(client_socket, buf, BUF_SIZE - 1, 0)) <= 0) {
-		disconnectClient(client_socket);
+		// disconnectClient(client_socket);
 		eventException(EVENT_FAIL_RECV, client_socket);
 		return -1;
 	}
@@ -205,8 +205,8 @@ void Event::reclaimProcess(Client& client) {
 
 void Event::disconnectClient(int client_socket) {
 	std::cout << "------------------- Disconnection : client[" << client_socket << "] -------------------\n";
-	close(client_socket);
-	cur_connection--;
+	if (close(client_socket) == 0)
+		cur_connection--;
 }
 
 void Event::checkReadTimeout(Event& event, std::vector<Client*>& read_timeout_list) {
