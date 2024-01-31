@@ -843,18 +843,31 @@ void	Request::matching_absolute_path()
 void	Request::check_is_cgi()
 {
 	set_header_key_and_value("redirect_path", "/serve/redirect/");
+	std::list<Location>::iterator	it = matched_server->getLocationList().begin();
+	std::list<Location>::iterator	ite = matched_server->getLocationList().end();
+
 	if (origin_path.find(".cpp") != std::string::npos)
 	{
 		if (origin_path.find("/script.cpp") == std::string::npos)
 			throw NOT_FOUND;
 
 		if (method == "DELETE")
-		{
 			path = cycle->getMainRoot() + get_header_field("redirect_path") + get_query_value("deletedata");
-			throw OK;
+		else
+		{
+			path = cycle->getMainRoot() + "/serve/script/script.cgi";
+			this->set_cgi (true);
 		}
-		path = cycle->getMainRoot() + "/serve/script/script.cgi";
-		this->set_cgi (true);
+
+		for (; it != ite; it++)
+		{
+			if (it->getLocationPath().find ("cpp") != std::string::npos)
+				matched_location = it;
+		}
+
+		if (check_allowed_method () == false)
+			throw METHOD_NOT_ALLOWED;
+
 		throw OK;
 	}
 
@@ -906,9 +919,7 @@ void	Request::matching_server()
 		matching_absolute_path();
 
 	matched_server = cycle->getServerList().begin();
-	check_is_cgi();
 
-	// std::cout<<"BEFORE_MATCHING_SERVER\n";
 	for (; it != ite; it++)
 	{
 		// std::cout <<"PORT_MATCHED\n";
@@ -922,6 +933,8 @@ void	Request::matching_server()
 		matched_server = it;
 		break;
 	}
+
+	check_is_cgi();
 	std::cout<<"BEFORE_MATCHING_ROUTE\n";
 	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());
 	if (this->default_error == true)
