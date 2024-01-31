@@ -16,7 +16,6 @@ Cycle& Cycle::operator =(const Cycle& src) {
 		default_error_root = src.default_error_root;
 		
 		server_list = src.server_list;
-		listen_socket_list = src.listen_socket_list;
 	}
 	return (*this);
 }
@@ -34,4 +33,3 @@ int						Cycle::getUriLimitLength(void) const { return uri_limit_length; }
 const std::string&		Cycle::getMainRoot(void) const { return main_root; }
 const std::string&		Cycle::getDefaultErrorRoot(void) const { return default_error_root; }
 std::list<Server>&		Cycle::getServerList(void) { return server_list; }
-std::vector<uintptr_t>&	Cycle::getListenSocketList(void) { return listen_socket_list; }
