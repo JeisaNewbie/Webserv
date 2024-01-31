@@ -40,7 +40,7 @@ size_t Event::pollingEvent() {
 	uint32_t	new_events;
 
 	new_events = kevent(event_queue, NULL, 0, &event_list[0], event_list.size(), &kevent_timeout);
-	
+
 	if (new_events == -1)
 		throw Exception(EVENT_FAIL_KEVENT);
 	return new_events;

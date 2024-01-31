@@ -134,6 +134,7 @@ std::string	&Cgi::get_response_from_cgi()
 	waitpid (this->pid, &status, 0);
 	std::cout << "WAIT_PID_DONE\n";
 	std::cout << "STATUS_CODE: " << WEXITSTATUS(status) << "\n";
+
 	if (WEXITSTATUS(status))
 	{
 		fclose (this->f_in);
@@ -143,15 +144,14 @@ std::string	&Cgi::get_response_from_cgi()
 		cgi_body = "Status_code: 500\r\n";
 		return cgi_body;
 	}
-
+	std::cout << "WAIT_STATUS_DONE\n";
 	lseek (this->fd_file_out, 0, SEEK_SET);
 	std::memset(buf, 0, sizeof(buf));
-
+	std::cout << "WAIT_STATUS_DONE\n";
 	while (len)
 	{
 		std::cout << this->fd_file_out << "\n";
 		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
-		std::cout << "len: " << len << "\n";
 		if (len == 0)
 			break;
 		cgi_body += buf;

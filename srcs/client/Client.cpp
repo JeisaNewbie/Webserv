@@ -80,7 +80,8 @@ void	Client::do_method_without_cgi(Request &request)
 
 	if (method == "DELETE")
 	{
-		Delete::remove_file(path);
+		if (Delete::remove_file(path) == false)
+			throw NOT_FOUND;
 		Delete::create_response(response);
 	}
 }
