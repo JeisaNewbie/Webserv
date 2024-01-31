@@ -40,7 +40,7 @@ size_t Event::pollingEvent() {
 	uint32_t	new_events;
 
 	new_events = kevent(event_queue, NULL, 0, &event_list[0], event_list.size(), &kevent_timeout);
-	
+
 	if (new_events == -1)
 		throw Exception(EVENT_FAIL_KEVENT);
 	return new_events;
@@ -361,11 +361,12 @@ void startConnect(Cycle& cycle) {
 									pid_t	cgi_pid = Cgi::execute_cgi(event_client.get_client_soket_ptr(), event_client.get_request_instance(),	\
 																		event_client.get_cgi_instance());
 									if (cgi_pid != -1)
-										event.addEvent(cgi_pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, &(cur_event->ident));
-									cgi_timeout_list.push_back(&event_client);
-									event_client.set_cgi_fork_status (true);
-									event_client.get_timeout_instance().setSavedTime();
-
+									{
+										event.addEvent(cgi_pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, event_client.get_client_soket_ptr());
+										cgi_timeout_list.push_back(&event_client);
+										event_client.set_cgi_fork_status (true);
+										event_client.get_timeout_instance().setSavedTime();
+									}
 									continue;
 								}
 								event_client.do_method_without_cgi(event_client.get_request_instance());

@@ -9,9 +9,6 @@
 #include <sys/file.h>
 #include "../request/Request.hpp"
 #include "../response/Response.hpp"
-// #include "../core/core.hpp"
-// #include "../utils/Status.hpp"
-// #include "../method/Method.hpp"
 #include "../method/Get.hpp"
 #include "../method/Delete.hpp"
 #include "../utils/Utils.hpp"
