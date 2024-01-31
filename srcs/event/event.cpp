@@ -199,7 +199,7 @@ void Event::reclaimProcess(Client& client) {
 	std::cout << "START_ASSEMBLE_CGI_RESPONSE\n";
 	client.assemble_response();
 	client.get_request_instance().get_request_msg() = "";
-	addEvent(client.get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, getEventTypeClient());
+	addEvent(client.get_client_soket(), EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, &event_type_client);
 	std::cout << "---------------end of assebling message--------------\n";
 }
 
@@ -360,11 +360,12 @@ void startConnect(Cycle& cycle) {
 									std::cout << "\n\nEXECUTE_CGI\n\n\n";
 									pid_t	cgi_pid = Cgi::execute_cgi(event_client.get_client_soket_ptr(), event_client.get_request_instance(),	\
 																		event_client.get_cgi_instance());
-									if (cgi_pid != -1)
-										event.addEvent(cgi_pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, &(cur_event->ident));
-									cgi_timeout_list.push_back(&event_client);
-									event_client.set_cgi_fork_status (true);
-									event_client.get_timeout_instance().setSavedTime();
+									if (cgi_pid != -1) {
+										event.addEvent(cgi_pid, EVFILT_PROC, EV_ADD | EV_ONESHOT, NOTE_EXIT, 0, event_client.get_client_soket_ptr());
+										event_client.set_cgi_fork_status (true);
+										event_client.get_timeout_instance().setSavedTime();
+										cgi_timeout_list.push_back(&event_client);
+									}
 
 									continue;
 								}

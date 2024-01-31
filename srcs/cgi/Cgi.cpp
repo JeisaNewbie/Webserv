@@ -113,6 +113,13 @@ pid_t	Cgi::execute_cgi(uintptr_t* client_socket, Request &request, Cgi &cgi)
 		exit (1);
 	}
 
+	if (cgi.env_cgi != NULL)
+	{
+		for (size_t i = 0; cgi.env_cgi[i]; i++)
+			delete []cgi.env_cgi[i];
+		delete []cgi.env_cgi;
+	}
+
 	return cgi.pid;
 
 	std::cout<<"AFTER_FORK\n";
@@ -142,7 +149,9 @@ std::string	&Cgi::get_response_from_cgi()
 
 	while (len)
 	{
+		std::cout << this->fd_file_out << "\n";
 		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
+		std::cout << "len: " << len << "\n";
 		if (len == 0)
 			break;
 		cgi_body += buf;
