@@ -18,7 +18,7 @@ class Timeout {
 		bool		checkTimeout(size_t timeout);
 
 	private:
-		time_t						saved_time;
+		time_t	saved_time;
 
 };
 
