@@ -6,11 +6,9 @@
 #include <map>
 #include <list>
 #include <iostream>
-// #include "../core/core.hpp"
 #include "../core/cycle.hpp"
 #include "../utils/Status.hpp"
 #include "../utils/Utils.hpp"
-// #include "../method/Method.hpp"
 
 #define	FAIL			1
 #define INVALID_METHOD	5
@@ -74,7 +72,7 @@ private:
 	bool											check_allowed_method();
 	void											check_uri_form();
 	void											decode_chunked(std::string &msg);
-	//////-------------utils--------------------------------------------------
+
 	std::string										lower(const char *key, size_t end);
 	void											remove_spf(std::string &value, size_t end);
 	void											remove_spb(std::string &value, size_t end);
@@ -87,7 +85,6 @@ public:
 	void											parse_header_fields();
 	void											reset_data();
 
-	//-----------------------------getter && setter------------------------------
 	Cycle&											get_cycle_instance();
 	bool											get_cgi();
 	bool											get_expect();

@@ -10,11 +10,9 @@ Client::~Client() {}
 
 void	Client::reset_data()
 {
-	std::cout<<"RESET_DATA_REQUEST\n";
 	get_request_instance().reset_data();
 	get_response_instance().reset_data();
 	get_cgi_instance().reset_data();
-	// this->cgi_fd_arr[get_cgi_instance().get_fd()] = 0;
 }
 
 void	Client::init_client(uintptr_t client_soket)
@@ -30,12 +28,9 @@ void	Client::do_parse(Cycle &cycle)
 
 void	Client::set_property_for_cgi(Request &request)
 {
-	std::cout<<"SET_PROPERTY_FOR_CGI\n";
-
 	std::string &path = request.get_path();
 	int			path_property = check_path_property (path);
 
-	// std::cout<<"Path: "<<path<<std::endl;
 	if (path_property == -1)
 	{
 		set_cgi(false);
@@ -43,11 +38,8 @@ void	Client::set_property_for_cgi(Request &request)
 	}
 
 	this->get_cgi_instance().set_body(request.get_message_body());
-	std::cout << "SET_CGI_BODY: " << this->get_cgi_instance().get_body() << std::endl;
 	this->get_cgi_instance().set_env(request, get_client_soket());
-	std::cout << "GET_CLI_SOCKET: " << get_client_soket() << std::endl;
 	this->get_cgi_instance().set_fd();
-	std::cout<<"END_SET_PROPERTY_FOR_CGI\n";
 }
 
 void	Client::do_method_without_cgi(Request &request)
@@ -61,7 +53,8 @@ void	Client::do_method_without_cgi(Request &request)
 	{
 		if (path_property == _FILE)
 		{
-			Get::make_body(response, path);
+			if (Get::make_body(response, path) == false)
+				throw NOT_FOUND;
 			Get::create_response(response);
 			throw OK;
 		}
@@ -126,7 +119,7 @@ void	Client::assemble_response()
 			set_error_page (path, response.get_body());
 		else
 		{
-			path = "/Users/ahkiler/Webserv/" + request.get_cycle_instance().getDefaultErrorRoot();
+			path = "/Users/eunwolee/private/Webserv/" + request.get_cycle_instance().getDefaultErrorRoot();
 			set_error_page (path, response.get_body());
 		}
 
@@ -147,7 +140,6 @@ void	Client::assemble_response()
 	response.assemble_message ();
 }
 
-//------------------------getter && setter---------------------------
 Phase		Client::get_current_phase() {return this->phase;}
 Request& 	Client::get_request_instance () {return this->request;}
 Response&	Client::get_response_instance () {return this->response;}

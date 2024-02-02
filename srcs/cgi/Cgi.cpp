@@ -55,7 +55,6 @@ void		Cgi::set_env(Request &request, uintptr_t client_soket)
 	catch(const std::exception& e)
 	{
 		request.set_cgi(false);
-		std::cout<<"CGI_ENV_FAIL\n";
 		throw INTERNAL_SERVER_ERROR;
 	}
 
@@ -93,9 +92,6 @@ void	Cgi::set_fd()
 
 pid_t	Cgi::execute_cgi(uintptr_t* client_socket, Request &request, Cgi &cgi)
 {
-	std::cout <<"BEFORE_FORK\n";
-	std::cout <<"CGI_PATH: "<< cgi.cgi_name<<std::endl;
-	std::cout <<"REDIRECT_PATH: "<<cgi.env["REDIRECT_PATH"]<<std::endl;
 	cgi.pid = fork();
 
 	if (cgi.pid == -1)
@@ -121,8 +117,6 @@ pid_t	Cgi::execute_cgi(uintptr_t* client_socket, Request &request, Cgi &cgi)
 	}
 
 	return cgi.pid;
-
-	std::cout<<"AFTER_FORK\n";
 }
 
 std::string	&Cgi::get_response_from_cgi()
@@ -130,10 +124,7 @@ std::string	&Cgi::get_response_from_cgi()
 	int	len = 1;
 	int	status = 0;
 
-	std::cout << "WAIT_PID_START\n";
 	waitpid (this->pid, &status, 0);
-	std::cout << "WAIT_PID_DONE\n";
-	std::cout << "STATUS_CODE: " << WEXITSTATUS(status) << "\n";
 
 	if (WEXITSTATUS(status))
 	{
@@ -144,13 +135,10 @@ std::string	&Cgi::get_response_from_cgi()
 		cgi_body = "Status_code: 500\r\n";
 		return cgi_body;
 	}
-	std::cout << "WAIT_STATUS_DONE\n";
 	lseek (this->fd_file_out, 0, SEEK_SET);
 	std::memset(buf, 0, sizeof(buf));
-	std::cout << "WAIT_STATUS_DONE\n";
 	while (len)
 	{
-		std::cout << this->fd_file_out << "\n";
 		len = read (this->fd_file_out, buf, CGI_BUFFER_SIZE - 1);
 		if (len == 0)
 			break;
@@ -163,7 +151,6 @@ std::string	&Cgi::get_response_from_cgi()
 	close (this->fd_file_in);
 	close (this->fd_file_out);
 
-	std::cout << "CGI_BODY: " << cgi_body << "\n";
 	return cgi_body;
 }
 

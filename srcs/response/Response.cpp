@@ -77,16 +77,13 @@ void	Response::reset_data()
 void	Response::assemble_message()
 {
 	response_msg = get_header_line();
-	// std::cout<< "response_msg_before_header_field: " << response_msg << std::endl;
 	response_msg += get_header_field();
-	// std::cout<< "response_msg_before_body: " << response_msg << std::endl;
 	response_msg += "\r\n";
 	if (body_flag == true)
 	{
 		response_msg += get_body();
 		set_body ("");
 	}
-	std::cout<< "response_msg: \n" << response_msg << std::endl;
 }
 
 std::string	&Response::get_header_line () {return this->header_line;}
@@ -126,13 +123,6 @@ void	Response::set_header_line (int status_code)
 
 	if (status_code == CONTINUE)
 		status = 51;
-	// std::cout <<"set_header_line_status_code: "<<status_code<<std::endl;
-	// std::string code (status_line[status].code);
-	// std::string text (status_line[status].text);
-
-	// std::cout<<"code: "<<status_line[status].code<<std::endl;
-	// std::cout<<"text: "<<status_line[status].text<<std::endl;
-	// std::cout << "set_header_line_start\n";
 
 	header_line = "HTTP/1.1 ";
 	header_line += status_line[status].code;
@@ -140,7 +130,6 @@ void	Response::set_header_line (int status_code)
 	header_line += status_line[status].text;
 	header_line += "\r\n";
 
-	// std::cout <<header_line;
 }
 
 void	Response::set_header_field (const std::string &key, const std::string &value)

@@ -57,19 +57,11 @@ void	Request::process_request_parsing(Cycle &cycle)
 	try
 	{
 		this->cycle = &cycle;
-		// std::cout<< "parse_request\n";
 		parse_request ();
-		std::cout<< "parse_request_line\n";
 		parse_request_line ();
-		std::cout<< "parse_header_fields\n";
 		parse_header_fields ();
-		std::cout<< "check_members\n";
-		// check_members();
-		std::cout<< "check_header_is_valid\n";
 		check_header_is_valid ();
-		// std::cout << "matching_server\n";
-		matching_server(); // port와 listen이 일치하는지 확인 &&  host와 server_name 일치 확인 -> location과 uri(path)와 일치하는지 확인 (만약 path가 absolute form으로 올경우 그중 path를 파싱해서 path 와 location 비교)
-		// std::cout<<"finish_mathcing_server\n";
+		matching_server();
 	}
 	catch(int e)
 	{
@@ -77,13 +69,11 @@ void	Request::process_request_parsing(Cycle &cycle)
 		if (this->status_code >= BAD_REQUEST)
 			header["connection"] = "close\r\n";
 		this->request_msg = "";
-		std::cout << "REQUEST_PARSING_DONE_AND STATUS_CODE: " << e << std::endl;
 	}
 }
 
 void	Request::parse_request()
 {
-	std::cout << "PARSE_REQUEST_START\n";
 	std::string &msg = this->request_msg;
 	size_t delimeter = msg.find ("\r\n");
 	this->pos = 0;
@@ -93,20 +83,15 @@ void	Request::parse_request()
 
 	if (delimeter == 0)
 	{
-		std::cout << "PARSE_REQUEST_DELIMETER_0\n";
 		this->pos = 2;
 		if (this->pos >= this->request_msg.size())
 			throw BAD_REQUEST;
 		delimeter = msg.find ("\r\n", this->pos);
 		if (delimeter == std::string::npos)
 			throw BAD_REQUEST;
-		std::cout << "PARSE_REQUEST_DELIMETER_0_DONE\n";
 	}
 
-	std::cout << "PARSE_REQUEST_WHILE_READY\n";
-	std::cout << "POS: " << this->pos << ", DELIMETER: " << delimeter << std::endl;
 	this->request_line = msg.substr (this->pos, delimeter - this->pos);
-	std::cout << "PARSE_REQUEST_WHILE_START\n";
 
 	while (delimeter != std::string::npos)
 	{
@@ -119,11 +104,8 @@ void	Request::parse_request()
 			break;
 		}
 		std::string tmp = msg.substr (this->pos, delimeter - this->pos + 2);
-		std::cout << "PARSE_REQUEST_WHILE_HEADER: " << tmp << std::endl;
-		// this->headers.push_back (msg.substr (this->pos, delimeter - this->pos + 2));
 		this->headers.push_back (tmp);
 	}
-	std::cout << "PARSE_REQUEST_END\n";
 }
 
 void	Request::parse_request_line()
@@ -139,7 +121,6 @@ void	Request::parse_request_line()
 	std::string::iterator query_start;
 	std::string::iterator query_end;
 	char	ch;
-	std::cout << "PARSE_REQUEST_LINE_START\n";
 	enum {
 		start = 0,
 		method,
@@ -377,7 +358,6 @@ void	Request::parse_request_line()
 				uri_end = it;
 				state = http;
 				this->path = this->request_line.substr (path_start - method_start, uri_end - path_start);
-				std::cout <<"PARSING_PATH: " << path << std::endl;
 				this->uri = this->request_line.substr (uri_start - method_start, uri_end - uri_start);
 				check_uri_form();
 				if (this->uri.size() > cycle->getUriLimitLength())
@@ -481,10 +461,10 @@ void	Request::parse_request_line()
 		case major_digit:
 
 			if (!('0' <= ch && ch <= '9'))
-				throw BAD_REQUEST; //invalid parsing
+				throw BAD_REQUEST;
 
 			if (ch != '1')
-				throw HTTP_VERSION_NOT_SUPPORTED; //invalid version
+				throw HTTP_VERSION_NOT_SUPPORTED;
 
 			state = dot;
 			break ;
@@ -497,7 +477,7 @@ void	Request::parse_request_line()
 				break ;
 			}
 
-			throw BAD_REQUEST; //invalid parsing
+			throw BAD_REQUEST;
 
 		case minor_digit:
 
@@ -515,10 +495,10 @@ void	Request::parse_request_line()
 
 			default:
 				if ('0' <= ch && ch <= '9')
-					throw HTTP_VERSION_NOT_SUPPORTED; //invalid version
+					throw HTTP_VERSION_NOT_SUPPORTED;
 
 				if (!('0' <= ch && ch <= '9'))
-					throw BAD_REQUEST; //invalid parsing
+					throw BAD_REQUEST;
 			}
 
 			break ;
@@ -538,7 +518,7 @@ void	Request::parse_request_line()
 				break;
 
 			default:
-				throw BAD_REQUEST; //invalid parsing
+				throw BAD_REQUEST;
 			}
 
 			break ;
@@ -550,7 +530,7 @@ void	Request::parse_request_line()
 				return ;
 
 			default:
-				throw BAD_REQUEST; //invalid parsing
+				throw BAD_REQUEST;
 			}
 		}
 	}
@@ -606,15 +586,10 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 	size_t	crlf = header_element.find ("\r\n");
 
 	if (pos == std::string::npos || crlf == std::string::npos)
-	{
-		// std::cout << "HEADER: " << header_element << std::endl;
 		throw BAD_REQUEST;
-	}
 
-	// std::cout<<"HEADER_FIELD: "<<header_element<<std::endl;
 	std::string	key = lower (header_element.substr (0, pos).c_str(), pos);
 	std::string	value = header_element.substr (pos + 1, end);
-	// std::cout<<"HEADER_KEY_AND_VALUE: "<<key<<", "<<value<<std::endl;
 	remove_spf(value, end);
 	remove_spb (value, value.find ("\r\n"));
 	set_header_key_and_value (key, value);
@@ -622,17 +597,11 @@ void	Request::parse_header_key_and_value(std::string &header_element)
 
 void	Request::check_header_is_valid()
 {
-	std::cout<< "check_host\n";
 	check_host();
-	std::cout<< "check_transfer_encoding_and_content_length\n";
 	check_expect();
 	check_transfer_encoding_and_content_length();
-	std::cout<< "check_te\n";
 	check_te();
-	std::cout<< "check_content_encoding\n";
 	check_content_encoding();
-	std::cout<<"check_body_limits\n";
-	// check_header_limits(); // config로 설정한 서버의 header limits size를 넘으면 return 413
 	check_body_limits();
 }
 void	Request::check_expect()
@@ -661,21 +630,14 @@ void	Request::check_expect()
 
 void	Request::check_body_limits()
 {
-	// std::cout <<"CLIENT_MAX_BODY_SIZE: " << cycle->getClientMaxBodySize()<<std::endl;
 	if (content_length > cycle->getClientMaxBodySize())
-	{
-		std::cout <<"CHECK_BODY_LIMITS_CONTENT_LENGTH: " << content_length << std::endl;
 		throw REQUEST_ENTITY_TOO_LARGE;
-	}
 }
 
 void	Request::check_host()
 {
 	if (this->header.find ("host") == this->header_end)
-	{
-		std::cout<<"no host header field\n";
 		throw BAD_REQUEST;
-	}
 
 	std::string	&host = this->header["host"];
 	size_t		end = host.size () - 2;
@@ -703,7 +665,6 @@ void	Request::check_host()
 			if (port_num > 65535)
 				throw BAD_REQUEST;
 			port_num = port_num * 10 + (host[i] - '0');
-			std::cout<<"PORT_NUM: "<<port_num<<std::endl;
 			port_len++;
 			continue;
 		}
@@ -738,13 +699,13 @@ void	Request::check_transfer_encoding()
 	if (pos != 0)
 	{
 		this->header["connection"] = "close\r\n";
-		throw NOT_IMPLEMENTED; //chunked외에 다른 인코딩이 있다는 뜻. 자원되지 않는 인코딩은 501
+		throw NOT_IMPLEMENTED;
 	}
 
 	decode_chunked (this->message_body);
 }
 
-void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chunkded error"
+void	Request::decode_chunked(std::string &msg)
 {
 	std::string	chunk = msg;
 	size_t		chunk_size = 0;
@@ -752,10 +713,7 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 	size_t		pos = 0;
 
 	if (msg.find ("0\r\n") == std::string::npos)
-	{
-		std::cout << "NO_0CRLF\n";
 		throw BAD_REQUEST;
-	}
 	this->message_body = "";
 
 	while (1)
@@ -777,19 +735,14 @@ void	Request::decode_chunked(std::string &msg) // "0\r\n 없으면 무조건 chu
 
 void	Request::check_content_length()
 {
-	std::cout<< "check_content_length\n";
 	char	*endptr;
 	this->content_length = std::strtol(this->header["content-length"].c_str(), &endptr, 10);
-	std::cout<< "check_content_length_1\n";
 	if (strlen(endptr) > 1 && strncmp (endptr, "\r\n", 2) != 0)
 		throw BAD_REQUEST;
-	std::cout<< "check_content_length_2\n";
 	if (this->content_length > 2147483647)
 		throw REQUEST_ENTITY_TOO_LARGE;
-	std::cout<< "check_content_length_3\n";
 	if (this->header["content-length"][0] == '0' && this->header["content-length"].substr(0, this->header["content-length"].find("\r\n")).size() > 1)
 		throw BAD_REQUEST;
-	std::cout<< "check_content_length_4\n";
 	if (this->content_length < this->message_body.size() || this->content_length > this->message_body.size())
 		throw BAD_REQUEST;
 
@@ -828,7 +781,6 @@ void	Request::check_uri_form()
 void	Request::matching_absolute_path()
 {
 	std::string	tmp_path = cycle->getMainRoot() + path;
-	// std::cout<<"MATCHING_ABSOLUTE_PATH: " << tmp_path << std::endl;
 	int			path_property = check_path_property(tmp_path);
 
 	origin_path = path;
@@ -896,11 +848,8 @@ std::string Request::check_index(std::list<Location>::iterator it)
 	for (; it_v != ite_v; it_v++)
 	{
 		path_index = cycle->getMainRoot() + it->getSubRoot() + "/" + *it_v;
-		// std::cout<<"PATH_INDEX: "<< path_index << std::endl;
 		if (check_path_property(path_index) == _FILE)
-		{
 			return  "/" + *it_v;
-		}
 	}
 
 	return "";
@@ -913,8 +862,6 @@ void	Request::matching_server()
 	std::list<Server>::iterator ite = servers.end();
 	std::string 				&host = this->host_only;
 
-	std::cout <<"PATH: " << path << std::endl;
-
 	if (path != "/")
 		matching_absolute_path();
 
@@ -922,24 +869,18 @@ void	Request::matching_server()
 
 	for (; it != ite; it++)
 	{
-		// std::cout <<"PORT_MATCHED\n";
 		if (port != it->getPort())
 			continue;
-		// std::cout << "SERVER IS " << it->getDomain() << std::endl;
 		if (host != it->getDomain())
 			continue;
-		// std::cout <<"SERVER_MATCHED\n";
-		// std::cout<<"SERVER: " << it->getDomain() << std::endl;
 		matched_server = it;
 		break;
 	}
 
 	check_is_cgi();
-	std::cout<<"BEFORE_MATCHING_ROUTE\n";
 	matching_route(matched_server->getLocationList().begin(), matched_server->getLocationList().end());
 	if (this->default_error == true)
 		throw BAD_REQUEST;
-	std::cout << "CHECK_ALLOWED_METHOD\n";
 	if (check_allowed_method () == false)
 		throw METHOD_NOT_ALLOWED;
 
@@ -949,12 +890,10 @@ void	Request::matching_server()
 		this->autoindex_path = cycle->getMainRoot() + matched_location->getSubRoot();
 		if (*autoindex_path.rbegin() != '/')
 			autoindex_path += '/';
-		// std::cout<<"AUTOINDEX_PATH: " << this->autoindex_path << std::endl;
 		throw OK;
 	}
 	else if (matched_location->getIndex().size() != 0)
 	{
-		std::cout<<"BEFORE_SET_REDIRECT\n";
 		this->file_name = check_index(matched_location);
 		if (this->file_name != "")
 			set_redirect(cycle->getMainRoot(), matched_location->getSubRoot(), file_name);
@@ -979,7 +918,6 @@ void	Request::set_redirect(std::string main_root, std::string sub_root, std::str
 {
 	this->redirect = true;
 	this->redirect_path = sub_root + file;
-	std::cout <<"REDIRECT: " << this->redirect_path << std::endl;
 	throw FOUND;
 }
 
@@ -995,8 +933,6 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 	if (*(sub_d.rbegin()) == '/' && sub_d.size() == 1)
 	{
 		matched_location = it_begin;
-		// std::cout << "/_dir\n";
-		// std::cout << "DEFAULT_ERROR: " << ((this->default_error == false) ? "false" : "true") << std::endl;
 		return ;
 	}
 
@@ -1006,7 +942,6 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 	for (; it != ite; it++)
 	{
 		try {
-			std::cout<<"MATCHING_ROUTE_ING\n";
 			sub_r = it->getLocationPath();
 			matching_sub_route(sub_r, sub_d, &depth);
 		}
@@ -1015,10 +950,8 @@ void	Request::matching_route(std::list<Location>::iterator it, std::list<Locatio
 			return ;
 		}
 		depth_map[depth] = it;
-		std::cout << "MATCHING_ROUTE_DEPTH_MAP: " << depth << std::endl;
 		depth = 0;
 	}
-	std::cout<<"MATCHING_ROUTE_DONE\n";
 
 	if (depth_map.rbegin()->first != 0)
 		matched_location = depth_map.rbegin()->second;
@@ -1034,12 +967,8 @@ size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *
 	if (route == "" && dest == "")
 		throw std::string::npos;
 
-	// if ((route == dest) && depth == 0)
-	// 	throw std::string::npos;
-
 	if (route == dest)
 	{
-		std::cout<<"route == sub_\n";
 		(*depth)++;
 		if (route.find ('/', 1) != std::string::npos && dest.find ('/', 1) != std::string::npos)
 			matching_sub_route (route.substr (route.find ('/', 1)), dest.substr (dest.find ('/', 1)), depth);
@@ -1047,15 +976,11 @@ size_t	Request::matching_sub_route(std::string route, std::string dest, size_t *
 	}
 
 	if (route != "" && dest != "")
-	{
-		std::cout<<"route != "" && dest != ""\n";
 		return 0;
-	}
 
 	return *depth;
 }
 
-//-----------------------------getter && setter------------------------------
 Cycle&			Request::get_cycle_instance() {return *(this->cycle);}
 std::string&	Request::get_header_field(const char *key) {return this->header[key];}
 std::string&	Request::get_query_value(const char *key) {return this->query_elements[key];}
@@ -1120,7 +1045,7 @@ std::string	Request::lower(const char *key, size_t end)
 	for (size_t i = 0; i < end; i++)
 	{
 		if (lowcase[static_cast<unsigned int>(key[i])] == '\0')
-			throw BAD_REQUEST; //INVALID_HEADER
+			throw BAD_REQUEST;
 		tmp_key.at(i) = lowcase[static_cast<unsigned int>(key[i])];
 	}
 

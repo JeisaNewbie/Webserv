@@ -36,8 +36,6 @@ class Client {
 		Client(const Client& ref);
 		~Client();
 
-		// Client& operator=(const Client& ref);
-
 		void		do_parse(Cycle &cycle);
 		void		set_property_for_cgi(Request &request);
 		void		do_method_without_cgi(Request &request);

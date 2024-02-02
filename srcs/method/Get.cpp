@@ -1,18 +1,18 @@
 #include "Get.hpp"
 
-void	Get::make_body(Response &response, std::string &path)
+bool	Get::make_body(Response &response, std::string &path)
 {
 	std::ifstream		file;
 	std::stringstream	buf;
 
 	file.open (path.c_str(), std::ifstream::in);
 	if (file.is_open() == false)
-		std::cout <<"file_open_failed\n";
+		return false;
 	buf << file.rdbuf();
 	response.set_body (buf.str());
 	buf.str("");
 	file.close();
-	// std::cout <<response.get_body();
+	return true;
 }
 
 void	 Get::create_response(Response &response)

@@ -48,11 +48,9 @@
                 if (xhr.readyState == XMLHttpRequest.DONE) {
                     if (xhr.status == 200) {
                         document.getElementById('postContainer').innerText = xhr.responseText;
-                        // console.log("Response received successfully");
                     }
                     else if (xhr.status == 404) {
                         document.getElementById('postContainer').innerText = "404 File not found";
-                        // console.log("404 File not found");
                     }
                 }
             }
@@ -69,12 +67,6 @@
             if (getData)
                 sendServerData("script.cpp?getdata=" + getData, "GET");
         }
-
-        // function promptForPost() {
-        //     var postData = prompt("Enter the data to post:");
-        //     if (postData)
-        //         sendServerDataPost("script.cpp?postdata=" + postData, "POST");
-        // }
 
         function promptForPost() {
             var postData = prompt("Enter the data to post:");
